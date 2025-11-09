@@ -1,0 +1,34 @@
+cat <<'EOF' > .gitignore
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.db
+*.log
+.env
+.venv/
+venv/
+*venv/
+.pytest_cache/
+tests/
+data/tests/
+hktn/tests/
+data/out/
+
+# Node artifacts
+node_modules/
+hktn/node_modules/
+yarn.lock
+package-lock.json
+npm-debug.log
+dist/
+
+# IDE/editor
+.vscode/
+.idea/
+
+# Misc
+*.egg-info/
+*.egg
+.DS_Store
+EOF
