@@ -21,6 +21,7 @@ from hktn.core.database import (
     get_product_consents_for_user,
     get_recent_bank_status_logs,
     get_user_goal,
+    StoredConsent,
 )
 
 from ..schemas import AnalysisRequest, FinancialPortraitRequest, IngestRequest
@@ -31,8 +32,8 @@ from .products import apply_consent_flags, build_account_product, build_credit_p
 logger = logging.getLogger("finpulse.backend.analytics")
 
 
-def _require_consents(user_id: str) -> Sequence[tuple[str, str]]:
-    approved_consents = find_approved_consents(user_id)
+def _require_consents(user_id: str) -> Sequence[StoredConsent]:
+    approved_consents = find_approved_consents(user_id, consent_type="accounts")
     if not approved_consents:
         raise HTTPException(
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
@@ -44,8 +45,8 @@ def _require_consents(user_id: str) -> Sequence[tuple[str, str]]:
 async def get_user_credits(user_id: str) -> Dict[str, Any]:
     approved_consents = _require_consents(user_id)
     tasks = [
-        fetch_bank_credits(bank_id, consent_id, user_id, create_product_consent=True)
-        for bank_id, consent_id in approved_consents
+        fetch_bank_credits(consent.bank_id, consent.consent_id, user_id, create_product_consent=True)
+        for consent in approved_consents
     ]
     bank_results = await asyncio.gather(*tasks)
 
@@ -66,8 +67,14 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
     stored_goal = get_user_goal(user_id)
     user_goal = compose_user_goal(stored_goal)
 
-    tx_tasks = [fetch_bank_data_with_consent(bank_id, consent_id, user_id) for bank_id, consent_id in approved_consents]
-    credit_tasks = [fetch_bank_credits(bank_id, consent_id, user_id) for bank_id, consent_id in approved_consents]
+    tx_tasks = [
+        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, user_id)
+        for consent in approved_consents
+    ]
+    credit_tasks = [
+        fetch_bank_credits(consent.bank_id, consent.consent_id, user_id)
+        for consent in approved_consents
+    ]
 
     tx_results, credit_results = await asyncio.gather(asyncio.gather(*tx_tasks), asyncio.gather(*credit_tasks))
 
@@ -163,16 +170,16 @@ async def build_financial_portrait_view(req: FinancialPortraitRequest) -> Dict[s
     approved_consents = _require_consents(req.user_id)
 
     tx_tasks = [
-        fetch_bank_data_with_consent(bank_id, consent_id, req.user_id)
-        for bank_id, consent_id in approved_consents
+        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, req.user_id)
+        for consent in approved_consents
     ]
     credit_tasks = [
-        fetch_bank_credits(bank_id, consent_id, req.user_id, create_product_consent=True)
-        for bank_id, consent_id in approved_consents
+        fetch_bank_credits(consent.bank_id, consent.consent_id, req.user_id, create_product_consent=True)
+        for consent in approved_consents
     ]
     account_tasks = [
-        fetch_bank_accounts_with_consent(bank_id, consent_id, req.user_id)
-        for bank_id, consent_id in approved_consents
+        fetch_bank_accounts_with_consent(consent.bank_id, consent.consent_id, req.user_id)
+        for consent in approved_consents
     ]
 
     tx_results, credit_results, account_results = await asyncio.gather(
@@ -299,8 +306,8 @@ async def run_initial_ingestion(req: IngestRequest) -> Dict[str, Any]:
     approved_consents = _require_consents(req.user_id)
 
     tasks = [
-        fetch_bank_data_with_consent(bank_id, consent_id, req.user_id)
-        for bank_id, consent_id in approved_consents
+        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, req.user_id)
+        for consent in approved_consents
     ]
     bank_results = await asyncio.gather(*tasks)
 
@@ -337,8 +344,8 @@ async def start_analysis(req: AnalysisRequest) -> Dict[str, Any]:
     approved_consents = _require_consents(req.user_id)
 
     tasks = [
-        fetch_bank_data_with_consent(bank_id, consent_id, req.user_id)
-        for bank_id, consent_id in approved_consents
+        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, req.user_id)
+        for consent in approved_consents
     ]
     bank_results = await asyncio.gather(*tasks)
 

@@ -60,7 +60,9 @@ async def bank_client(bank_id: str):
 def list_banks(user_id: Optional[str] = None) -> Dict[str, List[Dict[str, Any]]]:
     connected_bank_ids = set()
     if user_id:
-        connected_bank_ids = {bank_id for bank_id, _ in find_approved_consents(user_id)}
+        connected_bank_ids = {
+            consent.bank_id for consent in find_approved_consents(user_id, consent_type="accounts")
+        }
 
     banks = []
     for bank_id, config in settings.banks.items():
@@ -175,16 +177,16 @@ async def bootstrap_bank(bank_id: str, user_id: str) -> Dict[str, Any]:
             detail=message,
         )
 
-    approved_consents = find_approved_consents(user_id)
-    consent_id = next((consent for bid, consent in approved_consents if bid == bank_id), None)
-    if not consent_id:
+    approved_consents = find_approved_consents(user_id, consent_type="accounts")
+    consent = next((entry for entry in approved_consents if entry.bank_id == bank_id), None)
+    if not consent:
         message = "No approved consents found."
         add_bank_status_log(user_id, bank_id, "bootstrap", "error", message)
         raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY, detail=message)
 
-    accounts_task = fetch_bank_accounts_with_consent(bank_id, consent_id, user_id)
-    transactions_task = fetch_bank_data_with_consent(bank_id, consent_id, user_id)
-    credits_task = fetch_bank_credits(bank_id, consent_id, user_id)
+    accounts_task = fetch_bank_accounts_with_consent(bank_id, consent.consent_id, user_id)
+    transactions_task = fetch_bank_data_with_consent(bank_id, consent.consent_id, user_id)
+    credits_task = fetch_bank_credits(bank_id, consent.consent_id, user_id)
 
     accounts_res, transactions_res, credits_res = await asyncio.gather(
         accounts_task,

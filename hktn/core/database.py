@@ -1,10 +1,20 @@
 import json
 import logging
 import sqlite3
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 DB_FILE = "finpulse_consents.db"
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class StoredConsent:
+    """Lightweight view of a consent record used by service layers."""
+
+    bank_id: str
+    consent_id: str
+    consent_type: str = "accounts"
 
 
 def get_db_connection() -> sqlite3.Connection:
@@ -41,6 +51,23 @@ def init_db() -> None:
             )
             _ensure_column(conn, "consents", "request_id", "TEXT")
             _ensure_column(conn, "consents", "approval_url", "TEXT")
+            _ensure_column(conn, "consents", "consent_type", "TEXT")
+            # Backfill consent type for legacy rows.
+            conn.execute(
+                """
+                UPDATE consents
+                SET bank_id = substr(bank_id, 1, length(bank_id) - 9),
+                    consent_type = COALESCE(consent_type, 'products')
+                WHERE bank_id LIKE '%\_products' ESCAPE '\\'
+                """
+            )
+            conn.execute(
+                """
+                UPDATE consents
+                SET consent_type = COALESCE(consent_type, 'accounts')
+                WHERE consent_type IS NULL
+                """
+            )
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS user_profiles (
@@ -106,21 +133,23 @@ def save_consent(
     status: str,
     request_id: Optional[str] = None,
     approval_url: Optional[str] = None,
+    consent_type: str = "accounts",
 ) -> None:
     """Persist or update a consent record."""
     with get_db_connection() as conn:
         conn.execute(
             """
-            INSERT INTO consents (user_id, bank_id, consent_id, status, request_id, approval_url)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO consents (user_id, bank_id, consent_id, status, request_id, approval_url, consent_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(consent_id) DO UPDATE SET
                 status=excluded.status,
                 user_id=excluded.user_id,
                 bank_id=excluded.bank_id,
                 request_id=COALESCE(excluded.request_id, consents.request_id),
-                approval_url=COALESCE(excluded.approval_url, consents.approval_url)
+                approval_url=COALESCE(excluded.approval_url, consents.approval_url),
+                consent_type=COALESCE(excluded.consent_type, consents.consent_type)
             """,
-            (user_id, bank_id, consent_id, status, request_id, approval_url),
+            (user_id, bank_id, consent_id, status, request_id, approval_url, consent_type),
         )
         conn.commit()
 
@@ -162,15 +191,24 @@ def get_consent_by_request_id(request_id: str) -> Optional[Dict[str, Any]]:
     return dict(row) if row else None
 
 
-def find_approved_consents(user_id: str) -> List[Tuple[str, str]]:
-    """Return (bank_id, consent_id) for the user's approved consents."""
+def find_approved_consents(user_id: str, consent_type: Optional[str] = None) -> List[StoredConsent]:
+    """Return structured consents filtered by approval status (and optionally type)."""
     with get_db_connection() as conn:
-        cursor = conn.execute(
-            "SELECT bank_id, consent_id FROM consents WHERE user_id = ? AND status = 'APPROVED'",
-            (user_id,),
-        )
+        sql = "SELECT bank_id, consent_id, consent_type FROM consents WHERE user_id = ? AND status = 'APPROVED'"
+        params: List[Any] = [user_id]
+        if consent_type:
+            sql += " AND consent_type = ?"
+            params.append(consent_type)
+        cursor = conn.execute(sql, params)
         rows = cursor.fetchall()
-    return [(row["bank_id"], row["consent_id"]) for row in rows]
+    return [
+        StoredConsent(
+            bank_id=row["bank_id"],
+            consent_id=row["consent_id"],
+            consent_type=row["consent_type"] or "accounts",
+        )
+        for row in rows
+    ]
 
 
 def upsert_product_consents(user_id: str, items: List[Dict[str, Any]]) -> None:
@@ -213,7 +251,7 @@ def get_user_consents(user_id: str) -> List[Dict[str, Any]]:
     """Return all stored consents (any status) for the user."""
     with get_db_connection() as conn:
         cursor = conn.execute(
-            "SELECT bank_id, consent_id, status, request_id, approval_url, created_at FROM consents WHERE user_id = ?",
+            "SELECT bank_id, consent_id, status, request_id, approval_url, created_at, consent_type FROM consents WHERE user_id = ?",
             (user_id,),
         )
         rows = cursor.fetchall()

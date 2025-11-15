@@ -40,6 +40,7 @@ async def initiate_consent(req: ConsentInitiateRequest) -> Dict[str, Any]:
                 initial_status,
                 request_id=consent_meta.request_id,
                 approval_url=consent_meta.approval_url,
+                consent_type="accounts",
             )
 
             if consent_meta.consent_id and consent_meta.auto_approved:
@@ -87,11 +88,12 @@ async def initiate_product_consent(req: ConsentInitiateRequest) -> Dict[str, Any
             initial_status = "APPROVED" if consent_meta.auto_approved else "AWAITING_USER"
             save_consent(
                 req.user_id,
-                f"{req.bank_id}_products",
+                req.bank_id,
                 consent_identifier,
                 initial_status,
                 request_id=consent_meta.request_id,
                 approval_url=consent_meta.approval_url,
+                consent_type="products",
             )
 
             if consent_meta.consent_id and consent_meta.auto_approved:
@@ -178,7 +180,15 @@ async def poll_consent_status(user_id: str, bank_id: str, request_id: str) -> Di
                 if status_value in AUTHORIZED_CONSENT_STATUSES:
                     updated = update_consent_from_request(request_id, consent_id, "APPROVED")
                     if not updated:
-                        save_consent(user_id, bank_id, consent_id, "APPROVED", request_id=request_id)
+                        consent_kind = (stored or {}).get("consent_type") or "accounts"
+                        save_consent(
+                            user_id,
+                            bank_id,
+                            consent_id,
+                            "APPROVED",
+                            request_id=request_id,
+                            consent_type=consent_kind,
+                        )
                     update_consent_status(consent_id, "APPROVED")
                     response["state"] = "approved"
             return response

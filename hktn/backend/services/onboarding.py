@@ -26,7 +26,7 @@ logger = logging.getLogger("finpulse.backend.onboarding")
 
 async def preview_products(req: IngestRequest) -> Dict[str, Any]:
     """Fetch lightweight preview of accounts and credits for onboarding."""
-    approved_consents = find_approved_consents(req.user_id)
+    approved_consents = find_approved_consents(req.user_id, consent_type="accounts")
     if not approved_consents:
         raise HTTPException(
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
@@ -34,12 +34,18 @@ async def preview_products(req: IngestRequest) -> Dict[str, Any]:
         )
 
     account_tasks = [
-        fetch_bank_accounts_with_consent(bank_id, consent_id, req.user_id)
-        for bank_id, consent_id in approved_consents
+        fetch_bank_accounts_with_consent(consent.bank_id, consent.consent_id, req.user_id)
+        for consent in approved_consents
     ]
     credit_tasks = [
-        fetch_bank_credits(bank_id, consent_id, req.user_id, req.user_name, create_product_consent=True)
-        for bank_id, consent_id in approved_consents
+        fetch_bank_credits(
+            consent.bank_id,
+            consent.consent_id,
+            req.user_id,
+            req.user_name,
+            create_product_consent=True,
+        )
+        for consent in approved_consents
     ]
 
     account_results, credit_results = await asyncio.gather(
@@ -82,7 +88,7 @@ def save_product_consents(req: ProductConsentRequest) -> Dict[str, Any]:
     if not req.user_id:
         raise HTTPException(status_code=400, detail="user_id is required.")
 
-    approved_consents = find_approved_consents(req.user_id)
+    approved_consents = find_approved_consents(req.user_id, consent_type="accounts")
     if not approved_consents:
         raise HTTPException(
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
@@ -110,7 +116,7 @@ def finalize_onboarding(req: OnboardingCommitRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail="user_id is required.")
 
     try:
-        approved_consents = find_approved_consents(req.user_id)
+        approved_consents = find_approved_consents(req.user_id, consent_type="accounts")
         if not approved_consents:
             raise HTTPException(
                 status_code=status.HTTP_424_FAILED_DEPENDENCY,
@@ -131,7 +137,7 @@ def finalize_onboarding(req: OnboardingCommitRequest) -> Dict[str, Any]:
                 detail="No financial goal has been saved.",
             )
 
-        connected_bank_ids = [bank_id for bank_id, _ in approved_consents]
+        connected_bank_ids = [consent.bank_id for consent in approved_consents]
         commit_onboarding_session(req.user_id, connected_bank_ids, product_consents, user_goal)
 
         snapshot = {
