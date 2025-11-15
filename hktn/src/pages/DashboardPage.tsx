@@ -56,7 +56,7 @@ export const DashboardPage: React.FC = () => {
       <div className="card">
         <h3>Предстоящие платежи</h3>
         <ul className="list">
-          {(data.upcoming_payments ?? []).map((payment, index) => (
+          {(data.upcoming_payments ?? []).map((payment: any, index: number) => (
             <li key={`${payment.name}-${index}`}>
               {payment.name}: {payment.amount ?? '—'} ₽ до {payment.date ?? '—'}
             </li>
@@ -66,7 +66,7 @@ export const DashboardPage: React.FC = () => {
       <div className="card">
         <h3>Повторяющиеся события</h3>
         <ul className="list">
-          {(data.recurring_events ?? []).map((event, index) => (
+          {(data.recurring_events ?? []).map((event: any, index: number) => (
             <li key={`${event.name}-${index}`}>
               {event.name}: {event.amount ?? '—'} ₽ {event.is_income ? '(доход)' : '(расход)'} → {event.next_date}
             </li>
@@ -76,7 +76,7 @@ export const DashboardPage: React.FC = () => {
       <div className="card">
         <h3>Кредиты</h3>
         <ul className="list">
-          {(data.credit_rankings ?? []).map((credit) => (
+          {(data.credit_rankings ?? []).map((credit: any) => (
             <li key={credit.name}>
               {credit.name}: {credit.balance} ₽ | Платёж {credit.min_payment} ₽ | Stress {credit.stress_score}
             </li>

@@ -2,7 +2,7 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
 type FetchOptions = RequestInit & { skipAuth?: boolean };
 
-async function fetchJson<T>(path: string, options: FetchOptions = {}): Promise<T> {
+async function fetchJson<T = any>(path: string, options: FetchOptions = {}): Promise<T> {
   const url = `${API_BASE}${path}`;
   const headers = new Headers(options.headers);
   if (options.body && !headers.get('Content-Type')) {

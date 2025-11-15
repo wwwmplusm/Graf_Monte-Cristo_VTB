@@ -1,55 +1,82 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BanksList } from '../components/BanksList';
-import { startConsent } from '../api/client';
 import { useNotifications } from '../state/notifications';
 import { useUser } from '../state/useUser';
 
 export const BanksCatalogPage: React.FC = () => {
-  const { userId, banks, refreshBanks, upsertConsent } = useUser();
-  const { notifyError, notifySuccess } = useNotifications();
+  const { banks, refreshBanks, isFetchingBanks } = useUser();
+  const { notifyError } = useNotifications();
   const navigate = useNavigate();
-  const [busyBankId, setBusyBankId] = useState<string | null>(null);
+  const [selectedBankIds, setSelectedBankIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     refreshBanks();
   }, [refreshBanks]);
 
-  const handleConnect = async (bank: { id: string; name: string }) => {
-    if (!userId) return;
-    try {
-      setBusyBankId(bank.id);
-      const response = await startConsent({ user_id: userId, bank_id: bank.id });
-      upsertConsent({
-        bankId: bank.id,
-        requestId: response.request_id,
-        consentId: response.consent_id,
-        status: response.state,
-        approvalUrl: response.approval_url,
-      });
-      notifySuccess(`Запрос в ${bank.name} создан`);
-      if (response.state === 'approved') {
-        navigate('/banks/preview');
+  const handleToggleBank = (bankId: string) => {
+    setSelectedBankIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(bankId)) {
+        next.delete(bankId);
       } else {
-        const search = new URLSearchParams({ requestId: response.request_id ?? '', bankName: bank.name });
-        navigate(`/banks/${bank.id}/status?${search.toString()}`);
+        next.add(bankId);
       }
-    } catch (error) {
-      console.error(error);
-      notifyError('Не удалось инициировать консент');
-    } finally {
-      setBusyBankId(null);
-      refreshBanks();
+      return next;
+    });
+  };
+
+  const handleSubmit = () => {
+    if (selectedBankIds.size === 0) {
+      notifyError('Выберите хотя бы один банк');
+      return;
     }
+    const selectedBanks = banks.filter((bank) => selectedBankIds.has(bank.id));
+    navigate('/onboarding/consent', { state: { selectedBanks } });
   };
 
   return (
     <div className="app-main">
       <div className="card">
-        <h2>Шаг 2. Выберите банк</h2>
-        <p>Подключите хотя бы один банк, чтобы перейти к предпросмотру продуктов.</p>
+        <h2>Шаг 2. Выберите банки</h2>
+        <p>Отметьте банки, которые хотите подключить для анализа.</p>
       </div>
-      <BanksList banks={banks} onConnect={handleConnect} busyBankId={busyBankId} />
+
+      {isFetchingBanks && (
+        <div className="card">
+          <p>Загрузка списка банков...</p>
+        </div>
+      )}
+
+      {!isFetchingBanks && banks.length === 0 && (
+        <div className="card">
+          <p>Каталог банков пуст. Проверьте настройки бэкенда.</p>
+        </div>
+      )}
+
+      <div className="card">
+        {banks.map((bank) => (
+          <div key={bank.id} style={{ padding: '12px 0', borderBottom: '1px solid #eee' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={selectedBankIds.has(bank.id)}
+                onChange={() => handleToggleBank(bank.id)}
+                disabled={bank.connected}
+              />
+              <div>
+                <strong>{bank.name}</strong>
+                <p style={{ margin: 0, fontSize: 14, color: bank.connected ? '#16a34a' : '#475569' }}>
+                  {bank.connected ? 'Уже подключён' : 'Готов к подключению'}
+                </p>
+              </div>
+            </label>
+          </div>
+        ))}
+      </div>
+
+      <button className="btn" onClick={handleSubmit} disabled={selectedBankIds.size === 0}>
+        Продолжить
+      </button>
     </div>
   );
 };

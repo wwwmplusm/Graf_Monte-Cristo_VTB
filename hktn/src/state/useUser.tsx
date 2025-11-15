@@ -21,7 +21,8 @@ export type BankSummary = {
 
 type UserContextValue = {
   userId: string | null;
-  setUserId: (nextId: string) => void;
+  userName: string | null;
+  setInitialUserData: (nextId: string, nextName: string) => void;
   clearUser: () => void;
   consents: ConsentState[];
   upsertConsent: (consent: Omit<ConsentState, 'lastUpdated'>) => void;
@@ -31,6 +32,7 @@ type UserContextValue = {
 };
 
 const STORAGE_KEY = 'finpulse:userId';
+const USER_NAME_KEY = 'finpulse:userName';
 const CONSENTS_KEY = 'finpulse:consents';
 
 const UserContext = createContext<UserContextValue | undefined>(undefined);
@@ -55,19 +57,24 @@ const parseStoredConsents = (): ConsentState[] => {
 
 export const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [userId, setUserIdState] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
+  const [userName, setUserNameState] = useState<string | null>(() => localStorage.getItem(USER_NAME_KEY));
   const [consents, setConsents] = useState<ConsentState[]>(parseStoredConsents);
   const [banks, setBanks] = useState<BankSummary[]>([]);
   const [isFetchingBanks, setIsFetchingBanks] = useState(false);
 
-  const setUserId = useCallback((nextId: string) => {
+  const setInitialUserData = useCallback((nextId: string, nextName: string) => {
     localStorage.setItem(STORAGE_KEY, nextId);
     setUserIdState(nextId);
+    localStorage.setItem(USER_NAME_KEY, nextName);
+    setUserNameState(nextName);
   }, []);
 
   const clearUser = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(USER_NAME_KEY);
     localStorage.removeItem(CONSENTS_KEY);
     setUserIdState(null);
+    setUserNameState(null);
     setConsents([]);
     setBanks([]);
   }, []);
@@ -119,7 +126,8 @@ export const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   const value = useMemo<UserContextValue>(
     () => ({
       userId,
-      setUserId,
+      userName,
+      setInitialUserData,
       clearUser,
       consents,
       upsertConsent,
@@ -127,7 +135,7 @@ export const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       refreshBanks,
       isFetchingBanks,
     }),
-    [banks, clearUser, consents, isFetchingBanks, refreshBanks, upsertConsent, setUserId, userId]
+    [banks, clearUser, consents, isFetchingBanks, refreshBanks, upsertConsent, setInitialUserData, userId, userName]
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
