@@ -24,6 +24,19 @@ _TEXT_FEATURE_WEIGHT = 1.0
 _DEFAULT_SIMULATIONS = 1200
 _MIN_SIGMA_AMOUNT = 1.0
 
+MCC_TO_LABEL = {
+    "5732": "Электроника",
+    "5411": "Супермаркеты",
+    "5812": "Рестораны и кафе",
+    "5814": "Фастфуд",
+    "4814": "Связь и интернет",
+    "6011": "Снятие наличных",
+    "4121": "Такси",
+    "4900": "Коммунальные услуги",
+    "5541": "АЗС",
+    "6300": "Страхование",
+}
+
 
 class UserGoal(BaseModel):
     """Represents user's desired financial outcome and preferred pace."""
@@ -478,7 +491,9 @@ def _discover_events(df: pd.DataFrame) -> pd.DataFrame:
         text_features = np.zeros((len(df), 1))
 
     scaler = StandardScaler()
-    numeric_features = df[["amount", "day_of_month"]].astype(float)
+    numeric_features = df[["amount", "day_of_month"]].astype(float).copy()
+    mcc_codes = df["mcc_code"].fillna("unknown")
+    numeric_features["mcc_code_feature"] = pd.factorize(mcc_codes)[0].astype(float)
     scaled_numeric = scaler.fit_transform(numeric_features) * _NUMERIC_FEATURE_WEIGHT
     scaled_text = text_features * _TEXT_FEATURE_WEIGHT
 
