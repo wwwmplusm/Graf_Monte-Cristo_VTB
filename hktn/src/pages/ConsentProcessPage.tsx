@@ -65,6 +65,13 @@ export const ConsentProcessPage: React.FC = () => {
       try {
         const apiCall = step === 'accounts' ? startConsent : startProductConsent;
         const response = await apiCall({ user_id: userId, bank_id: bank.id });
+        if (response.state === 'error') {
+          const message = response.error_message ?? 'Не удалось инициировать согласие';
+          notifyError(message);
+          updateBankStatus(index, { [statusField]: 'error', errorMessage: message });
+          return;
+        }
+
         if (response.auto_approved || response.state === 'approved') {
           notifySuccess(
             `Доступ к ${step === 'accounts' ? 'счетам/транзакциям' : 'продуктам'} для ${bank.name} получен!`
@@ -76,9 +83,10 @@ export const ConsentProcessPage: React.FC = () => {
             finishBank();
           }
         } else {
+          const pendingData = { approvalUrl: response.approval_url, requestId: response.request_id };
           updateBankStatus(index, {
             [statusField]: 'pending_approval',
-            activeStepData: { approvalUrl: response.approval_url, requestId: response.request_id },
+            activeStepData: pendingData,
           });
         }
       } catch (error) {
@@ -91,9 +99,9 @@ export const ConsentProcessPage: React.FC = () => {
   );
 
   const handlePoll = useCallback(
-    async (index: number, step: ConsentStep) => {
+    async (index: number, step: ConsentStep, requestIdOverride?: string) => {
       const bank = bankStates[index];
-      const requestId = bank?.activeStepData?.requestId;
+      const requestId = requestIdOverride ?? bank?.activeStepData?.requestId;
       if (!bank || !userId || !requestId) return;
 
       const statusField = step === 'accounts' ? 'accountsStatus' : 'productsStatus';
@@ -146,6 +154,26 @@ export const ConsentProcessPage: React.FC = () => {
     }
   }, [bankStates, currentIndex, requestConsent]);
 
+  useEffect(() => {
+    bankStates.forEach((bank, index) => {
+      if (
+        bank.accountsStatus === 'pending_approval' &&
+        !bank.activeStepData?.approvalUrl &&
+        bank.activeStepData?.requestId
+      ) {
+        void handlePoll(index, 'accounts', bank.activeStepData.requestId);
+      }
+      if (
+        bank.accountsStatus === 'connected' &&
+        bank.productsStatus === 'pending_approval' &&
+        !bank.activeStepData?.approvalUrl &&
+        bank.activeStepData?.requestId
+      ) {
+        void handlePoll(index, 'products', bank.activeStepData.requestId);
+      }
+    });
+  }, [bankStates, handlePoll]);
+
   const retryBank = (index: number) => {
     const bank = bankStates[index];
     if (!bank) return;
@@ -171,18 +199,19 @@ export const ConsentProcessPage: React.FC = () => {
       {(status === 'connecting' || status === 'polling') && <span>В процессе ⏳</span>}
       {status === 'connected' && <span style={{ color: '#16a34a', fontWeight: 600 }}>✅ Получен</span>}
       {status === 'error' && <span style={{ color: '#dc2626', fontWeight: 600 }}>❌ Ошибка</span>}
-      {status === 'pending_approval' && (
-        <div style={{ display: 'flex', gap: 8 }}>
-          {bank.activeStepData?.approvalUrl ? (
+      {status === 'pending_approval' &&
+        (bank.activeStepData?.approvalUrl ? (
+          <div style={{ display: 'flex', gap: 8 }}>
             <a className="btn-secondary btn" href={bank.activeStepData.approvalUrl} target="_blank" rel="noreferrer">
               Подтвердить в банке
             </a>
-          ) : null}
-          <button className="btn" onClick={() => handlePoll(index, step)}>
-            Я подтвердил
-          </button>
-        </div>
-      )}
+            <button className="btn" onClick={() => handlePoll(index, step)}>
+              Я подтвердил
+            </button>
+          </div>
+        ) : (
+          <span>Ожидаем подтверждение от банка…</span>
+        ))}
     </div>
   );
 

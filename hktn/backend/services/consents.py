@@ -81,10 +81,7 @@ async def initiate_product_consent(req: ConsentInitiateRequest) -> Dict[str, Any
             logger.info("Initiating PRODUCT consent for user '%s' with bank '%s'", req.user_id, req.bank_id)
             consent_meta = await client.initiate_product_consent(req.user_id)
             if not consent_meta or not (consent_meta.consent_id or consent_meta.request_id):
-                raise HTTPException(
-                    status_code=502,
-                    detail="Bank did not provide product consent identifier.",
-                )
+                raise HTTPException(status_code=502, detail="Bank did not provide product consent identifier.")
 
             consent_identifier = consent_meta.consent_id or consent_meta.request_id
             initial_status = "APPROVED" if consent_meta.auto_approved else "AWAITING_USER"
@@ -111,11 +108,26 @@ async def initiate_product_consent(req: ConsentInitiateRequest) -> Dict[str, Any
                 "approval_url": consent_meta.approval_url,
                 "auto_approved": consent_meta.auto_approved,
             }
-        except HTTPException:
-            raise
+        except HTTPException as exc:
+            logger.error("Failed to initiate PRODUCT consent for bank %s: %s", req.bank_id, exc)
+            return {
+                "bank_id": req.bank_id,
+                "bank_name": bank_config.display_name,
+                "type": "product",
+                "state": "error",
+                "status": "error",
+                "error_message": str(exc.detail if hasattr(exc, "detail") else exc),
+            }
         except Exception as exc:  # noqa: BLE001
             logger.error("Failed to initiate PRODUCT consent for bank %s: %s", req.bank_id, exc)
-            raise HTTPException(status_code=502, detail=f"Could not initiate product consent: {exc}") from exc
+            return {
+                "bank_id": req.bank_id,
+                "bank_name": bank_config.display_name,
+                "type": "product",
+                "state": "error",
+                "status": "error",
+                "error_message": str(exc),
+            }
 
 
 async def poll_consent_status(user_id: str, bank_id: str, request_id: str) -> Dict[str, Any]:
