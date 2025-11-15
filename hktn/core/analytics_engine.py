@@ -573,7 +573,6 @@ def _profile_events(df_with_clusters: pd.DataFrame) -> Tuple[List[Dict[str, obje
 
         descriptions = cluster_df["description"].tolist()
         normalized_descriptions = cluster_df["normalized_description"].tolist()
-        label = _cluster_label(normalized_descriptions)
         coherence = _cluster_coherence(normalized_descriptions)
         last_date = cluster_df["bookingDate"].iloc[-1].date()
         dominant_sign = cluster_df["is_income"].mean()
@@ -605,6 +604,12 @@ def _profile_events(df_with_clusters: pd.DataFrame) -> Tuple[List[Dict[str, obje
             "mcc_consistency": mcc_consistency,
         }
         source_label = "income_event" if bool(dominant_sign >= 0.5) else "expense_event"
+
+        label = None
+        if dominant_mcc:
+            label = MCC_TO_LABEL.get(str(dominant_mcc))
+        if not label:
+            label = _cluster_label(normalized_descriptions)
 
         event_profiles.append(
             {

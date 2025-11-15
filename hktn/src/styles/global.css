@@ -292,7 +292,15 @@ a {
 }
 
 .metric {
-  font-size: 20px;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+.metric span {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-muted);
 }
 
 .safe-recommendation {
@@ -307,9 +315,24 @@ a {
 }
 
 .safe-obligations {
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  border-top: 1px solid var(--color-border);
   margin-top: var(--space-md);
   padding-top: var(--space-sm);
+  font-size: 14px;
+}
+
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.snapshot-item {
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #f9fafb;
 }
 
 .credit-row {

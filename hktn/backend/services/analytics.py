@@ -9,7 +9,7 @@ from fastapi import HTTPException, status
 
 from hktn.core.analytics_engine import (
     build_financial_portrait,
-    calculate_safe_to_spend,
+    calculate_daily_s2s,
     derive_obligations,
     estimate_goal_probability,
     extract_recurring_events,
@@ -134,12 +134,15 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         )
 
     current_balance = sum(_extract_account_balance(account) for account in all_accounts)
+    if not all_accounts:
+        logger.warning("Could not determine current balance for user %s, defaulting to 0.", user_id)
+        current_balance = 0.0
 
     (
-        analysis_result,
+        _analysis_result,
         trajectories,
         forecast_dates,
-        noise_profile,
+        _noise_profile,
         event_profiles,
     ) = run_analysis_with_details(
         all_transactions,
@@ -149,7 +152,7 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
     )
 
     obligations = derive_obligations(all_credits, event_profiles)
-    safe_to_spend = calculate_safe_to_spend(obligations, trajectories, forecast_dates)
+    safe_to_spend_daily = calculate_daily_s2s(current_balance, event_profiles, obligations, user_goal)
     goal_probability = estimate_goal_probability(user_goal, trajectories, forecast_dates, obligations, event_profiles)
     recurring_events = extract_recurring_events(event_profiles)
 
@@ -161,13 +164,16 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         debt_to_income_ratio = monthly_payments / monthly_income if monthly_income else 0
         health_score = max(0, int((1 - debt_to_income_ratio * 2) * 100))
 
+    today = date.today()
     upcoming_payloads: List[Dict[str, Any]] = []
     for obligation in obligations:
         due_date = obligation.get("due_date")
         if not isinstance(due_date, date):
             continue
+        if due_date < today:
+            continue
         payload = {
-            "name": obligation.get("label") or "Payment",
+            "name": obligation.get("label") or "Обязательный платёж",
             "amount": obligation.get("amount"),
             "due_date": due_date,
             "source": obligation.get("source"),
@@ -181,21 +187,22 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
 
     upcoming_payloads.sort(key=lambda item: item["due_date"])
     upcoming_payments = [
-        {**payload, "due_date": payload["due_date"].isoformat()} for payload in upcoming_payloads[:5]
+        {
+            **payload,
+            "due_date": payload["due_date"].isoformat(),
+        }
+        for payload in upcoming_payloads[:5]
     ]
 
     return {
-        "analysis": analysis_result.dict(),
-        "safe_to_spend": safe_to_spend,
-        "goal_probability": goal_probability,
-        "bank_statuses": bank_statuses,
-        "recurring_events": recurring_events,
-        "total_debt": total_debt,
-        "monthly_income": monthly_income,
-        "monthly_payments": monthly_payments,
-        "health_score": health_score,
-        "upcoming_payments": upcoming_payments,
         "current_balance": round(current_balance, 2),
+        "safe_to_spend_daily": safe_to_spend_daily,
+        "goal_probability": goal_probability,
+        "upcoming_payments": upcoming_payments,
+        "recurring_events": recurring_events,
+        "total_debt": round(total_debt, 2),
+        "health_score": health_score,
+        "bank_statuses": bank_statuses,
     }
 
 
