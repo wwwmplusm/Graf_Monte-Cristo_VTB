@@ -27,23 +27,43 @@ const formatDate = (value?: string | null) => {
   });
 };
 
-const STSCard: React.FC<{ data: DashboardResponse }> = ({ data }) => (
-  <div className="card">
-    <h2>Safe-to-Spend</h2>
-    <p className="muted">Ответ на вопрос «сколько можно потратить сегодня и остаться в курсе плана».</p>
-    <p className="metric">
-      {formatCurrency(data.safe_to_spend_daily)}
-      <span> / день</span>
-    </p>
-    <p className="muted">
-      Вероятность достижения цели: <strong>{data.goal_probability ?? 0}%</strong>
-    </p>
-    <div className="safe-obligations">
-      <div>Текущий баланс: {formatCurrency(data.current_balance)}</div>
-      <div>Запас: {formatCurrency(data.total_debt ?? 0)}</div>
+const STSCard: React.FC<{ data: DashboardResponse }> = ({ data }) => {
+  const context = data.safe_to_spend_context;
+  const narrative = data.safe_to_spend_narrative;
+  const hasValue = typeof data.safe_to_spend_daily === 'number' && !Number.isNaN(data.safe_to_spend_daily);
+  const calloutTone = context?.state === 'missing_balance' ? 'warning' : 'info';
+
+  return (
+    <div className="card">
+      <h2>Safe-to-Spend</h2>
+      <p className="muted">Ответ на вопрос «сколько можно потратить сегодня и остаться в курсе плана».</p>
+      {context?.message && (
+        <div className={`callout callout--${calloutTone}`}>
+          {context.message}
+        </div>
+      )}
+      <p className="metric">
+        {hasValue ? formatCurrency(data.safe_to_spend_daily ?? undefined) : '—'}
+        <span> / день</span>
+      </p>
+      <p className="muted">
+        Вероятность достижения цели: <strong>{data.goal_probability ?? 0}%</strong>
+      </p>
+      <div className="safe-obligations">
+        <div>Текущий баланс: {formatCurrency(data.current_balance)}</div>
+        {narrative ? (
+          <>
+            <div>Обязательства до {formatDate(narrative.cycle_end)}: {formatCurrency(narrative.obligations_total)}</div>
+            <div>Резерв на цель: {formatCurrency(narrative.goal_reserve)}</div>
+            <div>Доступно в цикле ({narrative.days_in_cycle ?? 0} д.): {formatCurrency(narrative.spendable_total)}</div>
+          </>
+        ) : (
+          <div>Нужны данные по регулярным платежам.</div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const FinancialSnapshotCard: React.FC<{ data: DashboardResponse }> = ({ data }) => (
   <div className="card">
@@ -60,6 +80,10 @@ const FinancialSnapshotCard: React.FC<{ data: DashboardResponse }> = ({ data }) 
       <div className="snapshot-item">
         <p className="muted">Финансовое здоровье</p>
         <strong>{data.health_score ?? 0}/100</strong>
+      </div>
+      <div className="snapshot-item">
+        <p className="muted">Подключено счетов</p>
+        <strong>{data.balance_context?.account_count ?? 0}</strong>
       </div>
     </div>
   </div>

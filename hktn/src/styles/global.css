@@ -319,6 +319,28 @@ a {
   margin-top: var(--space-md);
   padding-top: var(--space-sm);
   font-size: 14px;
+  display: grid;
+  gap: 4px;
+}
+
+.callout {
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  padding: var(--space-sm);
+  font-size: 0.9rem;
+  margin: var(--space-sm) 0;
+}
+
+.callout--warning {
+  background: #fef3c7;
+  border-color: #f97316;
+  color: #7c2d12;
+}
+
+.callout--info {
+  background: #ecfeff;
+  border-color: #0ea5e9;
+  color: #0f172a;
 }
 
 .snapshot-grid {

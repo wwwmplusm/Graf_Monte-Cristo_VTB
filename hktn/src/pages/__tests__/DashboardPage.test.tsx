@@ -10,6 +10,21 @@ const dashboardStub: DashboardResponse = {
   goal_probability: 82,
   total_debt: 450000,
   health_score: 72,
+  safe_to_spend_narrative: {
+    cycle_start: '2024-05-01',
+    cycle_end: '2024-05-15',
+    days_in_cycle: 14,
+    obligations_total: 50000,
+    goal_reserve: 12000,
+    spendable_total: 30000,
+  },
+  safe_to_spend_context: {
+    state: 'calculated',
+  },
+  balance_context: {
+    state: 'ok',
+    account_count: 2,
+  },
   upcoming_payments: [
     { name: 'Аренда', amount: 40000, due_date: '2024-05-05' },
     { name: 'Кредитная выплата', amount: 12000, due_date: '2024-05-12' },
@@ -71,5 +86,20 @@ describe('DashboardPage', () => {
     mockGetDashboard.mockRejectedValueOnce(error);
     render(<DashboardPage />);
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
+  });
+
+  it('shows warning callout when safe-to-spend is blocked', async () => {
+    mockGetDashboard.mockResolvedValueOnce({
+      ...dashboardStub,
+      safe_to_spend_daily: null,
+      safe_to_spend_context: {
+        state: 'missing_balance',
+        message: 'Подключите счёт, чтобы рассчитать лимит.',
+      },
+    });
+    render(<DashboardPage />);
+    await waitFor(() => expect(mockGetDashboard).toHaveBeenCalled());
+    expect(screen.getByText(/Подключите счёт/)).toBeInTheDocument();
+    expect(screen.getByText('—')).toBeInTheDocument();
   });
 });

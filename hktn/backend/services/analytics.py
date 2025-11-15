@@ -134,8 +134,16 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         )
 
     current_balance = sum(_extract_account_balance(account) for account in all_accounts)
+    balance_state = "ok"
+    balance_message = None
     if not all_accounts:
+        balance_state = "missing_accounts"
+        balance_message = "Банки не вернули данные по счетам. Подключите счёт с остатком."
         logger.warning("Could not determine current balance for user %s, defaulting to 0.", user_id)
+    elif current_balance <= 0:
+        balance_state = "zero_balance"
+        balance_message = "Текущий баланс равен 0 ₽ — не удалось получить остаток от банка."
+        logger.warning("Balance for user %s is zero despite connected accounts.", user_id)
         current_balance = 0.0
 
     (
@@ -152,9 +160,33 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
     )
 
     obligations = derive_obligations(all_credits, event_profiles)
-    safe_to_spend_daily = calculate_daily_s2s(current_balance, event_profiles, obligations, user_goal)
+    obligation_cluster_ids: set[int] = set()
+    for obligation in obligations:
+        cluster_id = obligation.get("cluster_id")
+        if cluster_id is None:
+            continue
+        try:
+            obligation_cluster_ids.add(int(cluster_id))
+        except (TypeError, ValueError):
+            continue
+    safe_to_spend_daily_raw, safe_to_spend_details = calculate_daily_s2s(
+        current_balance,
+        event_profiles,
+        obligations,
+        user_goal,
+        return_details=True,
+    )
+    safe_to_spend_daily = safe_to_spend_daily_raw if balance_state == "ok" else None
+    safe_to_spend_state = "calculated" if safe_to_spend_daily_raw > 0 else "no_free_cash"
+    safe_to_spend_message = None
+    if balance_state != "ok":
+        safe_to_spend_state = "missing_balance"
+        safe_to_spend_message = balance_message
+    elif safe_to_spend_daily_raw <= 0:
+        safe_to_spend_message = "Все ближайшие средства пойдут на обязательные платежи."
+
     goal_probability = estimate_goal_probability(user_goal, trajectories, forecast_dates, obligations, event_profiles)
-    recurring_events = extract_recurring_events(event_profiles)
+    recurring_events = extract_recurring_events(event_profiles, exclude_cluster_ids=obligation_cluster_ids)
 
     total_debt = sum(float(credit.get("balance", 0) or 0) for credit in all_credits)
     monthly_income = sum(float(event.get("mu_amount", 0) or 0) for event in event_profiles if event.get("is_income"))
@@ -167,6 +199,8 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
     today = date.today()
     upcoming_payloads: List[Dict[str, Any]] = []
     for obligation in obligations:
+        if obligation.get("source") != "credit_agreement":
+            continue
         due_date = obligation.get("due_date")
         if not isinstance(due_date, date):
             continue
@@ -196,7 +230,17 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
 
     return {
         "current_balance": round(current_balance, 2),
-        "safe_to_spend_daily": safe_to_spend_daily,
+        "safe_to_spend_daily": safe_to_spend_daily if safe_to_spend_daily is not None else None,
+        "safe_to_spend_narrative": safe_to_spend_details,
+        "safe_to_spend_context": {
+            "state": safe_to_spend_state,
+            "message": safe_to_spend_message,
+        },
+        "balance_context": {
+            "state": balance_state,
+            "message": balance_message,
+            "account_count": len(all_accounts),
+        },
         "goal_probability": goal_probability,
         "upcoming_payments": upcoming_payments,
         "recurring_events": recurring_events,

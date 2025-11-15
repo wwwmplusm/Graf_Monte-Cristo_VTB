@@ -28,13 +28,38 @@ export type RecurringEvent = MetadataMixin & {
   next_date: string;
 };
 
+export type SafeToSpendNarrative = {
+  cycle_start?: string;
+  cycle_end?: string;
+  days_in_cycle?: number;
+  obligations_total?: number;
+  free_cash?: number;
+  goal_reserve?: number;
+  spendable_total?: number;
+  next_income_label?: string | null;
+};
+
+export type SafeToSpendContext = {
+  state: string;
+  message?: string | null;
+};
+
+export type BalanceContext = {
+  state: string;
+  message?: string | null;
+  account_count?: number;
+};
+
 export type DashboardResponse = {
   current_balance: number;
-  safe_to_spend_daily: number;
+  safe_to_spend_daily: number | null;
   goal_probability: number;
   upcoming_payments: UpcomingPayment[];
   recurring_events: RecurringEvent[];
   total_debt?: number;
   health_score?: number;
   bank_statuses?: Record<string, { bank_name: string; status: string; message?: string }>;
+  safe_to_spend_narrative?: SafeToSpendNarrative;
+  safe_to_spend_context?: SafeToSpendContext;
+  balance_context?: BalanceContext;
 };

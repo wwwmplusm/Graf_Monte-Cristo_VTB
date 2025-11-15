@@ -5,7 +5,7 @@ import math
 import re
 from collections import Counter
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Literal
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Literal
 
 import numpy as np
 import pandas as pd
@@ -144,16 +144,48 @@ def _coerce_to_date(value: Any) -> Optional[date]:
     return None
 
 
+def _derive_event_label(profile: Dict[str, Any]) -> str:
+    """Generate a human-friendly label for recurring events."""
+    metadata = profile.get("metadata") or {}
+    dominant_mcc = profile.get("mcc_code") or metadata.get("dominant_mcc_code")
+    if dominant_mcc:
+        label = MCC_TO_LABEL.get(str(dominant_mcc))
+        if label:
+            return label
+    merchant_name = (
+        profile.get("merchant_name")
+        or metadata.get("dominant_merchant")
+        or metadata.get("merchant_category")
+    )
+    if merchant_name:
+        return merchant_name
+    raw_label = profile.get("label")
+    if isinstance(raw_label, str) and raw_label.strip():
+        normalized = raw_label.strip().lower()
+        if normalized.startswith("выруч"):
+            return "Регулярный доход"
+        if normalized.startswith("закуп"):
+            return "Регулярный расход"
+        return raw_label.strip()
+    return "Регулярный доход" if profile.get("is_income") else "Регулярный расход"
+
+
 def extract_recurring_events(
     event_profiles: Sequence[Dict[str, Any]],
     limit: int = 8,
+    exclude_cluster_ids: Optional[Set[int]] = None,
 ) -> List[Dict[str, Any]]:
     """Produce a simplified list of recurring events for UI."""
     events: List[Dict[str, Any]] = []
     today = date.today()
+    excluded = {int(cid) for cid in (exclude_cluster_ids or set()) if cid is not None}
 
     for profile in event_profiles or []:
-        label = profile.get("label") or profile.get("merchant") or "Recurring"
+        cluster_id = profile.get("cluster_id")
+        if cluster_id is not None and int(cluster_id) in excluded:
+            continue
+
+        label = _derive_event_label(profile)
         amount = round(float(profile.get("mu_amount") or 0.0), 2)
         is_income = bool(profile.get("is_income"))
         frequency_days = int(profile.get("frequency_days") or profile.get("frequencyDays") or 30)
@@ -369,6 +401,39 @@ def _find_next_income_event(event_profiles: List[Dict[str, Any]], start_date: da
     return min(candidates, key=lambda item: item["next_occurrence"])
 
 
+_BALANCE_FALLBACK_FIELDS = (
+    "balances",
+    "balance",
+    "current",
+    "available",
+    "amount",
+    "value",
+)
+
+
+def _resolve_numeric_value(value: Any) -> Optional[float]:
+    """Traverse nested structures to coerce a numeric amount."""
+    number = _safe_float(value)
+    if number is not None:
+        return number
+    if isinstance(value, dict):
+        for nested_key in _BALANCE_FALLBACK_FIELDS:
+            if nested_key in value:
+                nested = _resolve_numeric_value(value[nested_key])
+                if nested is not None:
+                    return nested
+        for nested in value.values():
+            nested_value = _resolve_numeric_value(nested)
+            if nested_value is not None:
+                return nested_value
+    if isinstance(value, (list, tuple)):
+        for item in value:
+            nested = _resolve_numeric_value(item)
+            if nested is not None:
+                return nested
+    return None
+
+
 def _extract_account_balance(account: Dict[str, Any]) -> float:
     """Best-effort balance extraction across heterogeneous account payloads."""
     balance_keys = (
@@ -377,13 +442,19 @@ def _extract_account_balance(account: Dict[str, Any]) -> float:
         "balance",
         "current_balance",
         "currentBalance",
+        "total_balance",
+        "totalBalance",
     )
     for key in balance_keys:
         if key in account and account[key] is not None:
-            try:
-                return float(account[key])
-            except (TypeError, ValueError):
-                continue
+            amount = _resolve_numeric_value(account[key])
+            if amount is not None:
+                return amount
+    for fallback_key in _BALANCE_FALLBACK_FIELDS:
+        if fallback_key in account and account[fallback_key] is not None:
+            amount = _resolve_numeric_value(account[fallback_key])
+            if amount is not None:
+                return amount
     return 0.0
 
 
@@ -393,7 +464,8 @@ def calculate_daily_s2s(
     obligations: List[Dict[str, Any]],
     user_goal: UserGoal,
     start_date: Optional[date] = None,
-) -> float:
+    return_details: bool = False,
+) -> float | Tuple[float, Dict[str, Any]]:
     """Estimate safe-to-spend per day leveraging detected income cycle and obligations."""
     if start_date is None:
         start_date = date.today()
@@ -419,14 +491,37 @@ def calculate_daily_s2s(
 
     free_cash = current_balance - cycle_expenses
     if free_cash <= 0:
-        return 0.0
+        details = {
+            "cycle_start": start_date.isoformat(),
+            "cycle_end": cycle_end.isoformat(),
+            "days_in_cycle": days_in_cycle,
+            "obligations_total": round(cycle_expenses, 2),
+            "free_cash": round(min(free_cash, 0.0), 2),
+            "goal_reserve": 0.0,
+            "spendable_total": 0.0,
+            "next_income_label": (next_income or {}).get("label"),
+        }
+        return (0.0, details) if return_details else 0.0
 
     reserve = 0.0
     if user_goal.goal_type == "pay_debts":
         reserve = free_cash * PACE_COEFFICIENTS.get(user_goal.pace, 0.25)
 
     spendable = max(0.0, free_cash - reserve)
-    return round(spendable / days_in_cycle, 2)
+    result = round(spendable / days_in_cycle, 2)
+    if not return_details:
+        return result
+    details = {
+        "cycle_start": start_date.isoformat(),
+        "cycle_end": cycle_end.isoformat(),
+        "days_in_cycle": days_in_cycle,
+        "obligations_total": round(cycle_expenses, 2),
+        "free_cash": round(free_cash, 2),
+        "goal_reserve": round(reserve, 2),
+        "spendable_total": round(spendable, 2),
+        "next_income_label": (next_income or {}).get("label"),
+    }
+    return result, details
 
 
 def _normalize_description(value: Optional[str]) -> str:
