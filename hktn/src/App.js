@@ -10,7 +10,6 @@ import { DashboardPage } from './pages/DashboardPage';
 import { DebtGoalPage } from './pages/DebtGoalPage';
 import { GoalsLandingPage } from './pages/GoalsLandingPage';
 import { IngestionPage } from './pages/IngestionPage';
-import { PreviewPage } from './pages/PreviewPage';
 import { SaveGoalPage } from './pages/SaveGoalPage';
 import { UserIdPage } from './pages/UserIdPage';
 import { ConsentProcessPage } from './pages/ConsentProcessPage';
@@ -50,5 +49,5 @@ const Header = () => {
                             navigate('/');
                         }, children: "\u0421\u0431\u0440\u043E\u0441\u0438\u0442\u044C" })) : null] })] }));
 };
-export const App = () => (_jsx(AppErrorBoundary, { children: _jsxs("div", { className: "app-shell", children: [_jsx(Header, {}), _jsxs(Routes, { children: [_jsx(Route, { path: "/", element: _jsx(UserIdPage, {}) }), _jsxs(Route, { element: _jsx(ProtectedRoute, {}), children: [_jsx(Route, { path: "/banks", element: _jsx(BanksCatalogPage, {}) }), _jsx(Route, { path: "/banks/:bankId/status", element: _jsx(ConsentStatusPage, {}) }), _jsx(Route, { path: "/banks/preview", element: _jsx(PreviewPage, {}) }), _jsx(Route, { path: "/onboarding/consent", element: _jsx(ConsentProcessPage, {}) }), _jsx(Route, { path: "/goals", element: _jsx(GoalsLandingPage, {}) }), _jsx(Route, { path: "/goals/save", element: _jsx(SaveGoalPage, {}) }), _jsx(Route, { path: "/goals/debts", element: _jsx(DebtGoalPage, {}) }), _jsx(Route, { path: "/ingest", element: _jsx(IngestionPage, {}) }), _jsx(Route, { path: "/dashboard", element: _jsx(DashboardPage, {}) })] }), _jsx(Route, { path: "/callback", element: _jsx(CallbackPage, {}) }), _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })] })] }) }));
+export const App = () => (_jsx(AppErrorBoundary, { children: _jsxs("div", { className: "app-shell", children: [_jsx(Header, {}), _jsxs(Routes, { children: [_jsx(Route, { path: "/", element: _jsx(UserIdPage, {}) }), _jsxs(Route, { element: _jsx(ProtectedRoute, {}), children: [_jsx(Route, { path: "/banks", element: _jsx(BanksCatalogPage, {}) }), _jsx(Route, { path: "/banks/:bankId/status", element: _jsx(ConsentStatusPage, {}) }), _jsx(Route, { path: "/onboarding/consent", element: _jsx(ConsentProcessPage, {}) }), _jsx(Route, { path: "/goals", element: _jsx(GoalsLandingPage, {}) }), _jsx(Route, { path: "/goals/save", element: _jsx(SaveGoalPage, {}) }), _jsx(Route, { path: "/goals/debts", element: _jsx(DebtGoalPage, {}) }), _jsx(Route, { path: "/ingest", element: _jsx(IngestionPage, {}) }), _jsx(Route, { path: "/dashboard", element: _jsx(DashboardPage, {}) })] }), _jsx(Route, { path: "/callback", element: _jsx(CallbackPage, {}) }), _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })] })] }) }));
 export default App;

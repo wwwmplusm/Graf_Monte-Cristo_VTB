@@ -49,6 +49,9 @@ export const getBanks = (userId?: string) => {
 export const startConsent = (payload: { user_id: string; bank_id: string }) =>
   fetchJson('/api/consents/start', { method: 'POST', body: JSON.stringify(payload) });
 
+export const startProductConsent = (payload: { user_id: string; bank_id: string }) =>
+  fetchJson('/api/consent/initiate/product', { method: 'POST', body: JSON.stringify(payload) });
+
 export const pollConsent = (params: { user_id: string; bank_id: string; request_id: string }) => {
   const query = new URLSearchParams({
     user_id: params.user_id,

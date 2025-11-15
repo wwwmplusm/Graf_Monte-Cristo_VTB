@@ -15,6 +15,11 @@ async def initiate_consent(req: ConsentInitiateRequest):
     return await consents.initiate_consent(req)
 
 
+@router.post("/consent/initiate/product")
+async def initiate_product_consent(req: ConsentInitiateRequest):
+    return await consents.initiate_product_consent(req)
+
+
 @router.post("/consents/start")
 async def start_consent_alias(req: ConsentInitiateRequest):
     """Specification-friendly alias for /api/consent/initiate."""

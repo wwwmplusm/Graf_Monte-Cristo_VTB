@@ -73,6 +73,51 @@ async def initiate_consent(req: ConsentInitiateRequest) -> Dict[str, Any]:
             raise HTTPException(status_code=502, detail=f"Could not initiate consent with bank: {exc}") from exc
 
 
+async def initiate_product_consent(req: ConsentInitiateRequest) -> Dict[str, Any]:
+    """Initiate product-agreement consent for the selected bank."""
+    bank_config = get_bank_config(req.bank_id, require_url=True)
+    async with bank_client(req.bank_id) as client:
+        try:
+            logger.info("Initiating PRODUCT consent for user '%s' with bank '%s'", req.user_id, req.bank_id)
+            consent_meta = await client.initiate_product_consent(req.user_id)
+            if not consent_meta or not (consent_meta.consent_id or consent_meta.request_id):
+                raise HTTPException(
+                    status_code=502,
+                    detail="Bank did not provide product consent identifier.",
+                )
+
+            consent_identifier = consent_meta.consent_id or consent_meta.request_id
+            initial_status = "APPROVED" if consent_meta.auto_approved else "AWAITING_USER"
+            save_consent(
+                req.user_id,
+                f"{req.bank_id}_products",
+                consent_identifier,
+                initial_status,
+                request_id=consent_meta.request_id,
+                approval_url=consent_meta.approval_url,
+            )
+
+            if consent_meta.consent_id and consent_meta.auto_approved:
+                update_consent_status(consent_meta.consent_id, "APPROVED")
+
+            return {
+                "bank_id": req.bank_id,
+                "bank_name": bank_config.display_name,
+                "type": "product",
+                "state": "approved" if consent_meta.auto_approved else "pending",
+                "status": consent_meta.status,
+                "consent_id": consent_meta.consent_id,
+                "request_id": consent_meta.request_id,
+                "approval_url": consent_meta.approval_url,
+                "auto_approved": consent_meta.auto_approved,
+            }
+        except HTTPException:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Failed to initiate PRODUCT consent for bank %s: %s", req.bank_id, exc)
+            raise HTTPException(status_code=502, detail=f"Could not initiate product consent: {exc}") from exc
+
+
 async def poll_consent_status(user_id: str, bank_id: str, request_id: str) -> Dict[str, Any]:
     if not request_id:
         raise HTTPException(status_code=400, detail="request_id is required.")

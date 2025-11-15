@@ -9,7 +9,6 @@ import { DashboardPage } from './pages/DashboardPage';
 import { DebtGoalPage } from './pages/DebtGoalPage';
 import { GoalsLandingPage } from './pages/GoalsLandingPage';
 import { IngestionPage } from './pages/IngestionPage';
-import { PreviewPage } from './pages/PreviewPage';
 import { SaveGoalPage } from './pages/SaveGoalPage';
 import { UserIdPage } from './pages/UserIdPage';
 import { ConsentProcessPage } from './pages/ConsentProcessPage';
@@ -96,7 +95,6 @@ export const App: React.FC = () => (
         <Route element={<ProtectedRoute />}>
           <Route path="/banks" element={<BanksCatalogPage />} />
           <Route path="/banks/:bankId/status" element={<ConsentStatusPage />} />
-          <Route path="/banks/preview" element={<PreviewPage />} />
           <Route path="/onboarding/consent" element={<ConsentProcessPage />} />
           <Route path="/goals" element={<GoalsLandingPage />} />
           <Route path="/goals/save" element={<SaveGoalPage />} />

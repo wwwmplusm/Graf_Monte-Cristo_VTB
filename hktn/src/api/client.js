@@ -31,6 +31,7 @@ export const getBanks = (userId) => {
     return fetchJson(`/api/banks${query}`);
 };
 export const startConsent = (payload) => fetchJson('/api/consents/start', { method: 'POST', body: JSON.stringify(payload) });
+export const startProductConsent = (payload) => fetchJson('/api/consent/initiate/product', { method: 'POST', body: JSON.stringify(payload) });
 export const pollConsent = (params) => {
     const query = new URLSearchParams({
         user_id: params.user_id,
