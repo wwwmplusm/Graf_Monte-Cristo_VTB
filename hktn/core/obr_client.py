@@ -666,6 +666,55 @@ class OBRAPIClient:
             except ValueError:
                 return None
 
+    @staticmethod
+    def _safe_str(value: Any) -> Optional[str]:
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    @staticmethod
+    def _normalize_merchant_payload(raw: Any) -> Dict[str, Optional[str]]:
+        if not isinstance(raw, dict):
+            return {}
+        merchant = {
+            "merchantId": OBRAPIClient._safe_str(
+                raw.get("merchantId") or raw.get("id") or raw.get("merchant_id")
+            ),
+            "name": OBRAPIClient._safe_str(raw.get("name")),
+            "mccCode": OBRAPIClient._safe_str(raw.get("mccCode") or raw.get("mcc")),
+            "category": OBRAPIClient._safe_str(raw.get("category")),
+            "city": OBRAPIClient._safe_str(raw.get("city")),
+            "country": OBRAPIClient._safe_str(raw.get("country")),
+            "address": OBRAPIClient._safe_str(raw.get("address") or raw.get("street")),
+        }
+        return {key: value for key, value in merchant.items() if value}
+
+    @staticmethod
+    def _normalize_card_payload(raw: Any) -> Dict[str, Optional[str]]:
+        if not isinstance(raw, dict):
+            return {}
+        card = {
+            "maskedPan": OBRAPIClient._safe_str(raw.get("maskedPan") or raw.get("masked_pan")),
+            "type": OBRAPIClient._safe_str(raw.get("type") or raw.get("scheme")),
+            "name": OBRAPIClient._safe_str(raw.get("name")),
+        }
+        return {key: value for key, value in card.items() if value}
+
+    @staticmethod
+    def _extract_bank_transaction_code(raw: Any) -> Optional[str]:
+        if raw is None:
+            return None
+        if isinstance(raw, str):
+            return OBRAPIClient._safe_str(raw)
+        if isinstance(raw, dict):
+            code = OBRAPIClient._safe_str(raw.get("code"))
+            subcode = OBRAPIClient._safe_str(raw.get("subCode") or raw.get("subcode"))
+            if code and subcode:
+                return f"{code}:{subcode}"
+            return code or subcode
+        return None
+
     def _to_transaction_model(self, raw: Any) -> Optional[Transaction]:
         if not isinstance(raw, dict):
             return None
@@ -718,6 +767,24 @@ class OBRAPIClient:
             or raw.get("narration")
             or raw.get("statementDescription")
         )
+        transaction_information = raw.get("transactionInformation")
+
+        merchant_payload = self._normalize_merchant_payload(raw.get("merchant"))
+        mcc_code = merchant_payload.get("mccCode") or self._safe_str(raw.get("mccCode") or raw.get("mcc_code"))
+
+        bank_transaction_code = self._extract_bank_transaction_code(
+            raw.get("bankTransactionCode") or raw.get("bank_transaction_code")
+        )
+
+        transaction_location = raw.get("transactionLocation") or raw.get("transaction_location") or raw.get("location")
+        if not isinstance(transaction_location, dict):
+            transaction_location = {}
+
+        card_payload = self._normalize_card_payload(
+            raw.get("card") or raw.get("cardInstrument") or raw.get("card_instrument")
+        )
+
+        category = self._safe_str(raw.get("category") or raw.get("transactionCategory") or raw.get("categoryCode"))
 
         return Transaction(
             transactionId=str(transaction_id),
@@ -725,4 +792,12 @@ class OBRAPIClient:
             currency=str(currency),
             description=description,
             bookingDate=booking_dt.date(),
+            creditDebitIndicator=self._safe_str(indicator),
+            bankTransactionCode=bank_transaction_code,
+            merchant=merchant_payload or {},
+            mccCode=mcc_code,
+            category=category,
+            transactionInformation=transaction_information,
+            transactionLocation=transaction_location or {},
+            card=card_payload or {},
         )

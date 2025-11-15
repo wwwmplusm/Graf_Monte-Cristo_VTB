@@ -10,10 +10,12 @@ from fastapi import HTTPException, status
 from hktn.core.analytics_engine import (
     build_financial_portrait,
     calculate_safe_to_spend,
+    derive_obligations,
     estimate_goal_probability,
     extract_recurring_events,
     rank_credits,
     run_analysis_with_details,
+    _extract_account_balance,
 )
 from hktn.core.data_models import Transaction
 from hktn.core.database import (
@@ -75,11 +77,20 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         fetch_bank_credits(consent.bank_id, consent.consent_id, user_id)
         for consent in approved_consents
     ]
+    account_tasks = [
+        fetch_bank_accounts_with_consent(consent.bank_id, consent.consent_id, user_id)
+        for consent in approved_consents
+    ]
 
-    tx_results, credit_results = await asyncio.gather(asyncio.gather(*tx_tasks), asyncio.gather(*credit_tasks))
+    tx_results, credit_results, account_results = await asyncio.gather(
+        asyncio.gather(*tx_tasks),
+        asyncio.gather(*credit_tasks),
+        asyncio.gather(*account_tasks),
+    )
 
     all_transactions: List[Transaction] = []
     all_credits: List[Dict[str, Any]] = []
+    all_accounts: List[Dict[str, Any]] = []
     bank_statuses: Dict[str, Dict[str, str]] = {}
 
     for res in tx_results:
@@ -103,13 +114,27 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
                 entry["status"] = "partial_error"
             entry["message"] += f"; credits failed: {res['message']}"
 
+    for res in account_results:
+        entry = bank_statuses.setdefault(
+            res["bank_id"],
+            {"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]},
+        )
+        if res["status"] == "ok":
+            all_accounts.extend(res.get("accounts") or [])
+        else:
+            if entry["status"] == "ok":
+                entry["status"] = "partial_error"
+            suffix = f"accounts failed: {res['message']}"
+            entry["message"] = f"{entry.get('message', '')}; {suffix}" if entry.get("message") else suffix
+
     if not all_transactions:
         raise HTTPException(
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
             detail="Could not fetch any transactions.",
         )
 
-    current_balance = 100_000  # TODO: derive from balances once available
+    current_balance = sum(_extract_account_balance(account) for account in all_accounts)
+
     (
         analysis_result,
         trajectories,
@@ -123,34 +148,41 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         0,
     )
 
-    obligations = [
-        {"amount": credit.get("min_payment", 0) or 0, "due_date": credit.get("next_payment_date")}
-        for credit in all_credits
-    ]
+    obligations = derive_obligations(all_credits, event_profiles)
     safe_to_spend = calculate_safe_to_spend(obligations, trajectories, forecast_dates)
     goal_probability = estimate_goal_probability(user_goal, trajectories, forecast_dates, obligations, event_profiles)
     recurring_events = extract_recurring_events(event_profiles)
 
     total_debt = sum(float(credit.get("balance", 0) or 0) for credit in all_credits)
     monthly_income = sum(float(event.get("mu_amount", 0) or 0) for event in event_profiles if event.get("is_income"))
-    monthly_payments = sum(float(credit.get("min_payment", 0) or 0) for credit in all_credits)
+    monthly_payments = sum(float(obligation.get("amount") or 0.0) for obligation in obligations)
     health_score = 0
     if monthly_income > 0:
         debt_to_income_ratio = monthly_payments / monthly_income if monthly_income else 0
         health_score = max(0, int((1 - debt_to_income_ratio * 2) * 100))
 
-    upcoming_payments = sorted(
-        [
-            {
-                "name": credit.get("name") or "Payment",
-                "amount": credit.get("min_payment") or credit.get("payment") or 0.0,
-                "due_date": credit.get("next_payment_date"),
-            }
-            for credit in all_credits
-            if credit.get("next_payment_date")
-        ],
-        key=lambda item: item["due_date"],
-    )[:5]
+    upcoming_payloads: List[Dict[str, Any]] = []
+    for obligation in obligations:
+        due_date = obligation.get("due_date")
+        if not isinstance(due_date, date):
+            continue
+        payload = {
+            "name": obligation.get("label") or "Payment",
+            "amount": obligation.get("amount"),
+            "due_date": due_date,
+            "source": obligation.get("source"),
+            "mcc_code": obligation.get("mcc_code"),
+            "category": obligation.get("category"),
+            "merchant_name": obligation.get("merchant_name"),
+            "bank_transaction_code": obligation.get("bank_transaction_code"),
+            "frequency_days": obligation.get("frequency_days"),
+        }
+        upcoming_payloads.append(payload)
+
+    upcoming_payloads.sort(key=lambda item: item["due_date"])
+    upcoming_payments = [
+        {**payload, "due_date": payload["due_date"].isoformat()} for payload in upcoming_payloads[:5]
+    ]
 
     return {
         "analysis": analysis_result.dict(),
@@ -163,6 +195,7 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         "monthly_payments": monthly_payments,
         "health_score": health_score,
         "upcoming_payments": upcoming_payments,
+        "current_balance": round(current_balance, 2),
     }
 
 
@@ -256,10 +289,6 @@ async def build_financial_portrait_view(req: FinancialPortraitRequest) -> Dict[s
     portrait["transactions_sample"] = all_transactions[:100]
     products_by_bank = group_products_by_bank(portrait["accounts"], portrait["credits"])
     portrait["products_by_bank"] = apply_consent_flags(products_by_bank, product_consents)
-    obligations = [
-        {"amount": credit.get("min_payment") or credit.get("payment") or 0.0, "due_date": credit.get("next_payment_date")}
-        for credit in portrait["credits"]
-    ]
     (
         portrait_analysis,
         portrait_trajectories,
@@ -273,6 +302,7 @@ async def build_financial_portrait_view(req: FinancialPortraitRequest) -> Dict[s
         0,
     )
     recurring_source = portrait.get("discovered_events") or portrait_event_profiles
+    obligations = derive_obligations(portrait["credits"], recurring_source)
     goal_probability = estimate_goal_probability(
         user_goal,
         portrait_trajectories,

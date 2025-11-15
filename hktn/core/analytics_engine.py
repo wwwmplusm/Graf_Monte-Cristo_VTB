@@ -47,6 +47,15 @@ def _safe_float(value: Any) -> Optional[float]:
     return None
 
 
+def _stringify(value: Any) -> str:
+    """Return a trimmed string representation for feature engineering."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    return str(value).strip()
+
+
 def estimate_goal_probability(
     goal: UserGoal,
     trajectories: np.ndarray,
@@ -146,6 +155,16 @@ def extract_recurring_events(
         while next_date <= today:
             next_date += timedelta(days=frequency_days)
 
+        metadata = profile.get("metadata") or {}
+        mcc_code = profile.get("mcc_code") or metadata.get("dominant_mcc_code")
+        category = (
+            profile.get("merchant_category")
+            or metadata.get("merchant_category")
+            or metadata.get("transaction_category")
+        )
+        merchant_name = profile.get("merchant_name") or metadata.get("dominant_merchant")
+        source = profile.get("source") or ("recurring_income" if is_income else "recurring_debit")
+
         events.append(
             {
                 "name": label,
@@ -153,6 +172,12 @@ def extract_recurring_events(
                 "is_income": is_income,
                 "next_date": next_date.isoformat(),
                 "frequency_days": frequency_days,
+                "mcc_code": mcc_code,
+                "category": category,
+                "merchant_name": merchant_name,
+                "bank_transaction_code": profile.get("bank_transaction_code")
+                or metadata.get("dominant_bank_transaction_code"),
+                "source": source,
             }
         )
 
@@ -216,8 +241,81 @@ def _create_obligations_from_credits(credits: Sequence[Dict[str, Any]]) -> List[
                 "amount": round(payment_amount, 2),
                 "due_date": _parse_payment_date(credit.get("next_payment_date")),
                 "source": "credit_agreement",
+                "mcc_code": credit.get("mccCode"),
+                "merchant_name": credit.get("name"),
+                "category": credit.get("category") or credit.get("type"),
+                "bank_transaction_code": None,
+                "frequency_days": 30,
             }
         )
+    return obligations
+
+
+def _event_to_obligation(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Convert a debit event profile into a deterministic obligation payload."""
+    if event.get("is_income"):
+        return None
+
+    amount = abs(float(event.get("mu_amount") or 0.0))
+    if amount <= 0:
+        return None
+
+    sample_size = int(event.get("sample_size") or 0)
+    if sample_size < 2:
+        return None
+
+    coherence = float(event.get("coherence") or 0.0)
+    metadata = event.get("metadata") or {}
+    mcc_code = event.get("mcc_code") or metadata.get("dominant_mcc_code")
+    mcc_consistency = float(metadata.get("mcc_consistency") or 0.0)
+
+    if coherence < 0.55 and mcc_consistency < 0.5:
+        return None
+
+    frequency_days = max(int(round(event.get("frequency_days") or 30)), 1)
+    last_date = event.get("last_date")
+    if isinstance(last_date, pd.Timestamp):
+        last_date = last_date.date()
+    elif isinstance(last_date, datetime):
+        last_date = last_date.date()
+    if not isinstance(last_date, date):
+        last_date = date.today()
+
+    next_due = last_date
+    while next_due <= date.today():
+        next_due += timedelta(days=frequency_days)
+
+    label = (
+        metadata.get("dominant_merchant")
+        or metadata.get("merchant_category")
+        or event.get("label")
+        or "Recurring debit"
+    )
+
+    return {
+        "label": label,
+        "amount": round(amount, 2),
+        "due_date": next_due,
+        "source": "recurring_debit",
+        "mcc_code": mcc_code,
+        "merchant_name": metadata.get("dominant_merchant"),
+        "category": metadata.get("merchant_category") or metadata.get("transaction_category"),
+        "bank_transaction_code": event.get("bank_transaction_code"),
+        "cluster_id": event.get("cluster_id"),
+        "frequency_days": frequency_days,
+    }
+
+
+def derive_obligations(
+    credits: Sequence[Dict[str, Any]],
+    event_profiles: Sequence[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Combine credit-derived obligations with recurring debit events."""
+    obligations = _create_obligations_from_credits(credits)
+    for event in event_profiles or []:
+        obligation = _event_to_obligation(event)
+        if obligation:
+            obligations.append(obligation)
     return obligations
 
 
@@ -335,7 +433,33 @@ def _prepare_transactions_df(transactions: Sequence[Transaction]) -> pd.DataFram
     df = pd.DataFrame([tx.model_dump() for tx in transactions])
     df["bookingDate"] = pd.to_datetime(df["bookingDate"])
     df = df.sort_values("bookingDate").reset_index(drop=True)
+    for field in ("description", "transactionInformation", "creditDebitIndicator", "bankTransactionCode", "mccCode", "category"):
+        if field not in df:
+            df[field] = None
+    if "merchant" not in df:
+        df["merchant"] = [{} for _ in range(len(df))]
+
     df["description"] = df["description"].fillna("")
+    df["transactionInformation"] = df["transactionInformation"].fillna("")
+    merchant_series = df["merchant"].apply(lambda value: value if isinstance(value, dict) else {})
+    df["merchantName"] = merchant_series.apply(lambda merchant: _stringify(merchant.get("name")))
+    df["merchantCategory"] = merchant_series.apply(lambda merchant: _stringify(merchant.get("category")))
+    df["merchantMcc"] = merchant_series.apply(lambda merchant: _stringify(merchant.get("mccCode") or merchant.get("mcc")))
+
+    empty_mask = df["description"].str.strip() == ""
+    df.loc[empty_mask, "description"] = df.loc[empty_mask, "transactionInformation"]
+    empty_mask = df["description"].str.strip() == ""
+    df.loc[empty_mask, "description"] = df.loc[empty_mask, "merchantName"]
+    df["description"] = df["description"].fillna("")
+
+    df["bankTransactionCode"] = df["bankTransactionCode"].apply(_stringify)
+    df["creditDebitIndicator"] = df["creditDebitIndicator"].apply(_stringify)
+    df["category"] = df["category"].apply(_stringify)
+    df["mcc_code"] = df["mccCode"]
+    df.loc[df["mcc_code"].isna(), "mcc_code"] = df.loc[df["mcc_code"].isna(), "merchantMcc"]
+    df["mcc_code"] = df["mcc_code"].apply(lambda value: _stringify(value) or None)
+    df["has_mcc"] = df["mcc_code"].notna()
+
     df["normalized_description"] = df["description"].apply(_normalize_description)
     df["day_of_month"] = df["bookingDate"].dt.day.astype(float)
     df["is_income"] = (df["amount"] >= 0).astype(int)
@@ -439,6 +563,34 @@ def _profile_events(df_with_clusters: pd.DataFrame) -> Tuple[List[Dict[str, obje
         last_date = cluster_df["bookingDate"].iloc[-1].date()
         dominant_sign = cluster_df["is_income"].mean()
 
+        mcc_counter = Counter(code for code in cluster_df["mcc_code"].tolist() if code)
+        bank_code_counter = Counter(code for code in cluster_df["bankTransactionCode"].tolist() if code)
+        merchant_counter = Counter(name for name in cluster_df["merchantName"].tolist() if name)
+        merchant_category_counter = Counter(cat for cat in cluster_df["merchantCategory"].tolist() if cat)
+        txn_category_counter = Counter(cat for cat in cluster_df["category"].tolist() if cat)
+
+        dominant_mcc = mcc_counter.most_common(1)[0][0] if mcc_counter else None
+        dominant_bank_code = bank_code_counter.most_common(1)[0][0] if bank_code_counter else None
+        dominant_merchant = merchant_counter.most_common(1)[0][0] if merchant_counter else None
+        dominant_merchant_category = (
+            merchant_category_counter.most_common(1)[0][0] if merchant_category_counter else None
+        )
+        dominant_txn_category = txn_category_counter.most_common(1)[0][0] if txn_category_counter else None
+        total_mcc_samples = sum(mcc_counter.values())
+        mcc_consistency = (
+            mcc_counter[dominant_mcc] / total_mcc_samples if dominant_mcc and total_mcc_samples else 0.0
+        )
+
+        metadata = {
+            "dominant_mcc_code": dominant_mcc,
+            "dominant_bank_transaction_code": dominant_bank_code,
+            "dominant_merchant": dominant_merchant,
+            "merchant_category": dominant_merchant_category,
+            "transaction_category": dominant_txn_category,
+            "mcc_consistency": mcc_consistency,
+        }
+        source_label = "income_event" if bool(dominant_sign >= 0.5) else "expense_event"
+
         event_profiles.append(
             {
                 "cluster_id": int(cluster_id),
@@ -453,6 +605,13 @@ def _profile_events(df_with_clusters: pd.DataFrame) -> Tuple[List[Dict[str, obje
                 "coherence": coherence,
                 "sample_size": len(cluster_df),
                 "descriptions": descriptions,
+                "mcc_code": dominant_mcc,
+                "merchant_name": dominant_merchant,
+                "merchant_category": dominant_merchant_category,
+                "bank_transaction_code": dominant_bank_code,
+                "has_mcc": bool(dominant_mcc),
+                "metadata": metadata,
+                "source": source_label,
             }
         )
 
@@ -738,7 +897,7 @@ def build_financial_portrait(
     df_with_clusters = _discover_events(df)
     event_profiles, noise_profile = _profile_events(df_with_clusters)
 
-    obligations = _create_obligations_from_credits(credits)
+    obligations = derive_obligations(credits, event_profiles)
     current_balance = sum(_extract_account_balance(acc) for acc in accounts or [])
     daily_s2s = calculate_daily_s2s(current_balance, event_profiles, obligations, user_goal)
 
@@ -753,7 +912,7 @@ def build_financial_portrait(
     upcoming_payments.sort(key=lambda item: item["due_date"])
 
     total_debt = sum(float(c.get("balance") or c.get("principal") or 0.0) for c in credits or [])
-    total_monthly_payments = sum(obligation["amount"] for obligation in obligations)
+    total_monthly_payments = sum(float(obligation.get("amount") or 0.0) for obligation in obligations)
 
     upcoming_payments_payload = [
         {
@@ -763,6 +922,11 @@ def build_financial_portrait(
             if isinstance(obligation.get("due_date"), date)
             else obligation.get("due_date"),
             "source": obligation.get("source"),
+            "mcc_code": obligation.get("mcc_code"),
+            "category": obligation.get("category"),
+            "merchant_name": obligation.get("merchant_name"),
+            "bank_transaction_code": obligation.get("bank_transaction_code"),
+            "frequency_days": obligation.get("frequency_days"),
         }
         for obligation in upcoming_payments
     ]

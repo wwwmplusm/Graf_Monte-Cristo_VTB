@@ -2,19 +2,27 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 
 class Transaction(BaseModel):
-    """Represents a single bank transaction."""
+    """Represents a single bank transaction with optional merchant context."""
 
     transactionId: str
     amount: float
     currency: str
     description: Optional[str] = None
     bookingDate: date
+    creditDebitIndicator: Optional[str] = None
+    bankTransactionCode: Optional[str] = None
+    merchant: Dict[str, Optional[str]] = Field(default_factory=dict)
+    mccCode: Optional[str] = None
+    category: Optional[str] = None
+    transactionInformation: Optional[str] = None
+    transactionLocation: Dict[str, Any] = Field(default_factory=dict)
+    card: Dict[str, Optional[str]] = Field(default_factory=dict)
 
 
 class Account(BaseModel):
@@ -40,4 +48,3 @@ class AnalysisResult(BaseModel):
     success_probability_percent: int
     recommendation: str
     color_zone: str = Field(description="green, yellow, or red")
-
