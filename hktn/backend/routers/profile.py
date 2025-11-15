@@ -4,7 +4,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from core.database import save_user_profile
+from hktn.core.database import save_user_profile
 
 from ..schemas import GoalRequest
 

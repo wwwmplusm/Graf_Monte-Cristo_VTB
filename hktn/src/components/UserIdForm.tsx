@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-export const USER_ID_PATTERN = /^demo-[a-z0-9]{3,}$/i;
+// ИЗМЕНЕНО: Новое регулярное выражение для формата team260-X (где X от 1 до 10)
+export const USER_ID_PATTERN = /^team260-([1-9]|10)$/i;
 
 export const validateUserId = (value: string): boolean => USER_ID_PATTERN.test(value.trim());
 
@@ -18,7 +19,8 @@ export const UserIdForm: React.FC<UserIdFormProps> = ({ defaultValue = '', onSub
     event.preventDefault();
     const trimmed = value.trim();
     if (!validateUserId(trimmed)) {
-      setError('ID должен быть в формате demo-XXX');
+      // ИЗМЕНЕНО: Новый текст ошибки
+      setError('ID должен быть в формате team260-X, где X от 1 до 10');
       return;
     }
     setError(null);
@@ -27,14 +29,14 @@ export const UserIdForm: React.FC<UserIdFormProps> = ({ defaultValue = '', onSub
 
   return (
     <form className="card" onSubmit={handleSubmit}>
-      <h2>Введите демо-ID</h2>
-      <p>Используйте формат demo-123. ID хранится локально и нужен для связи шагов.</p>
+      <h2>Введите ID команды</h2>
+      <p>Используйте формат team260-1. ID хранится локально и нужен для связи шагов.</p>
       <label htmlFor="user-id-input">User ID</label>
       <input
         id="user-id-input"
         value={value}
-        onChange={(event) => setValue(event.target.value)}
-        placeholder="demo-123"
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="team260-1"
         className="text-input"
         disabled={isSubmitting}
       />

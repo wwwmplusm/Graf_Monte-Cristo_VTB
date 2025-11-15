@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from core.analytics_engine import UserGoal
+from hktn.core.analytics_engine import UserGoal
 
 VALID_GOAL_PACES = {"conservative", "optimal", "fast"}
 

@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from fastapi import HTTPException, status
 
-from core.database import add_bank_status_log, find_approved_consents
-from core.obr_client import OBRAPIClient
+from hktn.core.database import add_bank_status_log, find_approved_consents
+from hktn.core.obr_client import OBRAPIClient
 
 from ..config import BankConfig, settings
 from ..state import api_cache

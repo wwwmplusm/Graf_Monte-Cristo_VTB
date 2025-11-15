@@ -1,13 +1,14 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// Я убрал root: 'src', как мы и договаривались
 export default defineConfig({
-  root: 'src',
   plugins: [react()],
   server: {
     port: 5173,
   },
-  test: {
+  test: { // Теперь эта секция валидна!
     globals: true,
     environment: 'jsdom',
     setupFiles: './test/setup.ts',

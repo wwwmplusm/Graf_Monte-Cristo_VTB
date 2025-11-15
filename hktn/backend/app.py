@@ -5,8 +5,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from core.database import init_db
-
+from hktn.core.database import init_db
 from .config import settings
 from .routers import analytics, banks, consents, onboarding, profile
 

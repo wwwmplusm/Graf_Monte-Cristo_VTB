@@ -7,7 +7,7 @@ from typing import Any, Dict
 
 from fastapi import HTTPException, status
 
-from core.database import (
+from hktn.core.database import (
     commit_onboarding_session,
     find_approved_consents,
     get_latest_onboarding_session,

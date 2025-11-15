@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Sequence
 
 from fastapi import HTTPException, status
 
-from core.analytics_engine import (
+from hktn.core.analytics_engine import (
     build_financial_portrait,
     calculate_safe_to_spend,
     estimate_goal_probability,
@@ -15,8 +15,8 @@ from core.analytics_engine import (
     rank_credits,
     run_analysis_with_details,
 )
-from core.data_models import Transaction
-from core.database import (
+from hktn.core.data_models import Transaction
+from hktn.core.database import (
     find_approved_consents,
     get_product_consents_for_user,
     get_recent_bank_status_logs,

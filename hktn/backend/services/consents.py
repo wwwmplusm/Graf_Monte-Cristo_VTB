@@ -5,13 +5,13 @@ from typing import Any, Dict
 
 from fastapi import HTTPException, status
 
-from core.database import (
+from hktn.core.database import (
     get_consent_by_request_id,
     save_consent,
     update_consent_from_request,
     update_consent_status,
 )
-from core.obr_client import AUTHORIZED_CONSENT_STATUSES, FAILED_CONSENT_STATUSES
+from hktn.core.obr_client import AUTHORIZED_CONSENT_STATUSES, FAILED_CONSENT_STATUSES
 
 from ..schemas import ConsentInitiateRequest
 from .banking import bank_client, get_bank_config
