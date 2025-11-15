@@ -41,7 +41,15 @@ api_retry = retry(
 AUTHORIZED_CONSENT_STATUSES = {"Authorized", "AuthorizedConsent", "Active", "Approved"}
 PENDING_CONSENT_STATUSES = {"AwaitingAuthorization", "Pending", "AwaitingApproval"}
 FAILED_CONSENT_STATUSES = {"Rejected", "Expired", "Revoked", "Cancelled"}
+_AUTHORIZED_STATUS_SET = {item.lower() for item in AUTHORIZED_CONSENT_STATUSES}
+_FAILED_STATUS_SET = {item.lower() for item in FAILED_CONSENT_STATUSES}
 RSA_JWT_ALGS = {"RS256", "RS384", "RS512"}
+
+
+def _normalize_status_value(value: Any) -> str:
+    if value is None:
+        return ""
+    return str(value).strip()
 
 
 @dataclass
@@ -318,17 +326,30 @@ class OBRAPIClient:
                 data = response.json()
                 consent_id = data.get("consent_id") or self._jget(data, ["data", "consentId"])
                 request_id = data.get("request_id") or self._jget(data, ["data", "requestId"])
-                status = data.get("status") or self._jget(data, ["data", "status"]) or "unknown"
+                status_raw = data.get("status") or self._jget(data, ["data", "status"])
+                approval_url = self._jget(data, ["links", "consentApproval"])
 
                 # SBank может вернуть request_id вместо consent_id
                 final_id = consent_id or request_id
                 if final_id:
+                    normalized_status = _normalize_status_value(status_raw).lower()
+                    auto_approved = bool(
+                        data.get("auto_approved")
+                        or (normalized_status and normalized_status in _AUTHORIZED_STATUS_SET)
+                    )
+                    if not auto_approved and not approval_url and normalized_status not in _FAILED_STATUS_SET:
+                        auto_approved = True
+                        status_raw = "Approved"
+
+                    status_value = status_raw or ("Approved" if auto_approved else "Pending")
+
                     logger.info("Product consent initiated successfully with payload: %s", body)
                     return ConsentInitResult(
                         consent_id=final_id,
-                        status=status,
-                        auto_approved=status in AUTHORIZED_CONSENT_STATUSES,
-                        approval_url=self._jget(data, ["links", "consentApproval"]),
+                        status=status_value,
+                        auto_approved=auto_approved,
+                        approval_url=approval_url,
+                        request_id=request_id,
                     )
             except httpx.RequestError as e:  # noqa: PERF203
                 logger.warning("Request failed for product consent payload %s: %s", body, e)
