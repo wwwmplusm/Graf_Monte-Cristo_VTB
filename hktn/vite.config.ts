@@ -11,6 +11,6 @@ export default defineConfig({
   test: { // Теперь эта секция валидна!
     globals: true,
     environment: 'jsdom',
-    setupFiles: './test/setup.ts',
+    setupFiles: './src/test/setup.ts',
   },
 });

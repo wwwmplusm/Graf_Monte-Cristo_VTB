@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getDashboard, getFinancialPortrait } from '../api/client';
 import { useNotifications } from '../state/notifications';
 import { useUser } from '../state/useUser';
-import type { DashboardResponse, RecurringEvent, UpcomingPayment } from '../types/dashboard';
 
 const currencyFormatter = new Intl.NumberFormat('ru-RU', {
   style: 'currency',
@@ -10,14 +9,14 @@ const currencyFormatter = new Intl.NumberFormat('ru-RU', {
   maximumFractionDigits: 0,
 });
 
-const formatCurrency = (value?: number | null) => {
+const formatCurrency = (value) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return '—';
   }
   return currencyFormatter.format(value);
 };
 
-const formatDate = (value?: string | null) => {
+const formatDate = (value) => {
   if (!value) return '—';
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
@@ -29,13 +28,7 @@ const formatDate = (value?: string | null) => {
   });
 };
 
-const SOURCE_COPY: Record<
-  string,
-  {
-    label: string;
-    tone: 'credit' | 'income' | 'debit' | 'neutral';
-  }
-> = {
+const SOURCE_COPY = {
   credit_agreement: { label: 'Кредит', tone: 'credit' },
   recurring_debit: { label: 'Регулярный расход', tone: 'debit' },
   expense_event: { label: 'Расход (AI)', tone: 'debit' },
@@ -43,18 +36,9 @@ const SOURCE_COPY: Record<
   income_event: { label: 'Доход (AI)', tone: 'income' },
 };
 
-const sanitizeSourceKey = (source: string) => source.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+const sanitizeSourceKey = (source) => source.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
 
-type MetadataProps = {
-  mcc?: string | null;
-  category?: string | null;
-  merchantName?: string | null;
-  bankTransactionCode?: string | null;
-  source?: string | null;
-  isIncome?: boolean;
-};
-
-const SourceChip: React.FC<{ source?: string | null }> = ({ source }) => {
+const SourceChip = ({ source }) => {
   if (!source) return null;
   const descriptor = SOURCE_COPY[source] ?? { label: source.replace(/_/g, ' '), tone: 'neutral' };
   const chipClass = `chip chip--source chip--${descriptor.tone} chip--${sanitizeSourceKey(source)}`;
@@ -65,7 +49,7 @@ const SourceChip: React.FC<{ source?: string | null }> = ({ source }) => {
   );
 };
 
-const MetadataBadges: React.FC<MetadataProps> = ({ mcc, category, merchantName, bankTransactionCode, source, isIncome }) => {
+const MetadataBadges = ({ mcc, category, merchantName, bankTransactionCode, source, isIncome }) => {
   const merchantLabel = merchantName || (isIncome ? 'Источник дохода не опознан' : 'Неизвестный торговец');
   return (
     <div className="metadata-badges" aria-label="Дополнительные атрибуты события">
@@ -93,7 +77,7 @@ const MetadataBadges: React.FC<MetadataProps> = ({ mcc, category, merchantName, 
   );
 };
 
-const RecurringEventRow: React.FC<{ event: RecurringEvent }> = ({ event }) => (
+const RecurringEventRow = ({ event }) => (
   <li className={`event-row ${event.is_income ? 'event-row--income' : 'event-row--expense'}`}>
     <div className="event-row__header">
       <div>
@@ -126,7 +110,7 @@ const RecurringEventRow: React.FC<{ event: RecurringEvent }> = ({ event }) => (
   </li>
 );
 
-const UpcomingPaymentRow: React.FC<{ payment: UpcomingPayment }> = ({ payment }) => {
+const UpcomingPaymentRow = ({ payment }) => {
   const derived = payment.source && payment.source !== 'credit_agreement';
   const amount = typeof payment.amount === 'number' ? Math.abs(payment.amount) : null;
   return (
@@ -158,26 +142,17 @@ const UpcomingPaymentRow: React.FC<{ payment: UpcomingPayment }> = ({ payment })
   );
 };
 
-type PortraitData = {
-  recurring_events?: RecurringEvent[];
-  transactions_sample?: Array<Record<string, any>>;
-};
-
-type DashboardPageProps = {
-  initialData?: DashboardResponse | null;
-};
-
-export const DashboardPage: React.FC<DashboardPageProps> = ({ initialData = null }) => {
+export const DashboardPage = ({ initialData = null }) => {
   const { userId } = useUser();
   const { notifyError } = useNotifications();
-  const [data, setData] = useState<DashboardResponse | null>(initialData);
+  const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(false);
   const [portraitOpen, setPortraitOpen] = useState(false);
   const [portraitLoading, setPortraitLoading] = useState(false);
-  const [portrait, setPortrait] = useState<PortraitData | null>(null);
-  const [sourceFilter, setSourceFilter] = useState<string>('all');
-  const [mccFilter, setMccFilter] = useState<string>('all');
-  const [sortMode, setSortMode] = useState<'due_date' | 'amount'>('due_date');
+  const [portrait, setPortrait] = useState(null);
+  const [sourceFilter, setSourceFilter] = useState('all');
+  const [mccFilter, setMccFilter] = useState('all');
+  const [sortMode, setSortMode] = useState('due_date');
 
   useEffect(() => {
     if (!userId || initialData) {
@@ -222,7 +197,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialData = null
     return parsed
       .map((item) => ({
         ...item,
-        due_date: item.due_date ?? (item as Record<string, any>).date ?? '',
+        due_date: item.due_date ?? item.date ?? '',
       }))
       .sort((a, b) => {
         const aTime = a.due_date ? new Date(a.due_date).getTime() : Number.POSITIVE_INFINITY;
@@ -233,7 +208,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialData = null
 
   const recurringEvents = data?.recurring_events ?? [];
   const uniqueSources = useMemo(() => {
-    const values = new Set<string>();
+    const values = new Set();
     upcomingPayments.forEach((item) => {
       if (item.source) values.add(item.source);
     });
@@ -241,7 +216,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialData = null
   }, [upcomingPayments]);
 
   const uniqueMccCodes = useMemo(() => {
-    const values = new Set<string>();
+    const values = new Set();
     upcomingPayments.forEach((item) => {
       if (item.mcc_code) values.add(item.mcc_code);
     });
@@ -285,7 +260,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialData = null
     ? Math.round((portraitEvents.filter((event) => Boolean(event.mcc_code)).length / portraitEvents.length) * 100)
     : 0;
   const merchantClusters = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map();
     portraitEvents.forEach((event) => {
       if (!event.merchant_name) return;
       const key = event.merchant_name.toLowerCase();
@@ -296,8 +271,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialData = null
       .sort((a, b) => b.count - a.count);
   }, [portraitEvents]);
 
-  const renderTransactionsForEvent = (event: RecurringEvent) => {
-    const matches = portraitTransactions.filter((tx: Record<string, any>) => {
+  const renderTransactionsForEvent = (event) => {
+    const matches = portraitTransactions.filter((tx) => {
       const txMerchant = tx.merchant?.name || tx.description;
       const txMcc = tx.mccCode || tx.merchant?.mccCode;
       const merchantMatch =
@@ -421,7 +396,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialData = null
             </label>
             <label>
               Сортировка
-              <select value={sortMode} onChange={(event) => setSortMode(event.target.value as 'due_date' | 'amount')}>
+              <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
                 <option value="due_date">По дате</option>
                 <option value="amount">По сумме</option>
               </select>
@@ -535,3 +510,5 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialData = null
     </div>
   );
 };
+
+export default DashboardPage;

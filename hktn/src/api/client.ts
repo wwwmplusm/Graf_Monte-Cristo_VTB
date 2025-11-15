@@ -1,3 +1,4 @@
+import type { DashboardResponse } from '../types/dashboard';
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
 type FetchOptions = RequestInit & { skipAuth?: boolean };
@@ -82,7 +83,7 @@ export const commitOnboarding = (payload: { user_id: string }) =>
   fetchJson('/api/onboarding/commit', { method: 'POST', body: JSON.stringify(payload) });
 
 export const getDashboard = (userId: string) =>
-  fetchJson(`/api/dashboard?user_id=${encodeURIComponent(userId)}`);
+  fetchJson<DashboardResponse>(`/api/dashboard?user_id=${encodeURIComponent(userId)}`);
 
 export const getCredits = (userId: string) =>
   fetchJson(`/api/credits?user_id=${encodeURIComponent(userId)}`);
@@ -90,6 +91,6 @@ export const getCredits = (userId: string) =>
 export const getFinancialPortrait = (payload: { user_id: string }) =>
   fetchJson('/api/financial-portrait', { method: 'POST', body: JSON.stringify(payload) });
 
-export type DashboardResponse = Awaited<ReturnType<typeof getDashboard>>;
+export type { DashboardResponse };
 
 export { fetchJson };
