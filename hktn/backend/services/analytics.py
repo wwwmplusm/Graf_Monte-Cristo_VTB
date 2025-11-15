@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import date, timedelta
-from typing import Any, Dict, List, Sequence
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional, Sequence
 
 from fastapi import HTTPException, status
 
@@ -16,6 +16,7 @@ from hktn.core.analytics_engine import (
     rank_credits,
     run_analysis_with_details,
     _extract_account_balance,
+    _derive_event_label,
 )
 from hktn.core.data_models import Transaction
 from hktn.core.database import (
@@ -32,6 +33,95 @@ from .goals import compose_user_goal
 from .products import apply_consent_flags, build_account_product, build_credit_product, group_products_by_bank
 
 logger = logging.getLogger("finpulse.backend.analytics")
+
+
+def _parse_iso_date(value: Any) -> Optional[date]:
+    if isinstance(value, date):
+        return value
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, str) and value:
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            try:
+                return datetime.fromisoformat(value).date()
+            except ValueError:
+                return None
+    return None
+
+
+def _generate_budget_breakdown(
+    spendable_total: float,
+    event_profiles: Sequence[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Distribute spendable cash across recurring spending categories."""
+    if spendable_total <= 0:
+        return []
+
+    category_spend: Dict[str, float] = {}
+    for event in event_profiles or []:
+        if event.get("is_income"):
+            continue
+        if event.get("source") not in (None, "expense_event", "recurring_debit"):
+            continue
+        avg_amount = abs(float(event.get("mu_amount") or 0.0))
+        if avg_amount <= 0:
+            continue
+        label = _derive_event_label(event)
+        category_spend[label] = category_spend.get(label, 0.0) + avg_amount
+
+    total_avg_spend = sum(category_spend.values())
+    if total_avg_spend <= 0:
+        return []
+
+    budget: List[Dict[str, Any]] = []
+    for category, avg_amount in category_spend.items():
+        proportion = avg_amount / total_avg_spend
+        budget.append(
+            {
+                "category": category,
+                "amount": round(spendable_total * proportion, 2),
+            }
+        )
+
+    budget.sort(key=lambda item: item["amount"], reverse=True)
+    return budget
+
+
+def _collect_cycle_events(
+    obligations: Sequence[Dict[str, Any]],
+    cycle_start_iso: Optional[str],
+    cycle_end_iso: Optional[str],
+) -> List[Dict[str, Any]]:
+    """Return obligations that fall within the current planning cycle."""
+    cycle_start = _parse_iso_date(cycle_start_iso)
+    cycle_end = _parse_iso_date(cycle_end_iso)
+    if not cycle_start or not cycle_end:
+        return []
+
+    events: List[Dict[str, Any]] = []
+    for obligation in obligations or []:
+        due_date = obligation.get("due_date")
+        due = _parse_iso_date(due_date)
+        if due is None:
+            continue
+        if not (cycle_start <= due < cycle_end):
+            continue
+        events.append(
+            {
+                "name": obligation.get("label") or "Обязательный платёж",
+                "amount": float(obligation.get("amount") or 0.0),
+                "date": due.isoformat(),
+                "is_income": False,
+                "source": obligation.get("source"),
+                "mcc_code": obligation.get("mcc_code"),
+                "merchant_name": obligation.get("merchant_name"),
+            }
+        )
+
+    events.sort(key=lambda item: item["date"])
+    return events
 
 
 def _require_consents(user_id: str) -> Sequence[StoredConsent]:
@@ -146,6 +236,8 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         logger.warning("Balance for user %s is zero despite connected accounts.", user_id)
         current_balance = 0.0
 
+    planning_start = date.today()
+
     (
         _analysis_result,
         trajectories,
@@ -155,7 +247,7 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
     ) = run_analysis_with_details(
         all_transactions,
         current_balance,
-        date.today() + timedelta(days=30),
+        planning_start + timedelta(days=30),
         0,
     )
 
@@ -174,6 +266,7 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         event_profiles,
         obligations,
         user_goal,
+        start_date=planning_start,
         return_details=True,
     )
     safe_to_spend_daily = safe_to_spend_daily_raw if balance_state == "ok" else None
@@ -184,6 +277,14 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         safe_to_spend_message = balance_message
     elif safe_to_spend_daily_raw <= 0:
         safe_to_spend_message = "Все ближайшие средства пойдут на обязательные платежи."
+
+    spendable_total = float(safe_to_spend_details.get("spendable_total") or 0.0)
+    budget_breakdown = _generate_budget_breakdown(spendable_total, event_profiles)
+    upcoming_events = _collect_cycle_events(
+        obligations,
+        safe_to_spend_details.get("cycle_start"),
+        safe_to_spend_details.get("cycle_end"),
+    )
 
     goal_probability = estimate_goal_probability(user_goal, trajectories, forecast_dates, obligations, event_profiles)
     recurring_events = extract_recurring_events(event_profiles, exclude_cluster_ids=obligation_cluster_ids)
@@ -241,6 +342,8 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
             "message": balance_message,
             "account_count": len(all_accounts),
         },
+        "upcoming_events": upcoming_events,
+        "budget_breakdown": budget_breakdown,
         "goal_probability": goal_probability,
         "upcoming_payments": upcoming_payments,
         "recurring_events": recurring_events,

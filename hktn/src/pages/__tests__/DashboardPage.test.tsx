@@ -14,9 +14,15 @@ const dashboardStub: DashboardResponse = {
     cycle_start: '2024-05-01',
     cycle_end: '2024-05-15',
     days_in_cycle: 14,
+    current_balance: 120000,
     obligations_total: 50000,
     goal_reserve: 12000,
     spendable_total: 30000,
+    next_income_event: {
+      label: 'Зарплата',
+      next_occurrence: '2024-05-15',
+      amount: 90000,
+    },
   },
   safe_to_spend_context: {
     state: 'calculated',
@@ -25,6 +31,14 @@ const dashboardStub: DashboardResponse = {
     state: 'ok',
     account_count: 2,
   },
+  upcoming_events: [
+    { name: 'Аренда', amount: 40000, date: '2024-05-05', is_income: false },
+    { name: 'Кредитная выплата', amount: 12000, date: '2024-05-12', is_income: false },
+  ],
+  budget_breakdown: [
+    { category: 'Продукты', amount: 10000 },
+    { category: 'Транспорт', amount: 5000 },
+  ],
   upcoming_payments: [
     { name: 'Аренда', amount: 40000, due_date: '2024-05-05' },
     { name: 'Кредитная выплата', amount: 12000, due_date: '2024-05-12' },
@@ -69,15 +83,16 @@ describe('DashboardPage', () => {
     await waitFor(() => expect(mockGetDashboard).toHaveBeenCalledWith('demo-user'));
     expect(screen.getByRole('heading', { name: /Safe-to-Spend/i })).toBeInTheDocument();
     expect(screen.getByText(/1.?500/)).toBeInTheDocument(); // formatted value (handles nbsp)
-    expect(screen.getByText(/82%/)).toBeInTheDocument();
+    expect(screen.getByText(/Бюджет действует до/)).toBeInTheDocument();
+    expect(screen.getByText(/Всего доступно/)).toBeInTheDocument();
   });
 
-  it('shows upcoming obligations and recurring events', async () => {
+  it('shows upcoming timeline and recurring events', async () => {
     render(<DashboardPage />);
     await waitFor(() => expect(mockGetDashboard).toHaveBeenCalled());
-    expect(screen.getByText('Аренда')).toBeInTheDocument();
-    expect(screen.getByText('Кредитная выплата')).toBeInTheDocument();
-    expect(screen.getByText('Зарплата')).toBeInTheDocument();
+    expect(screen.getAllByText('Аренда')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Кредитная выплата')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Зарплата')[0]).toBeInTheDocument();
     expect(screen.getByText('Коммунальные услуги')).toBeInTheDocument();
   });
 
@@ -100,6 +115,6 @@ describe('DashboardPage', () => {
     render(<DashboardPage />);
     await waitFor(() => expect(mockGetDashboard).toHaveBeenCalled());
     expect(screen.getByText(/Подключите счёт/)).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.getByText(/Нет оценки/)).toBeInTheDocument();
   });
 });

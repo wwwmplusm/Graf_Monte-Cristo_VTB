@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { getDashboard } from '../api/client';
 import { useUser } from '../state/useUser';
 import { useNotifications } from '../state/notifications';
-import type { DashboardResponse, RecurringEvent, UpcomingPayment } from '../types/dashboard';
+import type {
+  BudgetBreakdownItem,
+  DashboardResponse,
+  RecurringEvent,
+  UpcomingEvent,
+} from '../types/dashboard';
 
 const formatCurrency = (value?: number | null) => {
   if (value === null || value === undefined) {
@@ -30,86 +35,154 @@ const formatDate = (value?: string | null) => {
 const STSCard: React.FC<{ data: DashboardResponse }> = ({ data }) => {
   const context = data.safe_to_spend_context;
   const narrative = data.safe_to_spend_narrative;
-  const hasValue = typeof data.safe_to_spend_daily === 'number' && !Number.isNaN(data.safe_to_spend_daily);
-  const calloutTone = context?.state === 'missing_balance' ? 'warning' : 'info';
+  const hasValue = typeof data.safe_to_spend_daily === 'number' && !Number.isNaN(data.safe_to_spend_daily ?? NaN);
+  const cycleEndLabel = narrative?.cycle_end ? formatDate(narrative.cycle_end) : null;
+  const balanceValue = narrative?.current_balance ?? data.current_balance;
+  const obligationsValue = narrative?.obligations_total ?? 0;
+  const spendableValue = narrative?.spendable_total ?? null;
+  const isBalanceLow =
+    hasValue && typeof balanceValue === 'number' && typeof data.safe_to_spend_daily === 'number'
+      ? balanceValue < data.safe_to_spend_daily
+      : false;
 
   return (
     <div className="card">
       <h2>Safe-to-Spend</h2>
-      <p className="muted">Ответ на вопрос «сколько можно потратить сегодня и остаться в курсе плана».</p>
-      {context?.message && (
-        <div className={`callout callout--${calloutTone}`}>
+      <p className="muted">Рекомендованный дневной лимит до следующей зарплаты.</p>
+      {context?.message ? (
+        <div className={`callout callout--${context.state === 'missing_balance' ? 'warning' : 'info'}`}>
           {context.message}
         </div>
-      )}
+      ) : null}
       <p className="metric">
-        {hasValue ? formatCurrency(data.safe_to_spend_daily ?? undefined) : '—'}
+        {hasValue ? formatCurrency(data.safe_to_spend_daily ?? undefined) : 'Нет оценки'}
         <span> / день</span>
       </p>
-      <p className="muted">
-        Вероятность достижения цели: <strong>{data.goal_probability ?? 0}%</strong>
-      </p>
+      {cycleEndLabel ? (
+        <p className="muted">
+          Бюджет действует до <strong>{cycleEndLabel}</strong>.
+        </p>
+      ) : null}
+      {isBalanceLow && (
+        <div className="callout callout--warning">
+          Баланс ({formatCurrency(balanceValue)}) ниже дневного лимита. Сократите траты сегодня.
+        </div>
+      )}
       <div className="safe-obligations">
-        <div>Текущий баланс: {formatCurrency(data.current_balance)}</div>
-        {narrative ? (
-          <>
-            <div>Обязательства до {formatDate(narrative.cycle_end)}: {formatCurrency(narrative.obligations_total)}</div>
-            <div>Резерв на цель: {formatCurrency(narrative.goal_reserve)}</div>
-            <div>Доступно в цикле ({narrative.days_in_cycle ?? 0} д.): {formatCurrency(narrative.spendable_total)}</div>
-          </>
-        ) : (
-          <div>Нужны данные по регулярным платежам.</div>
-        )}
+        <div>Баланс: {formatCurrency(balanceValue)}</div>
+        <div>Обязательства в горизонте: {formatCurrency(obligationsValue)}</div>
+        <div>Резерв на цель: {formatCurrency(narrative?.goal_reserve)}</div>
+        <div>Доступно на цикл: {formatCurrency(spendableValue)}</div>
       </div>
     </div>
   );
 };
 
-const FinancialSnapshotCard: React.FC<{ data: DashboardResponse }> = ({ data }) => (
-  <div className="card">
-    <h3>Финансовый GPS</h3>
-    <div className="snapshot-grid">
-      <div className="snapshot-item">
-        <p className="muted">Где я сейчас?</p>
-        <strong>{formatCurrency(data.current_balance)}</strong>
-      </div>
-      <div className="snapshot-item">
-        <p className="muted">Сколько долга осталось?</p>
-        <strong>{formatCurrency(data.total_debt ?? 0)}</strong>
-      </div>
-      <div className="snapshot-item">
-        <p className="muted">Финансовое здоровье</p>
-        <strong>{data.health_score ?? 0}/100</strong>
-      </div>
-      <div className="snapshot-item">
-        <p className="muted">Подключено счетов</p>
-        <strong>{data.balance_context?.account_count ?? 0}</strong>
-      </div>
-    </div>
-  </div>
-);
+const UpcomingEventsCard: React.FC<{
+  events?: UpcomingEvent[];
+  narrative?: DashboardResponse['safe_to_spend_narrative'];
+}> = ({ events, narrative }) => {
+  const cycleEndLabel = narrative?.cycle_end ? formatDate(narrative.cycle_end) : '—';
+  const items = events ?? [];
+  const nextIncome = narrative?.next_income_event;
 
-const UpcomingPaymentsCard: React.FC<{ payments?: UpcomingPayment[] }> = ({ payments }) => (
-  <div className="card">
-    <h3>Предстоящие обязательства</h3>
-    <ul className="list">
-      {payments && payments.length > 0 ? (
-        payments.map((payment, index) => (
-          <li key={`${payment.name}-${index}`} className="event-row">
+  return (
+    <div className="card">
+      <h3>До зарплаты ({cycleEndLabel})</h3>
+      <ul className="list">
+        <li className="event-row">
+          <div className="event-row__header">
+            <div>
+              <p className="event-row__title">Текущий баланс</p>
+              <p className="event-row__subtitle">{formatDate(narrative?.cycle_start)}</p>
+            </div>
+            <div className="event-row__amount">
+              <span>{formatCurrency(narrative?.current_balance)}</span>
+            </div>
+          </div>
+        </li>
+        {items.length > 0 ? (
+          items.map((event, index) => (
+            <li
+              key={`${event.name}-${index}`}
+              className={`event-row ${event.is_income ? 'event-row--income' : 'event-row--expense'}`}
+            >
+              <div className="event-row__header">
+                <div>
+                  <p className="event-row__title">{event.name}</p>
+                  <p className="event-row__subtitle">{formatDate(event.date)}</p>
+                </div>
+                <div className="event-row__amount">
+                  <span>{formatCurrency(event.amount)}</span>
+                </div>
+              </div>
+            </li>
+          ))
+        ) : (
+          <li className="muted">Нет фиксированных платежей в этом горизонте.</li>
+        )}
+        {nextIncome ? (
+          <li className="event-row event-row--income">
             <div className="event-row__header">
               <div>
-                <p className="event-row__title">{payment.name}</p>
-                <p className="event-row__subtitle">Срок: {formatDate(payment.due_date)}</p>
+                <p className="event-row__title">{nextIncome.label ?? 'Доход'}</p>
+                <p className="event-row__subtitle">{formatDate(nextIncome.next_occurrence)}</p>
               </div>
               <div className="event-row__amount">
-                <span>{formatCurrency(payment.amount)}</span>
+                <span>{formatCurrency(nextIncome.amount)}</span>
+              </div>
+            </div>
+          </li>
+        ) : null}
+      </ul>
+    </div>
+  );
+};
+
+const BudgetCard: React.FC<{
+  budget?: BudgetBreakdownItem[];
+  narrative?: DashboardResponse['safe_to_spend_narrative'];
+}> = ({ budget, narrative }) => (
+  <div className="card">
+    <h3>Ваш бюджет на жизнь ({narrative?.days_in_cycle ?? 0} д.)</h3>
+    <p className="muted">Предлагаем так распределить свободные средства до следующей выплаты.</p>
+    <ul className="list">
+      <li className="event-row event-row--expense">
+        <div className="event-row__header">
+          <div>
+            <p className="event-row__title">Всего доступно</p>
+          </div>
+          <div className="event-row__amount">
+            <strong>{formatCurrency(narrative?.spendable_total)}</strong>
+          </div>
+        </div>
+      </li>
+      {budget && budget.length > 0 ? (
+        budget.map((item, index) => (
+          <li key={`${item.category}-${index}`} className="event-row event-row--expense">
+            <div className="event-row__header">
+              <div>
+                <p className="event-row__title">{item.category}</p>
+              </div>
+              <div className="event-row__amount">
+                <span>{formatCurrency(item.amount)}</span>
               </div>
             </div>
           </li>
         ))
       ) : (
-        <li className="muted">Нет обязательств в горизонте 30 дней.</li>
+        <li className="muted">Нет переменных трат для распределения.</li>
       )}
+      <li className="event-row event-row--income">
+        <div className="event-row__header">
+          <div>
+            <p className="event-row__title">Резерв на цель</p>
+          </div>
+          <div className="event-row__amount">
+            <span>{formatCurrency(narrative?.goal_reserve)}</span>
+          </div>
+        </div>
+      </li>
     </ul>
   </div>
 );
@@ -187,8 +260,8 @@ export const DashboardPage: React.FC = () => {
     <div className="app-main">
       <STSCard data={data} />
       <div className="grid grid-two">
-        <FinancialSnapshotCard data={data} />
-        <UpcomingPaymentsCard payments={data.upcoming_payments} />
+        <UpcomingEventsCard events={data.upcoming_events} narrative={data.safe_to_spend_narrative} />
+        <BudgetCard budget={data.budget_breakdown} narrative={data.safe_to_spend_narrative} />
       </div>
       <RecurringEventsCard events={data.recurring_events} />
     </div>

@@ -28,15 +28,32 @@ export type RecurringEvent = MetadataMixin & {
   next_date: string;
 };
 
+export type UpcomingEvent = MetadataMixin & {
+  name: string;
+  amount: number;
+  date: string;
+  is_income?: boolean;
+};
+
+export type BudgetBreakdownItem = {
+  category: string;
+  amount: number;
+};
+
 export type SafeToSpendNarrative = {
   cycle_start?: string;
   cycle_end?: string;
   days_in_cycle?: number;
+  current_balance?: number;
   obligations_total?: number;
   free_cash?: number;
   goal_reserve?: number;
   spendable_total?: number;
-  next_income_label?: string | null;
+  next_income_event?: {
+    label?: string | null;
+    next_occurrence?: string;
+    amount?: number;
+  } | null;
 };
 
 export type SafeToSpendContext = {
@@ -56,6 +73,8 @@ export type DashboardResponse = {
   goal_probability: number;
   upcoming_payments: UpcomingPayment[];
   recurring_events: RecurringEvent[];
+  upcoming_events?: UpcomingEvent[];
+  budget_breakdown?: BudgetBreakdownItem[];
   total_debt?: number;
   health_score?: number;
   bank_statuses?: Record<string, { bank_name: string; status: string; message?: string }>;

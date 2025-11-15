@@ -466,7 +466,10 @@ def calculate_daily_s2s(
     start_date: Optional[date] = None,
     return_details: bool = False,
 ) -> float | Tuple[float, Dict[str, Any]]:
-    """Estimate safe-to-spend per day leveraging detected income cycle and obligations."""
+    """
+    Estimate safe-to-spend per day using only the cash that already exists on the account.
+    Future income does not count toward the available balance — it merely defines the horizon.
+    """
     if start_date is None:
         start_date = date.today()
 
@@ -481,26 +484,32 @@ def calculate_daily_s2s(
     cycle_expenses = 0.0
     for obligation in obligations or []:
         due_date = obligation.get("due_date")
-        if isinstance(due_date, date) and start_date < due_date <= cycle_end:
+        if isinstance(due_date, date) and start_date <= due_date < cycle_end:
             cycle_expenses += float(obligation.get("amount") or 0.0)
 
-    for event in event_profiles or []:
-        if event.get("is_income"):
-            continue
-        cycle_expenses += abs(float(event.get("mu_amount") or 0.0))
-
     free_cash = current_balance - cycle_expenses
-    if free_cash <= 0:
-        details = {
-            "cycle_start": start_date.isoformat(),
-            "cycle_end": cycle_end.isoformat(),
-            "days_in_cycle": days_in_cycle,
-            "obligations_total": round(cycle_expenses, 2),
-            "free_cash": round(min(free_cash, 0.0), 2),
-            "goal_reserve": 0.0,
-            "spendable_total": 0.0,
-            "next_income_label": (next_income or {}).get("label"),
+    next_income_payload = None
+    if next_income:
+        next_occurrence = next_income["next_occurrence"]
+        next_income_payload = {
+            "label": next_income.get("label"),
+            "next_occurrence": next_occurrence.isoformat(),
+            "amount": round(float(next_income.get("mu_amount") or 0.0), 2),
         }
+
+    details = {
+        "cycle_start": start_date.isoformat(),
+        "cycle_end": cycle_end.isoformat(),
+        "days_in_cycle": days_in_cycle,
+        "current_balance": round(current_balance, 2),
+        "obligations_total": round(cycle_expenses, 2),
+        "free_cash": round(free_cash, 2),
+        "goal_reserve": 0.0,
+        "spendable_total": 0.0,
+        "next_income_event": next_income_payload,
+    }
+
+    if free_cash <= 0:
         return (0.0, details) if return_details else 0.0
 
     reserve = 0.0
@@ -509,19 +518,9 @@ def calculate_daily_s2s(
 
     spendable = max(0.0, free_cash - reserve)
     result = round(spendable / days_in_cycle, 2)
-    if not return_details:
-        return result
-    details = {
-        "cycle_start": start_date.isoformat(),
-        "cycle_end": cycle_end.isoformat(),
-        "days_in_cycle": days_in_cycle,
-        "obligations_total": round(cycle_expenses, 2),
-        "free_cash": round(free_cash, 2),
-        "goal_reserve": round(reserve, 2),
-        "spendable_total": round(spendable, 2),
-        "next_income_label": (next_income or {}).get("label"),
-    }
-    return result, details
+    details["goal_reserve"] = round(reserve, 2)
+    details["spendable_total"] = round(spendable, 2)
+    return (result, details) if return_details else result
 
 
 def _normalize_description(value: Optional[str]) -> str:
