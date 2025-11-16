@@ -1,4 +1,5 @@
 import type { DashboardResponse } from '../types/dashboard';
+
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
 type FetchOptions = RequestInit & { skipAuth?: boolean };
@@ -47,49 +48,8 @@ export const getBanks = (userId?: string) => {
   return fetchJson<BankResponse>(`/api/banks${query}`);
 };
 
-export const startConsent = (payload: { user_id: string; bank_id: string }) =>
-  fetchJson('/api/consents/start', { method: 'POST', body: JSON.stringify(payload) });
-
-export const startProductConsent = (payload: { user_id: string; bank_id: string }) =>
-  fetchJson('/api/consent/initiate/product', { method: 'POST', body: JSON.stringify(payload) });
-
-export const pollConsent = (params: { user_id: string; bank_id: string; request_id: string }) => {
-  const query = new URLSearchParams({
-    user_id: params.user_id,
-    bank_id: params.bank_id,
-    request_id: params.request_id,
-  }).toString();
-  return fetchJson(`/api/consents/status?${query}`);
-};
-
-export const getBankBootstrap = (bankId: string, userId: string) =>
-  fetchJson(`/api/banks/${bankId}/bootstrap?user_id=${encodeURIComponent(userId)}`);
-
-export const getPreview = (payload: { user_id: string }) =>
-  fetchJson('/api/ingest/preview', { method: 'POST', body: JSON.stringify(payload) });
-
-export const saveProductConsents = (payload: {
-  user_id: string;
-  items: Array<{ bank_id: string; product_id: string; product_type?: string; consented: boolean }>;
-}) => fetchJson('/api/products/consent', { method: 'POST', body: JSON.stringify(payload) });
-
-export const saveGoal = (payload: { user_id: string; goal_type: string; goal_details: Record<string, unknown> }) =>
-  fetchJson('/api/profile/goal', { method: 'POST', body: JSON.stringify(payload) });
-
-export const runIngestion = (payload: { user_id: string }) =>
-  fetchJson('/api/ingest/run', { method: 'POST', body: JSON.stringify(payload) });
-
-export const commitOnboarding = (payload: { user_id: string }) =>
-  fetchJson('/api/onboarding/commit', { method: 'POST', body: JSON.stringify(payload) });
-
 export const getDashboard = (userId: string) =>
   fetchJson<DashboardResponse>(`/api/dashboard?user_id=${encodeURIComponent(userId)}`);
-
-export const getCredits = (userId: string) =>
-  fetchJson(`/api/credits?user_id=${encodeURIComponent(userId)}`);
-
-export const getFinancialPortrait = (payload: { user_id: string }) =>
-  fetchJson('/api/financial-portrait', { method: 'POST', body: JSON.stringify(payload) });
 
 export type { DashboardResponse };
 

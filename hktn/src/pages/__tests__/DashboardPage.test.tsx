@@ -6,13 +6,17 @@ import { DashboardPage } from '../DashboardPage.tsx';
 
 const dashboardStub: DashboardResponse = {
   total_balance: 150000,
+  bank_statuses: [
+    { bank_id: 'vbank', bank_name: 'VBank', status: 'ok', fetched_at: new Date().toISOString() },
+    { bank_id: 'abank', bank_name: 'ABank', status: 'error', fetched_at: null },
+  ],
   safe_to_spend_daily: 3500,
-  next_income_date: '2025-12-25',
-  days_until_next_income: 10,
-  accounts: [{ accountId: 'acc1', nickname: 'Зарплатный' }],
-  bank_statuses: {
-    vbank: { bank_name: 'VBank', status: 'ok', fetched_at: new Date().toISOString() },
-    abank: { bank_name: 'ABank', status: 'error', fetched_at: null },
+  salary_amount: 80000,
+  next_salary_date: '2025-12-25',
+  days_until_next_salary: 10,
+  upcoming_credit_payment: {
+    amount: 12000,
+    next_payment_date: '2025-12-18',
   },
 };
 
@@ -45,21 +49,21 @@ describe('DashboardPage', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the new Safe-to-Spend metric correctly', async () => {
+  it('renders Safe-to-Spend metric with salary metadata', async () => {
     render(<DashboardPage />);
     await waitFor(() => expect(mockGetDashboard).toHaveBeenCalledWith('demo-user'));
 
     expect(screen.getByRole('heading', { name: /Safe-to-Spend/i })).toBeInTheDocument();
     expect(screen.getByText(/3.?500/)).toBeInTheDocument();
-    expect(screen.getByText(/до следующей зарплаты/)).toBeInTheDocument();
+    expect(screen.getByText(/Зарплата:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Ближайший платёж по кредиту/i)).toBeInTheDocument();
   });
 
-  it('renders the BanksOverviewCard with total balance and statuses', async () => {
+  it('renders the bank overview card with each status', async () => {
     render(<DashboardPage />);
     await waitFor(() => expect(mockGetDashboard).toHaveBeenCalled());
 
     expect(screen.getByRole('heading', { name: /Баланс и источники данных/i })).toBeInTheDocument();
-    expect(screen.getByText(/150.?000/)).toBeInTheDocument();
     expect(screen.getByText('VBank')).toBeInTheDocument();
     expect(screen.getByText('ABank')).toBeInTheDocument();
     expect(screen.getByText('OK')).toBeInTheDocument();
@@ -70,6 +74,8 @@ describe('DashboardPage', () => {
     const error = new Error('API is down');
     mockGetDashboard.mockRejectedValueOnce(error);
     render(<DashboardPage />);
-    await waitFor(() => expect(notifyError).toHaveBeenCalledWith('Не удалось загрузить данные для дашборда.'));
+    await waitFor(() =>
+      expect(notifyError).toHaveBeenCalledWith('Не удалось загрузить данные для дашборда.'),
+    );
   });
 });

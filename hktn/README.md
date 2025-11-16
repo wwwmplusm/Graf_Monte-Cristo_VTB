@@ -1,27 +1,45 @@
+# Main screens
 
-  # Main screens
+This bundle now exposes the streamlined screens and API needed to demo Safe-to-Spend without the historical onboarding and portrait flows.
 
-  This is a code bundle for Main screens. The original project is available at https://www.figma.com/design/g2lq6y3UolIAHaAuvnYRaz/Main-screens.
+## Running the code
 
-  ## Running the code
+Run `npm i` to install the frontend dependencies.
 
-  Run `npm i` to install the dependencies.
+Start the dev server via `npm run dev` and open `http://localhost:5173`.
 
-  Run `npm run dev` to start the development server.
+The FastAPI backend still boots through `uvicorn hktn.backend_app:app --reload` (requirements listed in `requirements.txt`).
 
-  ## Analytics flow updates
+## Simplified analytics flow
 
-  - Bank transactions now retain merchant, MCC, bank transaction code, and card metadata so the clustering engine can reason about actual merchants instead of generic descriptions.
-  - The analytics engine derives deterministic obligations from both credit agreements and highly coherent recurring debit clusters (tagged with their MCC/category/source), which flow into `/api/dashboard` and `/api/financial-portrait`.
-  - Safe-to-spend calculations now use real-time balances summed from linked accounts, so probability estimates and explanations reflect actual cash instead of placeholder values.
-  - Dashboard UI consumes the enriched payload and surfaces badges for MCC/category, merchant, transaction codes and obligation sources. Upcoming-payment filters allow PMs to slice by source or MCC to verify data quality quickly.
-  - The “Financial Portrait” inspector lazy-loads the `/api/financial-portrait` response, links recurring events back to `transactions_sample`, and displays MCC coverage percentages so onboarding engineers can confirm clustering quality without leaving the UI.
-  - Design tokens (`--color-chip-*`, `--space-*`, etc.) were added to `src/styles/global.css` to keep badges/chips responsive. Metadata stacks collapse vertically under 640px widths, so screenshots captured via `npm run dev` → `localhost:5173/dashboard` at 360px and 1440px widths remain legible.
+- `/api/dashboard` is the only analytics endpoint. It returns the summed bank balance, bank statuses, the scheduled salary (amount/date) and the next credit payment (amount/date). The safe-to-spend number is now computed with a single formula: `(balance + salary_amount - credit_payment_amount) / days_until_next_salary`.
+- `/api/banks` and `/api/consents/*` stay intact for teams who still connect banks, but the SPA only shows the bank catalog, a basic dashboard and the user-id screen.
+- All portrait, credit-ranking, onboarding and goal routes (and their React pages) were removed.
+- The bulky analytics engine and numerical dependencies (`pandas`, `numpy`, etc.) are gone; the backend only fetches balances and looks up the salary / credit metadata.
 
-  ## Testing & QA
+## Configuring salary and credit metadata
 
-  - Run `npm run test -- DashboardPage` to execute the new vitest suite at `src/pages/__tests__/DashboardPage.test.tsx`, which covers metadata rendering, filter behavior, and the lazy portrait fetch contract.
-  - Accessibility: All metadata badges expose ARIA labels/tooltips (e.g., `SourceChip`, bank transaction code titles). When adding new badges, reuse the `.metadata-badge` classes to inherit focus contrast.
-  - Localization: strings for badges/tooltips live inside `DashboardPage.tsx`. To localize, extract them into a shared dictionary and update the tests accordingly.
-  - Screenshot/regression coverage: capture updated dashboard states after major API changes and drop PNGs into `docs/main_screens`. Mention which dataset (e.g., `data/260-1_account.json`) produced the snapshot so analysts can reproduce it.
-  
+Each user can override the salary and payment inputs through the new `user_financial_inputs` table. Example SQL:
+
+```sql
+INSERT INTO user_financial_inputs (user_id, salary_amount, next_salary_date, credit_payment_amount, credit_payment_date)
+VALUES ('team260-1', 80000, '2025-12-25', 15000, '2025-12-18')
+ON CONFLICT(user_id) DO UPDATE SET
+  salary_amount=excluded.salary_amount,
+  next_salary_date=excluded.next_salary_date,
+  credit_payment_amount=excluded.credit_payment_amount,
+  credit_payment_date=excluded.credit_payment_date;
+```
+
+If no row exists the backend falls back to the new environment variables:
+
+- `DEFAULT_SALARY_AMOUNT` (float, default `0`)
+- `DEFAULT_NEXT_SALARY_DAYS` (int, default `14`)
+- `DEFAULT_CREDIT_PAYMENT_AMOUNT` (float, default `0`)
+- `DEFAULT_CREDIT_PAYMENT_DAYS` (int, default `10`)
+
+## Testing & QA
+
+- Run `npm run test` for the Vitest suite.
+- Run `pytest` for the backend tests.
+- When salary / payment data is missing the dashboard still renders, but the safe-to-spend limit will degrade to zero; populate the DB row (or env defaults) for realistic demos.

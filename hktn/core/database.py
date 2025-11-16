@@ -119,6 +119,18 @@ def init_db() -> None:
                 );
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS user_financial_inputs (
+                    user_id TEXT PRIMARY KEY,
+                    salary_amount REAL,
+                    next_salary_date TEXT,
+                    credit_payment_amount REAL,
+                    credit_payment_date TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
             conn.commit()
         logger.info("All database tables ensured.")
     except sqlite3.Error as exc:
@@ -360,3 +372,43 @@ def save_user_profile(user_id: str, goal_type: str, goal_details: Dict[str, Any]
         )
         conn.commit()
     logger.info("Saved profile for user %s (goal=%s)", user_id, goal_type)
+
+
+def upsert_user_financial_inputs(
+    user_id: str,
+    salary_amount: Optional[float] = None,
+    next_salary_date: Optional[str] = None,
+    credit_payment_amount: Optional[float] = None,
+    credit_payment_date: Optional[str] = None,
+) -> None:
+    """Persist salary/credit metadata used by the simplified analytics flow."""
+    with get_db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO user_financial_inputs (user_id, salary_amount, next_salary_date, credit_payment_amount, credit_payment_date, updated_at)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(user_id) DO UPDATE SET
+                salary_amount = excluded.salary_amount,
+                next_salary_date = excluded.next_salary_date,
+                credit_payment_amount = excluded.credit_payment_amount,
+                credit_payment_date = excluded.credit_payment_date,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (user_id, salary_amount, next_salary_date, credit_payment_amount, credit_payment_date),
+        )
+        conn.commit()
+
+
+def get_user_financial_inputs(user_id: str) -> Optional[Dict[str, Any]]:
+    """Return stored salary/payment metadata for a user if present."""
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            """
+            SELECT user_id, salary_amount, next_salary_date, credit_payment_amount, credit_payment_date
+            FROM user_financial_inputs
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        )
+        row = cursor.fetchone()
+    return dict(row) if row else None

@@ -24,21 +24,27 @@ const formatDate = (value?: string | null) => {
 };
 
 const STSCard: React.FC<{ data: DashboardResponse }> = ({ data }) => {
-  const nextIncomeLabel = data.next_income_date ? formatDate(data.next_income_date) : 'в ближайшие 30 дней';
+  const nextSalaryLabel = formatDate(data.next_salary_date);
+  const creditPaymentLabel = formatDate(data.upcoming_credit_payment?.next_payment_date);
 
   return (
     <div className="card">
       <h2>Safe-to-Spend</h2>
-      <p className="muted">Рекомендованный дневной лимит до следующей зарплаты ({nextIncomeLabel}).</p>
+      <p className="muted">Рекомендованный дневной лимит до следующей зарплаты ({nextSalaryLabel}).</p>
       <p className="metric">
         {formatCurrency(data.safe_to_spend_daily)}
         <span> / день</span>
       </p>
       <div className="safe-obligations">
         <div>
-          Этот бюджет рассчитан на <strong>{data.days_until_next_income}</strong> дней.
+          Зарплата: <strong>{formatCurrency(data.salary_amount)}</strong>
         </div>
-        <div>Он учитывает все обязательные платежи в этом периоде.</div>
+        <div>
+          Дней до выплаты: <strong>{data.days_until_next_salary}</strong>
+        </div>
+        <div>
+          Ближайший платёж по кредиту: {formatCurrency(data.upcoming_credit_payment?.amount)} ({creditPaymentLabel})
+        </div>
       </div>
     </div>
   );

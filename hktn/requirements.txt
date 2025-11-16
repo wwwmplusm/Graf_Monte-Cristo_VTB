@@ -4,13 +4,6 @@ fastapi
 uvicorn[standard]
 python-multipart
 
-# -- Data Science & Analytics --
-# Основные библиотеки для аналитического движка "Финансовый Пульс".
-pandas
-numpy
-scikit-learn
-scipy
-
 # -- Core Utilities & API Communication --
 # Библиотеки для HTTP-запросов, работы с JWT, .env файлами и моделями данных.
 httpx[http2]

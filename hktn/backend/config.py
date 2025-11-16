@@ -59,6 +59,10 @@ class Settings:
         self.team_client_id: Optional[str] = os.getenv("CLIENT_ID")
         self.team_client_secret: Optional[str] = os.getenv("CLIENT_SECRET")
         self.banks: Dict[str, BankConfig] = _build_bank_configs()
+        self.default_salary_amount: float = float(os.getenv("DEFAULT_SALARY_AMOUNT", "0"))
+        self.default_next_salary_days: int = int(os.getenv("DEFAULT_NEXT_SALARY_DAYS", "14"))
+        self.default_credit_payment_amount: float = float(os.getenv("DEFAULT_CREDIT_PAYMENT_AMOUNT", "0"))
+        self.default_credit_payment_days: int = int(os.getenv("DEFAULT_CREDIT_PAYMENT_DAYS", "10"))
 
 
 settings = Settings()

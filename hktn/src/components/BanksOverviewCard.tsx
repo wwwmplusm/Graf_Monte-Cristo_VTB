@@ -1,14 +1,10 @@
 import React from 'react';
 
-type BankStatus = {
-  bank_name: string;
-  status: string;
-  fetched_at: string | null;
-};
+import type { BankStatus } from '../types/dashboard';
 
 type BanksOverviewCardProps = {
   totalBalance: number;
-  bankStatuses: Record<string, BankStatus>;
+  bankStatuses: BankStatus[];
 };
 
 const formatCurrency = (value?: number | null) => {
@@ -40,10 +36,7 @@ const STATUS_LABELS: Record<string, { label: string; tone: 'ok' | 'error' }> = {
 const toneClass = (tone: 'ok' | 'error') => (tone === 'error' ? 'status-pill status-pill--error' : 'status-pill');
 
 export const BanksOverviewCard: React.FC<BanksOverviewCardProps> = ({ totalBalance, bankStatuses }) => {
-  const entries = Object.entries(bankStatuses ?? {}).map(([bankId, info]) => ({
-    id: bankId,
-    ...info,
-  }));
+  const entries = bankStatuses ?? [];
 
   return (
     <div className="card banks-overview">
@@ -63,7 +56,7 @@ export const BanksOverviewCard: React.FC<BanksOverviewCardProps> = ({ totalBalan
           entries.map((entry) => {
             const statusInfo = STATUS_LABELS[entry.status] ?? { label: 'НЕИЗВЕСТНО', tone: 'error' };
             return (
-              <div key={entry.id} className="banks-overview__row">
+              <div key={entry.bank_id} className="banks-overview__row">
                 <div>
                   <p className="banks-overview__bank">{entry.bank_name}</p>
                   <p className="banks-overview__message">Обновлено: {formatTimestamp(entry.fetched_at)}</p>

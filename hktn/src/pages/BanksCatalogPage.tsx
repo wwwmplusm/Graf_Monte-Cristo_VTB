@@ -1,13 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useNotifications } from '../state/notifications';
-import { useUser, BankSummary } from '../state/useUser';
+import React, { useEffect } from 'react';
+import { BanksList } from '../components/BanksList';
+import { useUser } from '../state/useUser';
 
 export const BanksCatalogPage: React.FC = () => {
   const { userId, banks, refreshBanks, isFetchingBanks } = useUser();
-  const { notifyError } = useNotifications();
-  const navigate = useNavigate();
-  const [selectedBankIds, setSelectedBankIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (userId) {
@@ -15,75 +11,20 @@ export const BanksCatalogPage: React.FC = () => {
     }
   }, [userId, refreshBanks]);
 
-  const handleToggleBank = (bankId: string) => {
-    setSelectedBankIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(bankId)) {
-        next.delete(bankId);
-      } else {
-        next.add(bankId);
-      }
-      return next;
-    });
-  };
-
-  const handleSubmit = () => {
-    if (selectedBankIds.size === 0) {
-      notifyError('Выберите хотя бы один банк');
-      return;
-    }
-    const selectedBanks: BankSummary[] = banks.filter((bank) => selectedBankIds.has(bank.id));
-    navigate('/onboarding/consent', { state: { selectedBanks } });
-  };
-
   return (
     <div className="app-main">
       <div className="card">
-        <h2>Шаг 2. Выберите банки</h2>
-        <p>Отметьте банки, которые хотите подключить для анализа.</p>
+        <h2>Банковские подключения</h2>
+        <p>Список банков, доступных для расчёта Safe-to-Spend.</p>
       </div>
 
-      {isFetchingBanks && (
+      {isFetchingBanks ? (
         <div className="card">
-          <p>Загрузка списка банков...</p>
+          <p>Загружаем информацию о банках...</p>
         </div>
+      ) : (
+        <BanksList banks={banks} />
       )}
-
-      {!isFetchingBanks && banks.length === 0 && (
-        <div className="card">
-          <p>Каталог банков пуст. Проверьте настройки бэкенда.</p>
-        </div>
-      )}
-
-      {banks.length > 0 && (
-        <div className="card">
-          {banks.map((bank, index) => (
-            <div
-              key={bank.id}
-              style={{ padding: '12px 0', borderBottom: index === banks.length - 1 ? 'none' : '1px solid #eee' }}
-            >
-              <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={selectedBankIds.has(bank.id)}
-                  onChange={() => handleToggleBank(bank.id)}
-                  disabled={bank.connected}
-                />
-                <div>
-                  <strong>{bank.name}</strong>
-                  <p style={{ margin: 0, fontSize: 14, color: bank.connected ? '#16a34a' : '#475569' }}>
-                    {bank.connected ? 'Уже подключён' : 'Готов к подключению'}
-                  </p>
-                </div>
-              </label>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <button className="btn" onClick={handleSubmit} disabled={selectedBankIds.size === 0 || isFetchingBanks}>
-        Продолжить
-      </button>
     </div>
   );
 };

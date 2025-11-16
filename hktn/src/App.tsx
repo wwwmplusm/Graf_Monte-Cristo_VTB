@@ -3,15 +3,8 @@ import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react
 import { useNotifications } from './state/notifications';
 import { useUser } from './state/useUser';
 import { BanksCatalogPage } from './pages/BanksCatalogPage';
-import { CallbackPage } from './pages/CallbackPage';
-import { ConsentStatusPage } from './pages/ConsentStatusPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { DebtGoalPage } from './pages/DebtGoalPage';
-import { GoalsLandingPage } from './pages/GoalsLandingPage';
-import { IngestionPage } from './pages/IngestionPage';
-import { SaveGoalPage } from './pages/SaveGoalPage';
 import { UserIdPage } from './pages/UserIdPage';
-import { ConsentProcessPage } from './pages/ConsentProcessPage';
 
 const ProtectedRoute: React.FC = () => {
   const { userId } = useUser();
@@ -93,17 +86,10 @@ export const App: React.FC = () => (
       <Routes>
         <Route path="/" element={<UserIdPage />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/banks" element={<BanksCatalogPage />} />
-          <Route path="/banks/:bankId/status" element={<ConsentStatusPage />} />
-          <Route path="/onboarding/consent" element={<ConsentProcessPage />} />
-          <Route path="/goals" element={<GoalsLandingPage />} />
-          <Route path="/goals/save" element={<SaveGoalPage />} />
-          <Route path="/goals/debts" element={<DebtGoalPage />} />
-          <Route path="/ingest" element={<IngestionPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-        </Route>
-        <Route path="/callback" element={<CallbackPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/banks" element={<BanksCatalogPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   </AppErrorBoundary>

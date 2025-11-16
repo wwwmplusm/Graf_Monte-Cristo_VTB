@@ -1,3 +1,3 @@
-from . import analytics, banks, consents, onboarding, profile
+from . import analytics, banks, consents
 
-__all__ = ["analytics", "banks", "consents", "onboarding", "profile"]
+__all__ = ["analytics", "banks", "consents"]
