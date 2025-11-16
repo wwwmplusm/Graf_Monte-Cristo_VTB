@@ -41,7 +41,7 @@ def _coerce_to_float(value: Any) -> Optional[float]:
         except ValueError:
             return None
     if isinstance(value, dict):
-        for field in ("amount", "value", "balance", "current"):
+        for field in ("amount", "Amount", "value", "Value", "balance", "Balance", "current", "Current"):
             candidate = value.get(field)
             numeric = _coerce_to_float(candidate)
             if numeric is not None:
@@ -70,13 +70,17 @@ def _normalize_balance_entry(entry: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         return None
 
     amount = None
-    for key in BALANCE_FIELDS:
-        if key in entry:
-            amount = _coerce_to_float(entry[key])
+    normalized_keys = {key.lower(): key for key in entry.keys()}
+    for field in BALANCE_FIELDS:
+        candidate_key = normalized_keys.get(field.lower())
+        if candidate_key:
+            amount = _coerce_to_float(entry[candidate_key])
             if amount is not None:
                 break
     if amount is None and "balanceAmount" in entry and isinstance(entry["balanceAmount"], dict):
         amount = _coerce_to_float(entry["balanceAmount"].get("amount"))
+    if amount is None and "BalanceAmount" in entry and isinstance(entry["BalanceAmount"], dict):
+        amount = _coerce_to_float(entry["BalanceAmount"].get("Amount") or entry["BalanceAmount"].get("amount"))
 
     if amount is None:
         return None
