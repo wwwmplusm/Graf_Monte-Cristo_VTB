@@ -16,6 +16,95 @@ from ..state import api_cache
 logger = logging.getLogger("finpulse.backend.banking")
 
 
+BALANCE_FIELDS = (
+    "amount",
+    "balance",
+    "availableBalance",
+    "currentBalance",
+    "ledgerBalance",
+    "available_balance",
+    "current_balance",
+    "clearedBalance",
+    "cleared_balance",
+)
+
+
+def _coerce_to_float(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            normalized = value.strip().replace("\u00a0", "").replace(",", ".")
+            return float(normalized)
+        except ValueError:
+            return None
+    if isinstance(value, dict):
+        for field in ("amount", "value", "balance", "current"):
+            candidate = value.get(field)
+            numeric = _coerce_to_float(candidate)
+            if numeric is not None:
+                return numeric
+        return None
+    return None
+
+
+def _extract_balance_entries(payload: Any) -> List[Dict[str, Any]]:
+    if isinstance(payload, dict):
+        for candidate in ("balances", "items", "data", "accountBalances"):
+            section = payload.get(candidate)
+            if isinstance(section, list):
+                return section
+        if isinstance(payload.get("data"), dict):
+            nested = payload["data"].get("balances")
+            if isinstance(nested, list):
+                return nested
+    if isinstance(payload, list):
+        return payload
+    return []
+
+
+def _normalize_balance_entry(entry: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    if not isinstance(entry, dict):
+        return None
+
+    amount = None
+    for key in BALANCE_FIELDS:
+        if key in entry:
+            amount = _coerce_to_float(entry[key])
+            if amount is not None:
+                break
+    if amount is None and "balanceAmount" in entry and isinstance(entry["balanceAmount"], dict):
+        amount = _coerce_to_float(entry["balanceAmount"].get("amount"))
+
+    if amount is None:
+        return None
+
+    account_id = (
+        entry.get("accountId")
+        or entry.get("account_id")
+        or entry.get("resource_id")
+        or entry.get("id")
+    )
+
+    return {
+        "bank_id": entry.get("bank_id") or entry.get("bankId"),
+        "account_id": account_id,
+        "amount": amount,
+        "currency": entry.get("currency") or entry.get("currency_code"),
+    }
+
+
+def _sum_balance_amounts(entries: List[Dict[str, Any]]) -> float:
+    total = 0.0
+    for entry in entries:
+        normalized = _normalize_balance_entry(entry)
+        if normalized and normalized.get("amount") is not None:
+            total += normalized["amount"]
+    return round(total, 2)
+
+
 def _ensure_team_credentials() -> Tuple[str, str]:
     if not settings.team_client_id or not settings.team_client_secret:
         raise HTTPException(
@@ -166,6 +255,27 @@ async def fetch_bank_accounts_with_consent(bank_id: str, consent_id: str, user_i
             return {"bank_id": bank_id, "status": "error", "accounts": [], "message": error_message}
 
 
+async def fetch_bank_balances_with_consent(bank_id: str, consent_id: str, user_id: str) -> Dict[str, Any]:
+    _require_bank(bank_id)
+    async with bank_client(bank_id) as client:
+        try:
+            balances = await client.fetch_balances_with_consent(user_id, consent_id)
+            entries = _extract_balance_entries(balances)
+            message = f"Fetched {len(entries)} balance records"
+            add_bank_status_log(user_id, bank_id, "fetch_balances", "ok", message)
+            return {
+                "bank_id": bank_id,
+                "status": "ok",
+                "balances": entries,
+                "message": message,
+            }
+        except Exception as exc:  # noqa: BLE001
+            error_message = str(exc)
+            logger.error("Failed to fetch balances for bank %s: %s", bank_id, error_message)
+            add_bank_status_log(user_id, bank_id, "fetch_balances", "error", error_message)
+            return {"bank_id": bank_id, "status": "error", "balances": [], "message": error_message}
+
+
 async def bootstrap_bank(bank_id: str, user_id: str) -> Dict[str, Any]:
     """Aggregate initial payload for a connected bank."""
     config = _require_bank(bank_id)
@@ -187,11 +297,13 @@ async def bootstrap_bank(bank_id: str, user_id: str) -> Dict[str, Any]:
     accounts_task = fetch_bank_accounts_with_consent(bank_id, consent.consent_id, user_id)
     transactions_task = fetch_bank_data_with_consent(bank_id, consent.consent_id, user_id)
     credits_task = fetch_bank_credits(bank_id, consent.consent_id, user_id)
+    balances_task = fetch_bank_balances_with_consent(bank_id, consent.consent_id, user_id)
 
-    accounts_res, transactions_res, credits_res = await asyncio.gather(
+    accounts_res, transactions_res, credits_res, balances_res = await asyncio.gather(
         accounts_task,
         transactions_task,
         credits_task,
+        balances_task,
     )
 
     transactions_snapshot = list(transactions_res.get("transactions") or [])[:100]
@@ -208,6 +320,10 @@ async def bootstrap_bank(bank_id: str, user_id: str) -> Dict[str, Any]:
             "state": credits_res.get("status"),
             "message": credits_res.get("message"),
         },
+        "balances": {
+            "state": balances_res.get("status"),
+            "message": balances_res.get("message"),
+        },
     }
 
     result = {
@@ -218,6 +334,7 @@ async def bootstrap_bank(bank_id: str, user_id: str) -> Dict[str, Any]:
         "credits": credits_res.get("credits") or [],
         "transactions": transactions_snapshot,
         "status": status_block,
+        "balances": balances_res.get("balances") or [],
     }
     add_bank_status_log(user_id, bank_id, "bootstrap", "ok", "Bootstrap payload generated.")
     return result

@@ -486,6 +486,23 @@ class OBRAPIClient:
         logger.info("Retrieved %d accounts for user '%s' from %s", len(accounts), user_id, self.api_base_url)
         return accounts
 
+    async def fetch_balances_with_consent(self, user_id: str, consent_id: str) -> Dict[str, Any]:
+        """Fetch balance totals for the user with the granted consent."""
+        bank_token = await self._get_bank_token()
+        headers = {**(await self._get_common_headers(bank_token)), "X-Consent-Id": consent_id}
+
+        logger.info("Fetching balances for user '%s' (consent %s)", user_id, consent_id)
+
+        @api_retry
+        async def _get_balances():
+            response = await self._client.get(f"/balances?client_id={user_id}", headers=headers)
+            response.raise_for_status()
+            return response.json()
+
+        payload = await _get_balances()
+        logger.info("Retrieved balances payload for user '%s' from %s", user_id, self.api_base_url)
+        return payload
+
     async def fetch_credits_with_consent(self, user_id: str, consent_id: str) -> List[Dict[str, Any]]:
         """
         Fetches credit agreements using multiple header variations and pagination,

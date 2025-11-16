@@ -1032,6 +1032,7 @@ def build_financial_portrait(
     credits: Sequence[Dict[str, Any]],
     accounts: Sequence[Dict[str, Any]],
     user_goal: UserGoal,
+    balance_override: Optional[float] = None,
 ) -> Dict[str, Any]:
     """Compose a holistic financial portrait combining probabilistic and deterministic insights."""
     df = _prepare_transactions_df(transactions)
@@ -1052,7 +1053,10 @@ def build_financial_portrait(
     event_profiles, noise_profile = _profile_events(df_with_clusters)
 
     obligations = derive_obligations(credits, event_profiles)
-    current_balance = sum(_extract_account_balance(acc) for acc in accounts or [])
+    if balance_override is not None:
+        current_balance = balance_override
+    else:
+        current_balance = sum(_extract_account_balance(acc) for acc in accounts or [])
     daily_s2s = calculate_daily_s2s(current_balance, event_profiles, obligations, user_goal)
 
     ranked_credits = rank_credits(credits)

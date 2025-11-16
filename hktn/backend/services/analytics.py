@@ -28,7 +28,13 @@ from hktn.core.database import (
 )
 
 from ..schemas import AnalysisRequest, FinancialPortraitRequest, IngestRequest
-from .banking import fetch_bank_accounts_with_consent, fetch_bank_credits, fetch_bank_data_with_consent
+from .banking import (
+    _sum_balance_amounts,
+    fetch_bank_accounts_with_consent,
+    fetch_bank_balances_with_consent,
+    fetch_bank_credits,
+    fetch_bank_data_with_consent,
+)
 from .goals import compose_user_goal
 from .products import apply_consent_flags, build_account_product, build_credit_product, group_products_by_bank
 
@@ -171,11 +177,16 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         fetch_bank_accounts_with_consent(consent.bank_id, consent.consent_id, user_id)
         for consent in approved_consents
     ]
+    balance_tasks = [
+        fetch_bank_balances_with_consent(consent.bank_id, consent.consent_id, user_id)
+        for consent in approved_consents
+    ]
 
-    tx_results, credit_results, account_results = await asyncio.gather(
+    tx_results, credit_results, account_results, balance_results = await asyncio.gather(
         asyncio.gather(*tx_tasks),
         asyncio.gather(*credit_tasks),
         asyncio.gather(*account_tasks),
+        asyncio.gather(*balance_tasks),
     )
 
     all_transactions: List[Transaction] = []
@@ -218,6 +229,21 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
                 entry["status"] = "partial_error"
             suffix = f"accounts failed: {res['message']}"
             entry["message"] = f"{entry.get('message', '')}; {suffix}" if entry.get("message") else suffix
+    balance_total = 0.0
+    for res in balance_results:
+        entry = bank_statuses.setdefault(
+            res["bank_id"],
+            {"bank_name": res["bank_id"], "status": res["status"], "message": res.get("message") or ""},
+        )
+        if res["status"] != "ok" and entry["status"] == "ok":
+            entry["status"] = "partial_error"
+        entry.setdefault("balances", {}).update(
+            {"state": res.get("status"), "message": res.get("message")}
+        )
+        entries = res.get("balances") or []
+        balance_total += _sum_balance_amounts(entries)
+
+    balance_total = round(balance_total, 2)
 
     if not all_transactions:
         raise HTTPException(
@@ -225,18 +251,24 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
             detail="Could not fetch any transactions.",
         )
 
-    current_balance = sum(_extract_account_balance(account) for account in all_accounts)
-    balance_state = "ok"
-    balance_message = None
-    if not all_accounts:
-        balance_state = "missing_accounts"
-        balance_message = "Банки не вернули данные по счетам. Подключите счёт с остатком."
-        logger.warning("Could not determine current balance for user %s, defaulting to 0.", user_id)
-    elif current_balance <= 0:
-        balance_state = "zero_balance"
-        balance_message = "Текущий баланс равен 0 ₽ — не удалось получить остаток от банка."
-        logger.warning("Balance for user %s is zero despite connected accounts.", user_id)
-        current_balance = 0.0
+    fallback_balance = sum(_extract_account_balance(account) for account in all_accounts)
+    if balance_total > 0:
+        current_balance = balance_total
+        balance_state = "ok"
+        balance_message = None
+    else:
+        current_balance = fallback_balance
+        if not all_accounts:
+            balance_state = "missing_accounts"
+            balance_message = "Банки не вернули данные по счетам. Подключите счёт с остатком."
+            logger.warning("Could not determine current balance for user %s, defaulting to 0.", user_id)
+        elif fallback_balance <= 0:
+            balance_state = "zero_balance"
+            balance_message = "Текущий баланс равен 0 ₽ — не удалось получить остаток от банка."
+            logger.warning("Balance for user %s is zero despite connected accounts.", user_id)
+        else:
+            balance_state = "ok"
+            balance_message = None
 
     planning_start = date.today()
 
@@ -370,11 +402,16 @@ async def build_financial_portrait_view(req: FinancialPortraitRequest) -> Dict[s
         fetch_bank_accounts_with_consent(consent.bank_id, consent.consent_id, req.user_id)
         for consent in approved_consents
     ]
+    balance_tasks = [
+        fetch_bank_balances_with_consent(consent.bank_id, consent.consent_id, req.user_id)
+        for consent in approved_consents
+    ]
 
-    tx_results, credit_results, account_results = await asyncio.gather(
+    tx_results, credit_results, account_results, balance_results = await asyncio.gather(
         asyncio.gather(*tx_tasks),
         asyncio.gather(*credit_tasks),
         asyncio.gather(*account_tasks),
+        asyncio.gather(*balance_tasks),
     )
 
     all_transactions: List[Transaction] = []
@@ -409,17 +446,26 @@ async def build_financial_portrait_view(req: FinancialPortraitRequest) -> Dict[s
                 if enriched:
                     enriched_accounts.append(enriched)
 
+    balance_total = 0.0
+    balance_statuses: List[Dict[str, str]] = []
+    for res in balance_results:
+        balance_statuses.append({"bank": res["bank_id"], "status": res["status"], "message": res.get("message") or ""})
+        entries = res.get("balances") or []
+        balance_total += _sum_balance_amounts(entries)
+
+
     product_consents = get_product_consents_for_user(req.user_id)
     bank_status_logs = get_recent_bank_status_logs(req.user_id)
 
     if not all_transactions:
         return {
             "error": "Could not fetch any transactions.",
-            "bank_statuses": {
-                "transactions": tx_statuses,
-                "credits": credit_statuses,
-                "accounts": account_statuses,
-            },
+        "bank_statuses": {
+            "transactions": tx_statuses,
+            "credits": credit_statuses,
+            "accounts": account_statuses,
+            "balances": balance_statuses,
+        },
             "product_consents": product_consents,
             "bank_status_logs": bank_status_logs,
         }
@@ -432,11 +478,13 @@ async def build_financial_portrait_view(req: FinancialPortraitRequest) -> Dict[s
         credits=enriched_credits or all_credits,
         accounts=enriched_accounts or all_accounts,
         user_goal=user_goal,
+        balance_override=balance_total if balance_total > 0 else None,
     )
     portrait["bank_statuses"] = {
         "transactions": tx_statuses,
         "credits": credit_statuses,
         "accounts": account_statuses,
+        "balances": balance_statuses,
     }
     portrait["product_consents"] = product_consents
     portrait["bank_status_logs"] = bank_status_logs

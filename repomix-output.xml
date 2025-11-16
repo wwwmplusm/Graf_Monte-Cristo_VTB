@@ -192,6 +192,7 @@ hktn/
       UserIdForm.tsx
     pages/
       __tests__/
+        DashboardPage.test.js
         DashboardPage.test.tsx
       BanksCatalogPage.js
       BanksCatalogPage.tsx
@@ -201,6 +202,7 @@ hktn/
       ConsentProcessPage.tsx
       ConsentStatusPage.js
       ConsentStatusPage.tsx
+      DashboardPage.js
       DashboardPage.tsx
       DebtGoalPage.js
       DebtGoalPage.tsx
@@ -223,6 +225,7 @@ hktn/
       setup.js
       setup.ts
     types/
+      dashboard.js
       dashboard.ts
     App.js
     App.tsx
@@ -15643,6 +15646,116 @@ export const UserIdForm = ({ defaultUserId = '', defaultUserName = '', onSubmit,
 };
 </file>
 
+<file path="hktn/src/pages/__tests__/DashboardPage.test.js">
+import { jsx as _jsx } from "react/jsx-runtime";
+import { render, screen, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
+import { DashboardPage } from '../DashboardPage';
+const dashboardStub = {
+    current_balance: 120000,
+    safe_to_spend_daily: 1500,
+    goal_probability: 82,
+    total_debt: 450000,
+    health_score: 72,
+    safe_to_spend_narrative: {
+        cycle_start: '2024-05-01',
+        cycle_end: '2024-05-15',
+        days_in_cycle: 14,
+        current_balance: 120000,
+        obligations_total: 50000,
+        goal_reserve: 12000,
+        spendable_total: 30000,
+        next_income_event: {
+            label: 'Зарплата',
+            next_occurrence: '2024-05-15',
+            amount: 90000,
+        },
+    },
+    safe_to_spend_context: {
+        state: 'calculated',
+    },
+    balance_context: {
+        state: 'ok',
+        account_count: 2,
+    },
+    upcoming_events: [
+        { name: 'Аренда', amount: 40000, date: '2024-05-05', is_income: false },
+        { name: 'Кредитная выплата', amount: 12000, date: '2024-05-12', is_income: false },
+    ],
+    budget_breakdown: [
+        { category: 'Продукты', amount: 10000 },
+        { category: 'Транспорт', amount: 5000 },
+    ],
+    upcoming_payments: [
+        { name: 'Аренда', amount: 40000, due_date: '2024-05-05' },
+        { name: 'Кредитная выплата', amount: 12000, due_date: '2024-05-12' },
+    ],
+    recurring_events: [
+        { name: 'Зарплата', amount: 90000, is_income: true, next_date: '2024-05-25' },
+        { name: 'Коммунальные услуги', amount: -4000, is_income: false, next_date: '2024-05-07' },
+    ],
+};
+vi.mock('../../state/useUser', () => ({
+    useUser: () => ({
+        userId: 'demo-user',
+    }),
+}));
+const notifyError = vi.fn();
+vi.mock('../../state/notifications', () => ({
+    useNotifications: () => ({
+        notifyError,
+    }),
+}));
+const mockGetDashboard = vi.fn();
+vi.mock('../../api/client', () => ({
+    getDashboard: (...args) => mockGetDashboard(...args),
+}));
+describe('DashboardPage', () => {
+    beforeEach(() => {
+        mockGetDashboard.mockResolvedValue(dashboardStub);
+    });
+    afterEach(() => {
+        vi.clearAllMocks();
+    });
+    it('renders Safe-to-Spend metric and goal probability', async () => {
+        render(_jsx(DashboardPage, {}));
+        await waitFor(() => expect(mockGetDashboard).toHaveBeenCalledWith('demo-user'));
+        expect(screen.getByRole('heading', { name: /Safe-to-Spend/i })).toBeInTheDocument();
+        expect(screen.getByText(/1.?500/)).toBeInTheDocument(); // formatted value (handles nbsp)
+        expect(screen.getByText(/Бюджет действует до/)).toBeInTheDocument();
+        expect(screen.getByText(/Всего доступно/)).toBeInTheDocument();
+    });
+    it('shows upcoming timeline and recurring events', async () => {
+        render(_jsx(DashboardPage, {}));
+        await waitFor(() => expect(mockGetDashboard).toHaveBeenCalled());
+        expect(screen.getAllByText('Аренда')[0]).toBeInTheDocument();
+        expect(screen.getAllByText('Кредитная выплата')[0]).toBeInTheDocument();
+        expect(screen.getAllByText('Зарплата')[0]).toBeInTheDocument();
+        expect(screen.getByText('Коммунальные услуги')).toBeInTheDocument();
+    });
+    it('falls back to error notification when request fails', async () => {
+        const error = new Error('boom');
+        mockGetDashboard.mockRejectedValueOnce(error);
+        render(_jsx(DashboardPage, {}));
+        await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    });
+    it('shows warning callout when safe-to-spend is blocked', async () => {
+        mockGetDashboard.mockResolvedValueOnce({
+            ...dashboardStub,
+            safe_to_spend_daily: null,
+            safe_to_spend_context: {
+                state: 'missing_balance',
+                message: 'Подключите счёт, чтобы рассчитать лимит.',
+            },
+        });
+        render(_jsx(DashboardPage, {}));
+        await waitFor(() => expect(mockGetDashboard).toHaveBeenCalled());
+        expect(screen.getByText(/Подключите счёт/)).toBeInTheDocument();
+        expect(screen.getByText(/Нет оценки/)).toBeInTheDocument();
+    });
+});
+</file>
+
 <file path="hktn/src/pages/CallbackPage.js">
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -16628,6 +16741,11 @@ import '@testing-library/jest-dom';
 
 <file path="hktn/src/test/setup.ts">
 import '@testing-library/jest-dom';
+</file>
+
+<file path="hktn/src/types/dashboard.js">
+// Файл: src/types/dashboard.ts
+export {};
 </file>
 
 <file path="hktn/src/main.js">
@@ -20040,6 +20158,90 @@ describe('DashboardPage', () => {
 });
 </file>
 
+<file path="hktn/src/pages/DashboardPage.js">
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useEffect, useState } from 'react';
+import { getDashboard } from '../api/client';
+import { useUser } from '../state/useUser';
+import { useNotifications } from '../state/notifications';
+const formatCurrency = (value) => {
+    if (value === null || value === undefined) {
+        return '—';
+    }
+    return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB',
+        maximumFractionDigits: 0,
+    }).format(value);
+};
+const formatDate = (value) => {
+    if (!value)
+        return '—';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return value;
+    }
+    return parsed.toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+    });
+};
+const STSCard = ({ data }) => {
+    const context = data.safe_to_spend_context;
+    const narrative = data.safe_to_spend_narrative;
+    const hasValue = typeof data.safe_to_spend_daily === 'number' && !Number.isNaN(data.safe_to_spend_daily ?? NaN);
+    const cycleEndLabel = narrative?.cycle_end ? formatDate(narrative.cycle_end) : null;
+    const balanceValue = narrative?.current_balance ?? data.current_balance;
+    const obligationsValue = narrative?.obligations_total ?? 0;
+    const spendableValue = narrative?.spendable_total ?? null;
+    const isBalanceLow = hasValue && typeof balanceValue === 'number' && typeof data.safe_to_spend_daily === 'number'
+        ? balanceValue < data.safe_to_spend_daily
+        : false;
+    return (_jsxs("div", { className: "card", children: [_jsx("h2", { children: "Safe-to-Spend" }), _jsx("p", { className: "muted", children: "\u0420\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0434\u043D\u0435\u0432\u043D\u043E\u0439 \u043B\u0438\u043C\u0438\u0442 \u0434\u043E \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0435\u0439 \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u044B." }), context?.message ? (_jsx("div", { className: `callout callout--${context.state === 'missing_balance' ? 'warning' : 'info'}`, children: context.message })) : null, _jsxs("p", { className: "metric", children: [hasValue ? formatCurrency(data.safe_to_spend_daily ?? undefined) : 'Нет оценки', _jsx("span", { children: " / \u0434\u0435\u043D\u044C" })] }), cycleEndLabel ? (_jsxs("p", { className: "muted", children: ["\u0411\u044E\u0434\u0436\u0435\u0442 \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u0435\u0442 \u0434\u043E ", _jsx("strong", { children: cycleEndLabel }), "."] })) : null, isBalanceLow && (_jsxs("div", { className: "callout callout--warning", children: ["\u0411\u0430\u043B\u0430\u043D\u0441 (", formatCurrency(balanceValue), ") \u043D\u0438\u0436\u0435 \u0434\u043D\u0435\u0432\u043D\u043E\u0433\u043E \u043B\u0438\u043C\u0438\u0442\u0430. \u0421\u043E\u043A\u0440\u0430\u0442\u0438\u0442\u0435 \u0442\u0440\u0430\u0442\u044B \u0441\u0435\u0433\u043E\u0434\u043D\u044F."] })), _jsxs("div", { className: "safe-obligations", children: [_jsxs("div", { children: ["\u0411\u0430\u043B\u0430\u043D\u0441: ", formatCurrency(balanceValue)] }), _jsxs("div", { children: ["\u041E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u0441\u0442\u0432\u0430 \u0432 \u0433\u043E\u0440\u0438\u0437\u043E\u043D\u0442\u0435: ", formatCurrency(obligationsValue)] }), _jsxs("div", { children: ["\u0420\u0435\u0437\u0435\u0440\u0432 \u043D\u0430 \u0446\u0435\u043B\u044C: ", formatCurrency(narrative?.goal_reserve)] }), _jsxs("div", { children: ["\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u043D\u0430 \u0446\u0438\u043A\u043B: ", formatCurrency(spendableValue)] })] })] }));
+};
+const UpcomingEventsCard = ({ events, narrative }) => {
+    const cycleEndLabel = narrative?.cycle_end ? formatDate(narrative.cycle_end) : '—';
+    const items = events ?? [];
+    const nextIncome = narrative?.next_income_event;
+    return (_jsxs("div", { className: "card", children: [_jsxs("h3", { children: ["\u0414\u043E \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u044B (", cycleEndLabel, ")"] }), _jsxs("ul", { className: "list", children: [_jsx("li", { className: "event-row", children: _jsxs("div", { className: "event-row__header", children: [_jsxs("div", { children: [_jsx("p", { className: "event-row__title", children: "\u0422\u0435\u043A\u0443\u0449\u0438\u0439 \u0431\u0430\u043B\u0430\u043D\u0441" }), _jsx("p", { className: "event-row__subtitle", children: formatDate(narrative?.cycle_start) })] }), _jsx("div", { className: "event-row__amount", children: _jsx("span", { children: formatCurrency(narrative?.current_balance) }) })] }) }), items.length > 0 ? (items.map((event, index) => (_jsx("li", { className: `event-row ${event.is_income ? 'event-row--income' : 'event-row--expense'}`, children: _jsxs("div", { className: "event-row__header", children: [_jsxs("div", { children: [_jsx("p", { className: "event-row__title", children: event.name }), _jsx("p", { className: "event-row__subtitle", children: formatDate(event.date) })] }), _jsx("div", { className: "event-row__amount", children: _jsx("span", { children: formatCurrency(event.amount) }) })] }) }, `${event.name}-${index}`)))) : (_jsx("li", { className: "muted", children: "\u041D\u0435\u0442 \u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0445 \u043F\u043B\u0430\u0442\u0435\u0436\u0435\u0439 \u0432 \u044D\u0442\u043E\u043C \u0433\u043E\u0440\u0438\u0437\u043E\u043D\u0442\u0435." })), nextIncome ? (_jsx("li", { className: "event-row event-row--income", children: _jsxs("div", { className: "event-row__header", children: [_jsxs("div", { children: [_jsx("p", { className: "event-row__title", children: nextIncome.label ?? 'Доход' }), _jsx("p", { className: "event-row__subtitle", children: formatDate(nextIncome.next_occurrence) })] }), _jsx("div", { className: "event-row__amount", children: _jsx("span", { children: formatCurrency(nextIncome.amount) }) })] }) })) : null] })] }));
+};
+const BudgetCard = ({ budget, narrative }) => (_jsxs("div", { className: "card", children: [_jsxs("h3", { children: ["\u0412\u0430\u0448 \u0431\u044E\u0434\u0436\u0435\u0442 \u043D\u0430 \u0436\u0438\u0437\u043D\u044C (", narrative?.days_in_cycle ?? 0, " \u0434.)"] }), _jsx("p", { className: "muted", children: "\u041F\u0440\u0435\u0434\u043B\u0430\u0433\u0430\u0435\u043C \u0442\u0430\u043A \u0440\u0430\u0441\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u0441\u0432\u043E\u0431\u043E\u0434\u043D\u044B\u0435 \u0441\u0440\u0435\u0434\u0441\u0442\u0432\u0430 \u0434\u043E \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0435\u0439 \u0432\u044B\u043F\u043B\u0430\u0442\u044B." }), _jsxs("ul", { className: "list", children: [_jsx("li", { className: "event-row event-row--expense", children: _jsxs("div", { className: "event-row__header", children: [_jsx("div", { children: _jsx("p", { className: "event-row__title", children: "\u0412\u0441\u0435\u0433\u043E \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E" }) }), _jsx("div", { className: "event-row__amount", children: _jsx("strong", { children: formatCurrency(narrative?.spendable_total) }) })] }) }), budget && budget.length > 0 ? (budget.map((item, index) => (_jsx("li", { className: "event-row event-row--expense", children: _jsxs("div", { className: "event-row__header", children: [_jsx("div", { children: _jsx("p", { className: "event-row__title", children: item.category }) }), _jsx("div", { className: "event-row__amount", children: _jsx("span", { children: formatCurrency(item.amount) }) })] }) }, `${item.category}-${index}`)))) : (_jsx("li", { className: "muted", children: "\u041D\u0435\u0442 \u043F\u0435\u0440\u0435\u043C\u0435\u043D\u043D\u044B\u0445 \u0442\u0440\u0430\u0442 \u0434\u043B\u044F \u0440\u0430\u0441\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u0438\u044F." })), _jsx("li", { className: "event-row event-row--income", children: _jsxs("div", { className: "event-row__header", children: [_jsx("div", { children: _jsx("p", { className: "event-row__title", children: "\u0420\u0435\u0437\u0435\u0440\u0432 \u043D\u0430 \u0446\u0435\u043B\u044C" }) }), _jsx("div", { className: "event-row__amount", children: _jsx("span", { children: formatCurrency(narrative?.goal_reserve) }) })] }) })] })] }));
+const RecurringEventsCard = ({ events }) => (_jsxs("div", { className: "card", children: [_jsx("h3", { children: "\u0424\u0438\u043D\u0430\u043D\u0441\u043E\u0432\u044B\u0435 \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0438" }), _jsx("ul", { className: "list", children: events && events.length > 0 ? (events.map((event, index) => (_jsx("li", { className: `event-row ${event.is_income ? 'event-row--income' : 'event-row--expense'}`, children: _jsxs("div", { className: "event-row__header", children: [_jsxs("div", { children: [_jsx("p", { className: "event-row__title", children: event.name }), _jsxs("p", { className: "event-row__subtitle", children: ["\u0421\u043B\u0435\u0434\u0443\u044E\u0449\u0435\u0435: ", formatDate(event.next_date)] })] }), _jsx("div", { className: "event-row__amount", children: _jsx("span", { children: formatCurrency(event.amount) }) })] }) }, `${event.name}-${index}`)))) : (_jsx("li", { className: "muted", children: "\u041F\u043E\u043A\u0430 \u043D\u0435 \u043D\u0430\u0448\u043B\u0438 \u043F\u043E\u0432\u0442\u043E\u0440\u044F\u044E\u0449\u0438\u0445\u0441\u044F \u0441\u043E\u0431\u044B\u0442\u0438\u0439." })) })] }));
+export const DashboardPage = () => {
+    const { userId } = useUser();
+    const { notifyError } = useNotifications();
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        if (!userId)
+            return;
+        const load = async () => {
+            try {
+                setLoading(true);
+                const payload = await getDashboard(userId);
+                setData(payload);
+            }
+            catch (error) {
+                console.error(error);
+                notifyError('Не удалось загрузить данные для дашборда.');
+            }
+            finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, [notifyError, userId]);
+    if (loading) {
+        return (_jsx("div", { className: "app-main", children: _jsx("div", { className: "card", children: _jsx("p", { children: "\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u0435\u043C \u0432\u0430\u0448\u0438 \u0444\u0438\u043D\u0430\u043D\u0441\u044B \u0438 \u0441\u0442\u0440\u043E\u0438\u043C \u043F\u0440\u043E\u0433\u043D\u043E\u0437\u044B..." }) }) }));
+    }
+    if (!data) {
+        return (_jsx("div", { className: "app-main", children: _jsxs("div", { className: "card", children: [_jsx("h2", { children: "\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445" }), _jsx("p", { children: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0430\u043D\u0430\u043B\u0438\u0442\u0438\u043A\u0443. \u041F\u0440\u043E\u0439\u0434\u0438\u0442\u0435 \u043E\u043D\u0431\u043E\u0440\u0434\u0438\u043D\u0433 \u0435\u0449\u0451 \u0440\u0430\u0437." })] }) }));
+    }
+    return (_jsxs("div", { className: "app-main", children: [_jsx(STSCard, { data: data }), _jsxs("div", { className: "grid grid-two", children: [_jsx(UpcomingEventsCard, { events: data.upcoming_events, narrative: data.safe_to_spend_narrative }), _jsx(BudgetCard, { budget: data.budget_breakdown, narrative: data.safe_to_spend_narrative })] }), _jsx(RecurringEventsCard, { events: data.recurring_events })] }));
+};
+export default DashboardPage;
+</file>
+
 <file path="hktn/src/styles/global.css">
 :root {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -20495,103 +20697,6 @@ textarea {
 }
 </file>
 
-<file path="hktn/src/types/dashboard.ts">
-// Файл: src/types/dashboard.ts
-
-// --- Секция 1: Вспомогательные типы (оставьте как есть) ---
-export type ObligationSource =
-  | 'credit_agreement'
-  | 'recurring_debit'
-  | 'recurring_income'
-  | 'income_event'
-  | 'expense_event'
-  | (string & Record<never, never>);
-
-export type MetadataMixin = {
-  mcc_code?: string | null;
-  category?: string | null;
-  merchant_name?: string | null;
-  bank_transaction_code?: string | null;
-  source?: ObligationSource | null;
-  frequency_days?: number | null;
-};
-
-export type RecurringEvent = MetadataMixin & {
-  name: string;
-  amount: number;
-  is_income: boolean;
-  next_date: string;
-};
-
-export type SafeToSpendNarrative = {
-  cycle_start?: string;
-  cycle_end?: string;
-  days_in_cycle?: number;
-  current_balance?: number; // Убедитесь, что это поле здесь есть
-  obligations_total?: number;
-  free_cash?: number;
-  goal_reserve?: number;
-  spendable_total?: number;
-  next_income_event?: { // Убедитесь, что этот объект определен
-    label?: string;
-    next_occurrence?: string;
-    mu_amount?: number;
-  } | null;
-};
-
-export type SafeToSpendContext = {
-  state: string;
-  message?: string | null;
-};
-
-export type BalanceContext = {
-  state: string;
-  message?: string | null;
-  account_count?: number;
-};
-
-
-// --- Секция 2: Новые типы для дашборда (УБЕДИТЕСЬ, ЧТО ОНИ ЕСТЬ ТОЛЬКО ОДИН РАЗ) ---
-
-// Тип для элемента в блоке "Бортовой журнал"
-export type UpcomingEvent = {
-  name: string;
-  amount: number | null;
-  date: string; // ISO date string
-  is_income: boolean;
-  source?: string | null;
-};
-
-// Тип для элемента в блоке "Ваш бюджет"
-export type BudgetBreakdownItem = {
-  category: string;
-  amount: number;
-};
-
-
-// --- Секция 3: Главный тип ответа (УБЕДИТЕСЬ, ЧТО ОН ЕСТЬ ТОЛЬКО ОДИН РАЗ) ---
-
-// Это единственное и правильное определение для DashboardResponse
-export type DashboardResponse = {
-  current_balance: number;
-  safe_to_spend_daily: number | null;
-  goal_probability: number;
-  
-  total_debt?: number;
-  debt_freedom_date?: string | null;
-
-  upcoming_events: UpcomingEvent[]; 
-  budget_breakdown: BudgetBreakdownItem[];
-  recurring_events: RecurringEvent[];
-
-  health_score?: number;
-  bank_statuses?: Record<string, { bank_name: string; status: string; message?: string }>;
-  safe_to_spend_narrative?: SafeToSpendNarrative;
-  safe_to_spend_context?: SafeToSpendContext;
-  balance_context?: BalanceContext;
-};
-</file>
-
 <file path="hktn/backend/services/consents.py">
 from __future__ import annotations
 
@@ -20797,6 +20902,956 @@ async def poll_consent_status(user_id: str, bank_id: str, request_id: str) -> Di
 def mark_consent_from_callback(consent_id: str) -> bool:
     """Mark consent as approved when redirected back from bank."""
     return update_consent_status(consent_id, "APPROVED")
+</file>
+
+<file path="hktn/src/types/dashboard.ts">
+// Файл: src/types/dashboard.ts
+
+// --- Секция 1: Вспомогательные типы (оставьте как есть) ---
+export type ObligationSource =
+  | 'credit_agreement'
+  | 'recurring_debit'
+  | 'recurring_income'
+  | 'income_event'
+  | 'expense_event'
+  | (string & Record<never, never>);
+
+export type MetadataMixin = {
+  mcc_code?: string | null;
+  category?: string | null;
+  merchant_name?: string | null;
+  bank_transaction_code?: string | null;
+  source?: ObligationSource | null;
+  frequency_days?: number | null;
+};
+
+export type RecurringEvent = MetadataMixin & {
+  name: string;
+  amount: number;
+  is_income: boolean;
+  next_date: string;
+};
+
+export type SafeToSpendNarrative = {
+  cycle_start?: string;
+  cycle_end?: string;
+  days_in_cycle?: number;
+  current_balance?: number; // Убедитесь, что это поле здесь есть
+  obligations_total?: number;
+  free_cash?: number;
+  goal_reserve?: number;
+  spendable_total?: number;
+  next_income_event?: { // Убедитесь, что этот объект определен
+    label?: string;
+    next_occurrence?: string;
+    mu_amount?: number;
+    amount?: number;
+  } | null;
+};
+
+export type SafeToSpendContext = {
+  state: string;
+  message?: string | null;
+};
+
+export type BalanceContext = {
+  state: string;
+  message?: string | null;
+  account_count?: number;
+};
+
+
+// --- Секция 2: Новые типы для дашборда (УБЕДИТЕСЬ, ЧТО ОНИ ЕСТЬ ТОЛЬКО ОДИН РАЗ) ---
+
+// Тип для элемента в блоке "Бортовой журнал"
+export type UpcomingEvent = {
+  name: string;
+  amount: number;
+  date?: string; // ISO date string
+  is_income?: boolean;
+  source?: string | null;
+  due_date?: string;
+};
+
+// Тип для элемента в блоке "Ваш бюджет"
+export type BudgetBreakdownItem = {
+  category: string;
+  amount: number;
+};
+
+
+// --- Секция 3: Главный тип ответа (УБЕДИТЕСЬ, ЧТО ОН ЕСТЬ ТОЛЬКО ОДИН РАЗ) ---
+
+// Это единственное и правильное определение для DashboardResponse
+export type DashboardResponse = {
+  current_balance: number;
+  safe_to_spend_daily: number | null;
+  goal_probability: number;
+  upcoming_events?: UpcomingEvent[];
+  budget_breakdown?: BudgetBreakdownItem[];
+  upcoming_payments?: UpcomingEvent[];
+  
+  total_debt?: number;
+  debt_freedom_date?: string | null;
+
+  recurring_events: RecurringEvent[];
+
+  health_score?: number;
+  bank_statuses?: Record<string, { bank_name: string; status: string; message?: string }>;
+  safe_to_spend_narrative?: SafeToSpendNarrative;
+  safe_to_spend_context?: SafeToSpendContext;
+  balance_context?: BalanceContext;
+};
+</file>
+
+<file path="hktn/src/pages/DashboardPage.tsx">
+import React, { useEffect, useState } from 'react';
+import { getDashboard } from '../api/client';
+import { useUser } from '../state/useUser';
+import { useNotifications } from '../state/notifications';
+import type {
+  BudgetBreakdownItem,
+  DashboardResponse,
+  RecurringEvent,
+  UpcomingEvent,
+} from '../types/dashboard';
+
+const formatCurrency = (value?: number | null) => {
+  if (value === null || value === undefined) {
+    return '—';
+  }
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) return '—';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+  });
+};
+
+const STSCard: React.FC<{ data: DashboardResponse }> = ({ data }) => {
+  const context = data.safe_to_spend_context;
+  const narrative = data.safe_to_spend_narrative;
+  const hasValue = typeof data.safe_to_spend_daily === 'number' && !Number.isNaN(data.safe_to_spend_daily ?? NaN);
+  const cycleEndLabel = narrative?.cycle_end ? formatDate(narrative.cycle_end) : null;
+  const balanceValue = narrative?.current_balance ?? data.current_balance;
+  const obligationsValue = narrative?.obligations_total ?? 0;
+  const spendableValue = narrative?.spendable_total ?? null;
+  const isBalanceLow =
+    hasValue && typeof balanceValue === 'number' && typeof data.safe_to_spend_daily === 'number'
+      ? balanceValue < data.safe_to_spend_daily
+      : false;
+
+  return (
+    <div className="card">
+      <h2>Safe-to-Spend</h2>
+      <p className="muted">Рекомендованный дневной лимит до следующей зарплаты.</p>
+      {context?.message ? (
+        <div className={`callout callout--${context.state === 'missing_balance' ? 'warning' : 'info'}`}>
+          {context.message}
+        </div>
+      ) : null}
+      <p className="metric">
+        {hasValue ? formatCurrency(data.safe_to_spend_daily ?? undefined) : 'Нет оценки'}
+        <span> / день</span>
+      </p>
+      {cycleEndLabel ? (
+        <p className="muted">
+          Бюджет действует до <strong>{cycleEndLabel}</strong>.
+        </p>
+      ) : null}
+      {isBalanceLow && (
+        <div className="callout callout--warning">
+          Баланс ({formatCurrency(balanceValue)}) ниже дневного лимита. Сократите траты сегодня.
+        </div>
+      )}
+      <div className="safe-obligations">
+        <div>Баланс: {formatCurrency(balanceValue)}</div>
+        <div>Обязательства в горизонте: {formatCurrency(obligationsValue)}</div>
+        <div>Резерв на цель: {formatCurrency(narrative?.goal_reserve)}</div>
+        <div>Доступно на цикл: {formatCurrency(spendableValue)}</div>
+      </div>
+    </div>
+  );
+};
+
+const UpcomingEventsCard: React.FC<{
+  events?: UpcomingEvent[];
+  narrative?: DashboardResponse['safe_to_spend_narrative'];
+}> = ({ events, narrative }) => {
+  const cycleEndLabel = narrative?.cycle_end ? formatDate(narrative.cycle_end) : '—';
+  const items = events ?? [];
+  const nextIncome = narrative?.next_income_event;
+
+  return (
+    <div className="card">
+      <h3>До зарплаты ({cycleEndLabel})</h3>
+      <ul className="list">
+        <li className="event-row">
+          <div className="event-row__header">
+            <div>
+              <p className="event-row__title">Текущий баланс</p>
+              <p className="event-row__subtitle">{formatDate(narrative?.cycle_start)}</p>
+            </div>
+            <div className="event-row__amount">
+              <span>{formatCurrency(narrative?.current_balance)}</span>
+            </div>
+          </div>
+        </li>
+        {items.length > 0 ? (
+          items.map((event, index) => (
+            <li
+              key={`${event.name}-${index}`}
+              className={`event-row ${event.is_income ? 'event-row--income' : 'event-row--expense'}`}
+            >
+              <div className="event-row__header">
+                <div>
+                  <p className="event-row__title">{event.name}</p>
+                  <p className="event-row__subtitle">{formatDate(event.date)}</p>
+                </div>
+                <div className="event-row__amount">
+                  <span>{formatCurrency(event.amount)}</span>
+                </div>
+              </div>
+            </li>
+          ))
+        ) : (
+          <li className="muted">Нет фиксированных платежей в этом горизонте.</li>
+        )}
+        {nextIncome ? (
+          <li className="event-row event-row--income">
+            <div className="event-row__header">
+              <div>
+                <p className="event-row__title">{nextIncome.label ?? 'Доход'}</p>
+                <p className="event-row__subtitle">{formatDate(nextIncome.next_occurrence)}</p>
+              </div>
+              <div className="event-row__amount">
+                <span>{formatCurrency(nextIncome.amount)}</span>
+              </div>
+            </div>
+          </li>
+        ) : null}
+      </ul>
+    </div>
+  );
+};
+
+const BudgetCard: React.FC<{
+  budget?: BudgetBreakdownItem[];
+  narrative?: DashboardResponse['safe_to_spend_narrative'];
+}> = ({ budget, narrative }) => (
+  <div className="card">
+    <h3>Ваш бюджет на жизнь ({narrative?.days_in_cycle ?? 0} д.)</h3>
+    <p className="muted">Предлагаем так распределить свободные средства до следующей выплаты.</p>
+    <ul className="list">
+      <li className="event-row event-row--expense">
+        <div className="event-row__header">
+          <div>
+            <p className="event-row__title">Всего доступно</p>
+          </div>
+          <div className="event-row__amount">
+            <strong>{formatCurrency(narrative?.spendable_total)}</strong>
+          </div>
+        </div>
+      </li>
+      {budget && budget.length > 0 ? (
+        budget.map((item, index) => (
+          <li key={`${item.category}-${index}`} className="event-row event-row--expense">
+            <div className="event-row__header">
+              <div>
+                <p className="event-row__title">{item.category}</p>
+              </div>
+              <div className="event-row__amount">
+                <span>{formatCurrency(item.amount)}</span>
+              </div>
+            </div>
+          </li>
+        ))
+      ) : (
+        <li className="muted">Нет переменных трат для распределения.</li>
+      )}
+      <li className="event-row event-row--income">
+        <div className="event-row__header">
+          <div>
+            <p className="event-row__title">Резерв на цель</p>
+          </div>
+          <div className="event-row__amount">
+            <span>{formatCurrency(narrative?.goal_reserve)}</span>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+);
+
+const RecurringEventsCard: React.FC<{ events?: RecurringEvent[] }> = ({ events }) => (
+  <div className="card">
+    <h3>Финансовые привычки</h3>
+    <ul className="list">
+      {events && events.length > 0 ? (
+        events.map((event, index) => (
+          <li key={`${event.name}-${index}`} className={`event-row ${event.is_income ? 'event-row--income' : 'event-row--expense'}`}>
+            <div className="event-row__header">
+              <div>
+                <p className="event-row__title">{event.name}</p>
+                <p className="event-row__subtitle">Следующее: {formatDate(event.next_date)}</p>
+              </div>
+              <div className="event-row__amount">
+                <span>{formatCurrency(event.amount)}</span>
+              </div>
+            </div>
+          </li>
+        ))
+      ) : (
+        <li className="muted">Пока не нашли повторяющихся событий.</li>
+      )}
+    </ul>
+  </div>
+);
+
+export const DashboardPage: React.FC = () => {
+  const { userId } = useUser();
+  const { notifyError } = useNotifications();
+  const [data, setData] = useState<DashboardResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    const load = async () => {
+      try {
+        setLoading(true);
+        const payload = await getDashboard(userId);
+        setData(payload);
+      } catch (error) {
+        console.error(error);
+        notifyError('Не удалось загрузить данные для дашборда.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [notifyError, userId]);
+
+  if (loading) {
+    return (
+      <div className="app-main">
+        <div className="card">
+          <p>Анализируем ваши финансы и строим прогнозы...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="app-main">
+        <div className="card">
+          <h2>Нет данных</h2>
+          <p>Не удалось загрузить аналитику. Пройдите онбординг ещё раз.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app-main">
+      <STSCard data={data} />
+      <div className="grid grid-two">
+        <UpcomingEventsCard events={data.upcoming_events} narrative={data.safe_to_spend_narrative} />
+        <BudgetCard budget={data.budget_breakdown} narrative={data.safe_to_spend_narrative} />
+      </div>
+      <RecurringEventsCard events={data.recurring_events} />
+    </div>
+  );
+};
+
+export default DashboardPage;
+</file>
+
+<file path="hktn/backend/services/analytics.py">
+from __future__ import annotations
+
+import asyncio
+import logging
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional, Sequence
+
+from fastapi import HTTPException, status
+
+from hktn.core.analytics_engine import (
+    build_financial_portrait,
+    calculate_daily_s2s,
+    derive_obligations,
+    estimate_goal_probability,
+    extract_recurring_events,
+    rank_credits,
+    run_analysis_with_details,
+    _extract_account_balance,
+    _derive_event_label,
+)
+from hktn.core.data_models import Transaction
+from hktn.core.database import (
+    find_approved_consents,
+    get_product_consents_for_user,
+    get_recent_bank_status_logs,
+    get_user_goal,
+    StoredConsent,
+)
+
+from ..schemas import AnalysisRequest, FinancialPortraitRequest, IngestRequest
+from .banking import fetch_bank_accounts_with_consent, fetch_bank_credits, fetch_bank_data_with_consent
+from .goals import compose_user_goal
+from .products import apply_consent_flags, build_account_product, build_credit_product, group_products_by_bank
+
+logger = logging.getLogger("finpulse.backend.analytics")
+
+
+def _parse_iso_date(value: Any) -> Optional[date]:
+    if isinstance(value, date):
+        return value
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, str) and value:
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            try:
+                return datetime.fromisoformat(value).date()
+            except ValueError:
+                return None
+    return None
+
+
+def _generate_budget_breakdown(
+    spendable_total: float,
+    event_profiles: Sequence[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Distribute spendable cash across recurring spending categories."""
+    if spendable_total <= 0:
+        return []
+
+    category_spend: Dict[str, float] = {}
+    for event in event_profiles or []:
+        if event.get("is_income"):
+            continue
+        if event.get("source") not in (None, "expense_event", "recurring_debit"):
+            continue
+        avg_amount = abs(float(event.get("mu_amount") or 0.0))
+        if avg_amount <= 0:
+            continue
+        label = _derive_event_label(event)
+        category_spend[label] = category_spend.get(label, 0.0) + avg_amount
+
+    total_avg_spend = sum(category_spend.values())
+    if total_avg_spend <= 0:
+        return []
+
+    budget: List[Dict[str, Any]] = []
+    for category, avg_amount in category_spend.items():
+        proportion = avg_amount / total_avg_spend
+        budget.append(
+            {
+                "category": category,
+                "amount": round(spendable_total * proportion, 2),
+            }
+        )
+
+    budget.sort(key=lambda item: item["amount"], reverse=True)
+    return budget
+
+
+def _collect_cycle_events(
+    obligations: Sequence[Dict[str, Any]],
+    cycle_start_iso: Optional[str],
+    cycle_end_iso: Optional[str],
+) -> List[Dict[str, Any]]:
+    """Return obligations that fall within the current planning cycle."""
+    cycle_start = _parse_iso_date(cycle_start_iso)
+    cycle_end = _parse_iso_date(cycle_end_iso)
+    if not cycle_start or not cycle_end:
+        return []
+
+    events: List[Dict[str, Any]] = []
+    for obligation in obligations or []:
+        due_date = obligation.get("due_date")
+        due = _parse_iso_date(due_date)
+        if due is None:
+            continue
+        if not (cycle_start <= due < cycle_end):
+            continue
+        events.append(
+            {
+                "name": obligation.get("label") or "Обязательный платёж",
+                "amount": float(obligation.get("amount") or 0.0),
+                "date": due.isoformat(),
+                "is_income": False,
+                "source": obligation.get("source"),
+                "mcc_code": obligation.get("mcc_code"),
+                "merchant_name": obligation.get("merchant_name"),
+            }
+        )
+
+    events.sort(key=lambda item: item["date"])
+    return events
+
+
+def _require_consents(user_id: str) -> Sequence[StoredConsent]:
+    approved_consents = find_approved_consents(user_id, consent_type="accounts")
+    if not approved_consents:
+        raise HTTPException(
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+            detail="No approved consents found.",
+        )
+    return approved_consents
+
+
+async def get_user_credits(user_id: str) -> Dict[str, Any]:
+    approved_consents = _require_consents(user_id)
+    tasks = [
+        fetch_bank_credits(consent.bank_id, consent.consent_id, user_id, create_product_consent=True)
+        for consent in approved_consents
+    ]
+    bank_results = await asyncio.gather(*tasks)
+
+    all_credits: List[Dict[str, Any]] = []
+    bank_statuses: List[Dict[str, str]] = []
+    for res in bank_results:
+        bank_statuses.append({"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]})
+        if res["status"] == "ok":
+            all_credits.extend(res["credits"])
+
+    ranked = rank_credits(all_credits)
+    return {"credits": all_credits, "credit_rankings": ranked, "bank_statuses": bank_statuses}
+
+
+async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
+    approved_consents = _require_consents(user_id)
+
+    stored_goal = get_user_goal(user_id)
+    user_goal = compose_user_goal(stored_goal)
+
+    tx_tasks = [
+        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, user_id)
+        for consent in approved_consents
+    ]
+    credit_tasks = [
+        fetch_bank_credits(consent.bank_id, consent.consent_id, user_id)
+        for consent in approved_consents
+    ]
+    account_tasks = [
+        fetch_bank_accounts_with_consent(consent.bank_id, consent.consent_id, user_id)
+        for consent in approved_consents
+    ]
+
+    tx_results, credit_results, account_results = await asyncio.gather(
+        asyncio.gather(*tx_tasks),
+        asyncio.gather(*credit_tasks),
+        asyncio.gather(*account_tasks),
+    )
+
+    all_transactions: List[Transaction] = []
+    all_credits: List[Dict[str, Any]] = []
+    all_accounts: List[Dict[str, Any]] = []
+    bank_statuses: Dict[str, Dict[str, str]] = {}
+
+    for res in tx_results:
+        bank_statuses[res["bank_id"]] = {
+            "bank_name": res["bank_id"],
+            "status": res["status"],
+            "message": res["message"],
+        }
+        if res["status"] == "ok":
+            all_transactions.extend(res["transactions"])
+
+    for res in credit_results:
+        entry = bank_statuses.setdefault(
+            res["bank_id"],
+            {"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]},
+        )
+        if res["status"] == "ok":
+            all_credits.extend(res["credits"])
+        else:
+            if entry["status"] == "ok":
+                entry["status"] = "partial_error"
+            entry["message"] += f"; credits failed: {res['message']}"
+
+    for res in account_results:
+        entry = bank_statuses.setdefault(
+            res["bank_id"],
+            {"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]},
+        )
+        if res["status"] == "ok":
+            raw_accounts = res.get("accounts") or []
+            logger.info("Raw accounts payload for bank %s: %s", res["bank_id"], raw_accounts)
+            all_accounts.extend(res.get("accounts") or [])
+        else:
+            if entry["status"] == "ok":
+                entry["status"] = "partial_error"
+            suffix = f"accounts failed: {res['message']}"
+            entry["message"] = f"{entry.get('message', '')}; {suffix}" if entry.get("message") else suffix
+
+    if not all_transactions:
+        raise HTTPException(
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+            detail="Could not fetch any transactions.",
+        )
+
+    current_balance = sum(_extract_account_balance(account) for account in all_accounts)
+    balance_state = "ok"
+    balance_message = None
+    if not all_accounts:
+        balance_state = "missing_accounts"
+        balance_message = "Банки не вернули данные по счетам. Подключите счёт с остатком."
+        logger.warning("Could not determine current balance for user %s, defaulting to 0.", user_id)
+    elif current_balance <= 0:
+        balance_state = "zero_balance"
+        balance_message = "Текущий баланс равен 0 ₽ — не удалось получить остаток от банка."
+        logger.warning("Balance for user %s is zero despite connected accounts.", user_id)
+        current_balance = 0.0
+
+    planning_start = date.today()
+
+    (
+        _analysis_result,
+        trajectories,
+        forecast_dates,
+        _noise_profile,
+        event_profiles,
+    ) = run_analysis_with_details(
+        all_transactions,
+        current_balance,
+        planning_start + timedelta(days=30),
+        0,
+    )
+
+    obligations = derive_obligations(all_credits, event_profiles)
+    obligation_cluster_ids: set[int] = set()
+    for obligation in obligations:
+        cluster_id = obligation.get("cluster_id")
+        if cluster_id is None:
+            continue
+        try:
+            obligation_cluster_ids.add(int(cluster_id))
+        except (TypeError, ValueError):
+            continue
+    safe_to_spend_daily_raw, safe_to_spend_details = calculate_daily_s2s(
+        current_balance,
+        event_profiles,
+        obligations,
+        user_goal,
+        start_date=planning_start,
+        return_details=True,
+    )
+    safe_to_spend_daily = safe_to_spend_daily_raw if balance_state == "ok" else None
+    safe_to_spend_state = "calculated" if safe_to_spend_daily_raw > 0 else "no_free_cash"
+    safe_to_spend_message = None
+    if balance_state != "ok":
+        safe_to_spend_state = "missing_balance"
+        safe_to_spend_message = balance_message
+    elif safe_to_spend_daily_raw <= 0:
+        safe_to_spend_message = "Все ближайшие средства пойдут на обязательные платежи."
+
+    spendable_total = float(safe_to_spend_details.get("spendable_total") or 0.0)
+    budget_breakdown = _generate_budget_breakdown(spendable_total, event_profiles)
+    upcoming_events = _collect_cycle_events(
+        obligations,
+        safe_to_spend_details.get("cycle_start"),
+        safe_to_spend_details.get("cycle_end"),
+    )
+
+    goal_probability = estimate_goal_probability(user_goal, trajectories, forecast_dates, obligations, event_profiles)
+    recurring_events = extract_recurring_events(event_profiles, exclude_cluster_ids=obligation_cluster_ids)
+
+    total_debt = sum(float(credit.get("balance", 0) or 0) for credit in all_credits)
+    monthly_income = sum(float(event.get("mu_amount", 0) or 0) for event in event_profiles if event.get("is_income"))
+    monthly_payments = sum(float(obligation.get("amount") or 0.0) for obligation in obligations)
+    health_score = 0
+    if monthly_income > 0:
+        debt_to_income_ratio = monthly_payments / monthly_income if monthly_income else 0
+        health_score = max(0, int((1 - debt_to_income_ratio * 2) * 100))
+
+    today = date.today()
+    upcoming_payloads: List[Dict[str, Any]] = []
+    for obligation in obligations:
+        if obligation.get("source") != "credit_agreement":
+            continue
+        due_date = obligation.get("due_date")
+        if not isinstance(due_date, date):
+            continue
+        if due_date < today:
+            continue
+        payload = {
+            "name": obligation.get("label") or "Обязательный платёж",
+            "amount": obligation.get("amount"),
+            "due_date": due_date,
+            "source": obligation.get("source"),
+            "mcc_code": obligation.get("mcc_code"),
+            "category": obligation.get("category"),
+            "merchant_name": obligation.get("merchant_name"),
+            "bank_transaction_code": obligation.get("bank_transaction_code"),
+            "frequency_days": obligation.get("frequency_days"),
+        }
+        upcoming_payloads.append(payload)
+
+    upcoming_payloads.sort(key=lambda item: item["due_date"])
+    upcoming_payments = [
+        {
+            **payload,
+            "due_date": payload["due_date"].isoformat(),
+        }
+        for payload in upcoming_payloads[:5]
+    ]
+
+    return {
+        "current_balance": round(current_balance, 2),
+        "safe_to_spend_daily": safe_to_spend_daily if safe_to_spend_daily is not None else None,
+        "safe_to_spend_narrative": safe_to_spend_details,
+        "safe_to_spend_context": {
+            "state": safe_to_spend_state,
+            "message": safe_to_spend_message,
+        },
+        "balance_context": {
+            "state": balance_state,
+            "message": balance_message,
+            "account_count": len(all_accounts),
+        },
+        "upcoming_events": upcoming_events,
+        "budget_breakdown": budget_breakdown,
+        "goal_probability": goal_probability,
+        "upcoming_payments": upcoming_payments,
+        "recurring_events": recurring_events,
+        "total_debt": round(total_debt, 2),
+        "health_score": health_score,
+        "bank_statuses": bank_statuses,
+    }
+
+
+async def build_financial_portrait_view(req: FinancialPortraitRequest) -> Dict[str, Any]:
+    approved_consents = _require_consents(req.user_id)
+
+    tx_tasks = [
+        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, req.user_id)
+        for consent in approved_consents
+    ]
+    credit_tasks = [
+        fetch_bank_credits(consent.bank_id, consent.consent_id, req.user_id, create_product_consent=True)
+        for consent in approved_consents
+    ]
+    account_tasks = [
+        fetch_bank_accounts_with_consent(consent.bank_id, consent.consent_id, req.user_id)
+        for consent in approved_consents
+    ]
+
+    tx_results, credit_results, account_results = await asyncio.gather(
+        asyncio.gather(*tx_tasks),
+        asyncio.gather(*credit_tasks),
+        asyncio.gather(*account_tasks),
+    )
+
+    all_transactions: List[Transaction] = []
+    all_credits: List[Dict[str, Any]] = []
+    all_accounts: List[Dict[str, Any]] = []
+    enriched_credits: List[Dict[str, Any]] = []
+    enriched_accounts: List[Dict[str, Any]] = []
+    tx_statuses: List[Dict[str, str]] = []
+    credit_statuses: List[Dict[str, str]] = []
+    account_statuses: List[Dict[str, str]] = []
+
+    for res in tx_results:
+        tx_statuses.append({"bank": res["bank_id"], "status": res["status"], "message": res.get("message") or ""})
+        if res["status"] == "ok":
+            all_transactions.extend(res["transactions"])
+
+    for res in credit_results:
+        credit_statuses.append({"bank": res["bank_id"], "status": res["status"], "message": res.get("message") or ""})
+        if res["status"] == "ok":
+            all_credits.extend(res.get("credits") or [])
+            for credit in res.get("credits", []) or []:
+                enriched = build_credit_product(credit, res["bank_id"])
+                if enriched:
+                    enriched_credits.append(enriched)
+
+    for res in account_results:
+        account_statuses.append({"bank": res["bank_id"], "status": res["status"], "message": res.get("message") or ""})
+        if res["status"] == "ok":
+            all_accounts.extend(res.get("accounts") or [])
+            for account in res.get("accounts", []) or []:
+                enriched = build_account_product(account, res["bank_id"])
+                if enriched:
+                    enriched_accounts.append(enriched)
+
+    product_consents = get_product_consents_for_user(req.user_id)
+    bank_status_logs = get_recent_bank_status_logs(req.user_id)
+
+    if not all_transactions:
+        return {
+            "error": "Could not fetch any transactions.",
+            "bank_statuses": {
+                "transactions": tx_statuses,
+                "credits": credit_statuses,
+                "accounts": account_statuses,
+            },
+            "product_consents": product_consents,
+            "bank_status_logs": bank_status_logs,
+        }
+
+    stored_goal = get_user_goal(req.user_id)
+    user_goal = compose_user_goal(stored_goal, req.goal_type, req.goal_details, req.pace)
+
+    portrait = build_financial_portrait(
+        transactions=all_transactions,
+        credits=enriched_credits or all_credits,
+        accounts=enriched_accounts or all_accounts,
+        user_goal=user_goal,
+    )
+    portrait["bank_statuses"] = {
+        "transactions": tx_statuses,
+        "credits": credit_statuses,
+        "accounts": account_statuses,
+    }
+    portrait["product_consents"] = product_consents
+    portrait["bank_status_logs"] = bank_status_logs
+    portrait["accounts"] = enriched_accounts or all_accounts
+    portrait["credits"] = enriched_credits or all_credits
+    portrait["transactions_sample"] = all_transactions[:100]
+    products_by_bank = group_products_by_bank(portrait["accounts"], portrait["credits"])
+    portrait["products_by_bank"] = apply_consent_flags(products_by_bank, product_consents)
+    (
+        portrait_analysis,
+        portrait_trajectories,
+        portrait_forecast_dates,
+        portrait_noise_profile,
+        portrait_event_profiles,
+    ) = run_analysis_with_details(
+        all_transactions,
+        float(portrait.get("current_balance") or 0.0),
+        date.today() + timedelta(days=30),
+        0,
+    )
+    recurring_source = portrait.get("discovered_events") or portrait_event_profiles
+    obligations = derive_obligations(portrait["credits"], recurring_source)
+    goal_probability = estimate_goal_probability(
+        user_goal,
+        portrait_trajectories,
+        portrait_forecast_dates,
+        obligations,
+        recurring_source,
+    )
+    portrait["analysis"] = portrait_analysis.dict()
+    portrait["diagnostics"] = {
+        "noise_profile": portrait_noise_profile,
+        "forecast_dates": [d.isoformat() for d in portrait_forecast_dates],
+        "trajectory_sample": list(portrait_trajectories.shape),
+    }
+    portrait["goal_probability"] = goal_probability
+    if not portrait.get("recurring_events"):
+        portrait["recurring_events"] = extract_recurring_events(recurring_source)
+    logger.info(
+        "Financial portrait for %s: debt=%.2f, monthly=%.2f, sts=%.2f, loans=%d, accounts=%d",
+        req.user_id,
+        portrait.get("financial_health", {}).get("total_debt", 0.0),
+        portrait.get("financial_health", {}).get("total_monthly_payments", 0.0),
+        portrait.get("safe_to_spend_daily", 0.0),
+        len(portrait["credits"]),
+        len(portrait["accounts"]),
+    )
+    return portrait
+
+
+async def run_initial_ingestion(req: IngestRequest) -> Dict[str, Any]:
+    logger.info("Starting initial ingestion for user %s", req.user_id)
+    approved_consents = _require_consents(req.user_id)
+
+    tasks = [
+        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, req.user_id)
+        for consent in approved_consents
+    ]
+    bank_results = await asyncio.gather(*tasks)
+
+    all_transactions: List[Transaction] = []
+    bank_statuses: List[Dict[str, str]] = []
+    for res in bank_results:
+        bank_statuses.append(
+            {"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]}
+        )
+        if res["status"] == "ok":
+            all_transactions.extend(res["transactions"])
+
+    if not all_transactions:
+        raise HTTPException(
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+            detail="Could not fetch any transactions.",
+        )
+
+    logger.info(
+        "Initial ingestion completed for user %s (%d transactions)",
+        req.user_id,
+        len(all_transactions),
+    )
+
+    return {
+        "status": "ok",
+        "transactions_count": len(all_transactions),
+        "bank_statuses": bank_statuses,
+        "message": "Initial data ingestion complete.",
+    }
+
+
+async def start_analysis(req: AnalysisRequest) -> Dict[str, Any]:
+    approved_consents = _require_consents(req.user_id)
+
+    tasks = [
+        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, req.user_id)
+        for consent in approved_consents
+    ]
+    bank_results = await asyncio.gather(*tasks)
+
+    all_transactions: List[Transaction] = []
+    bank_statuses: List[Dict[str, str]] = []
+    for res in bank_results:
+        bank_statuses.append(
+            {"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]}
+        )
+        if res["status"] == "ok":
+            all_transactions.extend(res["transactions"])
+
+    if not all_transactions:
+        raise HTTPException(
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+            detail="Could not fetch any transactions.",
+        )
+
+    (
+        analysis_result,
+        trajectories,
+        forecast_dates,
+        noise_profile,
+        event_profiles,
+    ) = run_analysis_with_details(
+        all_transactions,
+        req.current_balance,
+        req.payment_date,
+        req.payment_amount,
+    )
+
+    return {
+        "analysis_result": analysis_result.dict(),
+        "bank_statuses": bank_statuses,
+        "discovered_events": event_profiles,
+        "noise_profile": noise_profile,
+        "forecast_dates": [d.isoformat() for d in forecast_dates],
+        "trajectory_shape": list(trajectories.shape),
+    }
 </file>
 
 <file path="hktn/core/analytics_engine.py">
@@ -21212,20 +22267,38 @@ _BALANCE_FALLBACK_FIELDS = (
     "value",
 )
 
+_ID_HINTS_TO_SKIP = {
+    "accountid",
+    "account_id",
+    "resource_id",
+    "identification",
+    "agreement_id",
+    "iban",
+    "pan",
+    "mask",
+    "card",
+    "id",
+}
 
-def _resolve_numeric_value(value: Any) -> Optional[float]:
+
+def _resolve_numeric_value(value: Any, key_hint: str | None = None) -> Optional[float]:
     """Traverse nested structures to coerce a numeric amount."""
+    if key_hint:
+        hint = key_hint.replace("-", "_").lower()
+        if hint in _ID_HINTS_TO_SKIP:
+            return None
+
     number = _safe_float(value)
     if number is not None:
         return number
     if isinstance(value, dict):
         for nested_key in _BALANCE_FALLBACK_FIELDS:
             if nested_key in value:
-                nested = _resolve_numeric_value(value[nested_key])
+                nested = _resolve_numeric_value(value[nested_key], nested_key)
                 if nested is not None:
                     return nested
-        for nested in value.values():
-            nested_value = _resolve_numeric_value(nested)
+        for nested_key, nested in value.items():
+            nested_value = _resolve_numeric_value(nested, nested_key)
             if nested_value is not None:
                 return nested_value
     if isinstance(value, (list, tuple)):
@@ -21237,7 +22310,23 @@ def _resolve_numeric_value(value: Any) -> Optional[float]:
 
 
 def _extract_account_balance(account: Dict[str, Any]) -> float:
-    """Best-effort balance extraction across heterogeneous account payloads."""
+    """
+    Best-effort balance extraction across heterogeneous account payloads.
+    Prioritizes nested 'balances' array as seen in sandbox data.
+    """
+    balances_list = account.get("balances")
+    if isinstance(balances_list, list) and balances_list:
+        balance_obj = balances_list[0]
+        if isinstance(balance_obj, dict):
+            for key in ("availableBalance", "available_balance", "currentBalance", "current_balance"):
+                if key in balance_obj and balance_obj[key] is not None:
+                    amount = _resolve_numeric_value(balance_obj[key], key)
+                    if amount is not None:
+                        return amount
+            amount = _resolve_numeric_value(balance_obj)
+            if amount is not None:
+                return amount
+
     balance_keys = (
         "available_balance",
         "availableBalance",
@@ -21249,14 +22338,20 @@ def _extract_account_balance(account: Dict[str, Any]) -> float:
     )
     for key in balance_keys:
         if key in account and account[key] is not None:
-            amount = _resolve_numeric_value(account[key])
+            amount = _resolve_numeric_value(account[key], key)
             if amount is not None:
                 return amount
+
     for fallback_key in _BALANCE_FALLBACK_FIELDS:
         if fallback_key in account and account[fallback_key] is not None:
-            amount = _resolve_numeric_value(account[fallback_key])
+            amount = _resolve_numeric_value(account[fallback_key], fallback_key)
             if amount is not None:
                 return amount
+
+    final_attempt = _resolve_numeric_value(account)
+    if final_attempt is not None:
+        return final_attempt
+
     return 0.0
 
 
@@ -21917,854 +23012,6 @@ def build_financial_portrait(
         "noise_profile": noise_profile,
         "next_income_event": next_income_event,
         "goal_summary": goal_summary,
-    }
-</file>
-
-<file path="hktn/src/pages/DashboardPage.tsx">
-import React, { useEffect, useState } from 'react';
-import { getDashboard } from '../api/client';
-import { useUser } from '../state/useUser';
-import { useNotifications } from '../state/notifications';
-import type {
-  BudgetBreakdownItem,
-  DashboardResponse,
-  RecurringEvent,
-  UpcomingEvent,
-} from '../types/dashboard';
-
-const formatCurrency = (value?: number | null) => {
-  if (value === null || value === undefined) {
-    return '—';
-  }
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'RUB',
-    maximumFractionDigits: 0,
-  }).format(value);
-};
-
-const formatDate = (value?: string | null) => {
-  if (!value) return '—';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-  return parsed.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-  });
-};
-
-const STSCard: React.FC<{ data: DashboardResponse }> = ({ data }) => {
-  const context = data.safe_to_spend_context;
-  const narrative = data.safe_to_spend_narrative;
-  const hasValue = typeof data.safe_to_spend_daily === 'number' && !Number.isNaN(data.safe_to_spend_daily ?? NaN);
-  const cycleEndLabel = narrative?.cycle_end ? formatDate(narrative.cycle_end) : null;
-  const balanceValue = narrative?.current_balance ?? data.current_balance;
-  const obligationsValue = narrative?.obligations_total ?? 0;
-  const spendableValue = narrative?.spendable_total ?? null;
-  const isBalanceLow =
-    hasValue && typeof balanceValue === 'number' && typeof data.safe_to_spend_daily === 'number'
-      ? balanceValue < data.safe_to_spend_daily
-      : false;
-
-  return (
-    <div className="card">
-      <h2>Safe-to-Spend</h2>
-      <p className="muted">Рекомендованный дневной лимит до следующей зарплаты.</p>
-      {context?.message ? (
-        <div className={`callout callout--${context.state === 'missing_balance' ? 'warning' : 'info'}`}>
-          {context.message}
-        </div>
-      ) : null}
-      <p className="metric">
-        {hasValue ? formatCurrency(data.safe_to_spend_daily ?? undefined) : 'Нет оценки'}
-        <span> / день</span>
-      </p>
-      {cycleEndLabel ? (
-        <p className="muted">
-          Бюджет действует до <strong>{cycleEndLabel}</strong>.
-        </p>
-      ) : null}
-      {isBalanceLow && (
-        <div className="callout callout--warning">
-          Баланс ({formatCurrency(balanceValue)}) ниже дневного лимита. Сократите траты сегодня.
-        </div>
-      )}
-      <div className="safe-obligations">
-        <div>Баланс: {formatCurrency(balanceValue)}</div>
-        <div>Обязательства в горизонте: {formatCurrency(obligationsValue)}</div>
-        <div>Резерв на цель: {formatCurrency(narrative?.goal_reserve)}</div>
-        <div>Доступно на цикл: {formatCurrency(spendableValue)}</div>
-      </div>
-    </div>
-  );
-};
-
-const UpcomingEventsCard: React.FC<{
-  events?: UpcomingEvent[];
-  narrative?: DashboardResponse['safe_to_spend_narrative'];
-}> = ({ events, narrative }) => {
-  const cycleEndLabel = narrative?.cycle_end ? formatDate(narrative.cycle_end) : '—';
-  const items = events ?? [];
-  const nextIncome = narrative?.next_income_event;
-
-  return (
-    <div className="card">
-      <h3>До зарплаты ({cycleEndLabel})</h3>
-      <ul className="list">
-        <li className="event-row">
-          <div className="event-row__header">
-            <div>
-              <p className="event-row__title">Текущий баланс</p>
-              <p className="event-row__subtitle">{formatDate(narrative?.cycle_start)}</p>
-            </div>
-            <div className="event-row__amount">
-              <span>{formatCurrency(narrative?.current_balance)}</span>
-            </div>
-          </div>
-        </li>
-        {items.length > 0 ? (
-          items.map((event, index) => (
-            <li
-              key={`${event.name}-${index}`}
-              className={`event-row ${event.is_income ? 'event-row--income' : 'event-row--expense'}`}
-            >
-              <div className="event-row__header">
-                <div>
-                  <p className="event-row__title">{event.name}</p>
-                  <p className="event-row__subtitle">{formatDate(event.date)}</p>
-                </div>
-                <div className="event-row__amount">
-                  <span>{formatCurrency(event.amount)}</span>
-                </div>
-              </div>
-            </li>
-          ))
-        ) : (
-          <li className="muted">Нет фиксированных платежей в этом горизонте.</li>
-        )}
-        {nextIncome ? (
-          <li className="event-row event-row--income">
-            <div className="event-row__header">
-              <div>
-                <p className="event-row__title">{nextIncome.label ?? 'Доход'}</p>
-                <p className="event-row__subtitle">{formatDate(nextIncome.next_occurrence)}</p>
-              </div>
-              <div className="event-row__amount">
-                <span>{formatCurrency(nextIncome.amount)}</span>
-              </div>
-            </div>
-          </li>
-        ) : null}
-      </ul>
-    </div>
-  );
-};
-
-const BudgetCard: React.FC<{
-  budget?: BudgetBreakdownItem[];
-  narrative?: DashboardResponse['safe_to_spend_narrative'];
-}> = ({ budget, narrative }) => (
-  <div className="card">
-    <h3>Ваш бюджет на жизнь ({narrative?.days_in_cycle ?? 0} д.)</h3>
-    <p className="muted">Предлагаем так распределить свободные средства до следующей выплаты.</p>
-    <ul className="list">
-      <li className="event-row event-row--expense">
-        <div className="event-row__header">
-          <div>
-            <p className="event-row__title">Всего доступно</p>
-          </div>
-          <div className="event-row__amount">
-            <strong>{formatCurrency(narrative?.spendable_total)}</strong>
-          </div>
-        </div>
-      </li>
-      {budget && budget.length > 0 ? (
-        budget.map((item, index) => (
-          <li key={`${item.category}-${index}`} className="event-row event-row--expense">
-            <div className="event-row__header">
-              <div>
-                <p className="event-row__title">{item.category}</p>
-              </div>
-              <div className="event-row__amount">
-                <span>{formatCurrency(item.amount)}</span>
-              </div>
-            </div>
-          </li>
-        ))
-      ) : (
-        <li className="muted">Нет переменных трат для распределения.</li>
-      )}
-      <li className="event-row event-row--income">
-        <div className="event-row__header">
-          <div>
-            <p className="event-row__title">Резерв на цель</p>
-          </div>
-          <div className="event-row__amount">
-            <span>{formatCurrency(narrative?.goal_reserve)}</span>
-          </div>
-        </div>
-      </li>
-    </ul>
-  </div>
-);
-
-const RecurringEventsCard: React.FC<{ events?: RecurringEvent[] }> = ({ events }) => (
-  <div className="card">
-    <h3>Финансовые привычки</h3>
-    <ul className="list">
-      {events && events.length > 0 ? (
-        events.map((event, index) => (
-          <li key={`${event.name}-${index}`} className={`event-row ${event.is_income ? 'event-row--income' : 'event-row--expense'}`}>
-            <div className="event-row__header">
-              <div>
-                <p className="event-row__title">{event.name}</p>
-                <p className="event-row__subtitle">Следующее: {formatDate(event.next_date)}</p>
-              </div>
-              <div className="event-row__amount">
-                <span>{formatCurrency(event.amount)}</span>
-              </div>
-            </div>
-          </li>
-        ))
-      ) : (
-        <li className="muted">Пока не нашли повторяющихся событий.</li>
-      )}
-    </ul>
-  </div>
-);
-
-export const DashboardPage: React.FC = () => {
-  const { userId } = useUser();
-  const { notifyError } = useNotifications();
-  const [data, setData] = useState<DashboardResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!userId) return;
-    const load = async () => {
-      try {
-        setLoading(true);
-        const payload = await getDashboard(userId);
-        setData(payload);
-      } catch (error) {
-        console.error(error);
-        notifyError('Не удалось загрузить данные для дашборда.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [notifyError, userId]);
-
-  if (loading) {
-    return (
-      <div className="app-main">
-        <div className="card">
-          <p>Анализируем ваши финансы и строим прогнозы...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="app-main">
-        <div className="card">
-          <h2>Нет данных</h2>
-          <p>Не удалось загрузить аналитику. Пройдите онбординг ещё раз.</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="app-main">
-      <STSCard data={data} />
-      <div className="grid grid-two">
-        <UpcomingEventsCard events={data.upcoming_events} narrative={data.safe_to_spend_narrative} />
-        <BudgetCard budget={data.budget_breakdown} narrative={data.safe_to_spend_narrative} />
-      </div>
-      <RecurringEventsCard events={data.recurring_events} />
-    </div>
-  );
-};
-
-export default DashboardPage;
-</file>
-
-<file path="hktn/backend/services/analytics.py">
-from __future__ import annotations
-
-import asyncio
-import logging
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Sequence
-
-from fastapi import HTTPException, status
-
-from hktn.core.analytics_engine import (
-    build_financial_portrait,
-    calculate_daily_s2s,
-    derive_obligations,
-    estimate_goal_probability,
-    extract_recurring_events,
-    rank_credits,
-    run_analysis_with_details,
-    _extract_account_balance,
-    _derive_event_label,
-)
-from hktn.core.data_models import Transaction
-from hktn.core.database import (
-    find_approved_consents,
-    get_product_consents_for_user,
-    get_recent_bank_status_logs,
-    get_user_goal,
-    StoredConsent,
-)
-
-from ..schemas import AnalysisRequest, FinancialPortraitRequest, IngestRequest
-from .banking import fetch_bank_accounts_with_consent, fetch_bank_credits, fetch_bank_data_with_consent
-from .goals import compose_user_goal
-from .products import apply_consent_flags, build_account_product, build_credit_product, group_products_by_bank
-
-logger = logging.getLogger("finpulse.backend.analytics")
-
-
-def _parse_iso_date(value: Any) -> Optional[date]:
-    if isinstance(value, date):
-        return value
-    if isinstance(value, datetime):
-        return value.date()
-    if isinstance(value, str) and value:
-        try:
-            return date.fromisoformat(value)
-        except ValueError:
-            try:
-                return datetime.fromisoformat(value).date()
-            except ValueError:
-                return None
-    return None
-
-
-def _generate_budget_breakdown(
-    spendable_total: float,
-    event_profiles: Sequence[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
-    """Distribute spendable cash across recurring spending categories."""
-    if spendable_total <= 0:
-        return []
-
-    category_spend: Dict[str, float] = {}
-    for event in event_profiles or []:
-        if event.get("is_income"):
-            continue
-        if event.get("source") not in (None, "expense_event", "recurring_debit"):
-            continue
-        avg_amount = abs(float(event.get("mu_amount") or 0.0))
-        if avg_amount <= 0:
-            continue
-        label = _derive_event_label(event)
-        category_spend[label] = category_spend.get(label, 0.0) + avg_amount
-
-    total_avg_spend = sum(category_spend.values())
-    if total_avg_spend <= 0:
-        return []
-
-    budget: List[Dict[str, Any]] = []
-    for category, avg_amount in category_spend.items():
-        proportion = avg_amount / total_avg_spend
-        budget.append(
-            {
-                "category": category,
-                "amount": round(spendable_total * proportion, 2),
-            }
-        )
-
-    budget.sort(key=lambda item: item["amount"], reverse=True)
-    return budget
-
-
-def _collect_cycle_events(
-    obligations: Sequence[Dict[str, Any]],
-    cycle_start_iso: Optional[str],
-    cycle_end_iso: Optional[str],
-) -> List[Dict[str, Any]]:
-    """Return obligations that fall within the current planning cycle."""
-    cycle_start = _parse_iso_date(cycle_start_iso)
-    cycle_end = _parse_iso_date(cycle_end_iso)
-    if not cycle_start or not cycle_end:
-        return []
-
-    events: List[Dict[str, Any]] = []
-    for obligation in obligations or []:
-        due_date = obligation.get("due_date")
-        due = _parse_iso_date(due_date)
-        if due is None:
-            continue
-        if not (cycle_start <= due < cycle_end):
-            continue
-        events.append(
-            {
-                "name": obligation.get("label") or "Обязательный платёж",
-                "amount": float(obligation.get("amount") or 0.0),
-                "date": due.isoformat(),
-                "is_income": False,
-                "source": obligation.get("source"),
-                "mcc_code": obligation.get("mcc_code"),
-                "merchant_name": obligation.get("merchant_name"),
-            }
-        )
-
-    events.sort(key=lambda item: item["date"])
-    return events
-
-
-def _require_consents(user_id: str) -> Sequence[StoredConsent]:
-    approved_consents = find_approved_consents(user_id, consent_type="accounts")
-    if not approved_consents:
-        raise HTTPException(
-            status_code=status.HTTP_424_FAILED_DEPENDENCY,
-            detail="No approved consents found.",
-        )
-    return approved_consents
-
-
-async def get_user_credits(user_id: str) -> Dict[str, Any]:
-    approved_consents = _require_consents(user_id)
-    tasks = [
-        fetch_bank_credits(consent.bank_id, consent.consent_id, user_id, create_product_consent=True)
-        for consent in approved_consents
-    ]
-    bank_results = await asyncio.gather(*tasks)
-
-    all_credits: List[Dict[str, Any]] = []
-    bank_statuses: List[Dict[str, str]] = []
-    for res in bank_results:
-        bank_statuses.append({"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]})
-        if res["status"] == "ok":
-            all_credits.extend(res["credits"])
-
-    ranked = rank_credits(all_credits)
-    return {"credits": all_credits, "credit_rankings": ranked, "bank_statuses": bank_statuses}
-
-
-async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
-    approved_consents = _require_consents(user_id)
-
-    stored_goal = get_user_goal(user_id)
-    user_goal = compose_user_goal(stored_goal)
-
-    tx_tasks = [
-        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, user_id)
-        for consent in approved_consents
-    ]
-    credit_tasks = [
-        fetch_bank_credits(consent.bank_id, consent.consent_id, user_id)
-        for consent in approved_consents
-    ]
-    account_tasks = [
-        fetch_bank_accounts_with_consent(consent.bank_id, consent.consent_id, user_id)
-        for consent in approved_consents
-    ]
-
-    tx_results, credit_results, account_results = await asyncio.gather(
-        asyncio.gather(*tx_tasks),
-        asyncio.gather(*credit_tasks),
-        asyncio.gather(*account_tasks),
-    )
-
-    all_transactions: List[Transaction] = []
-    all_credits: List[Dict[str, Any]] = []
-    all_accounts: List[Dict[str, Any]] = []
-    bank_statuses: Dict[str, Dict[str, str]] = {}
-
-    for res in tx_results:
-        bank_statuses[res["bank_id"]] = {
-            "bank_name": res["bank_id"],
-            "status": res["status"],
-            "message": res["message"],
-        }
-        if res["status"] == "ok":
-            all_transactions.extend(res["transactions"])
-
-    for res in credit_results:
-        entry = bank_statuses.setdefault(
-            res["bank_id"],
-            {"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]},
-        )
-        if res["status"] == "ok":
-            all_credits.extend(res["credits"])
-        else:
-            if entry["status"] == "ok":
-                entry["status"] = "partial_error"
-            entry["message"] += f"; credits failed: {res['message']}"
-
-    for res in account_results:
-        entry = bank_statuses.setdefault(
-            res["bank_id"],
-            {"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]},
-        )
-        if res["status"] == "ok":
-            all_accounts.extend(res.get("accounts") or [])
-        else:
-            if entry["status"] == "ok":
-                entry["status"] = "partial_error"
-            suffix = f"accounts failed: {res['message']}"
-            entry["message"] = f"{entry.get('message', '')}; {suffix}" if entry.get("message") else suffix
-
-    if not all_transactions:
-        raise HTTPException(
-            status_code=status.HTTP_424_FAILED_DEPENDENCY,
-            detail="Could not fetch any transactions.",
-        )
-
-    current_balance = sum(_extract_account_balance(account) for account in all_accounts)
-    balance_state = "ok"
-    balance_message = None
-    if not all_accounts:
-        balance_state = "missing_accounts"
-        balance_message = "Банки не вернули данные по счетам. Подключите счёт с остатком."
-        logger.warning("Could not determine current balance for user %s, defaulting to 0.", user_id)
-    elif current_balance <= 0:
-        balance_state = "zero_balance"
-        balance_message = "Текущий баланс равен 0 ₽ — не удалось получить остаток от банка."
-        logger.warning("Balance for user %s is zero despite connected accounts.", user_id)
-        current_balance = 0.0
-
-    planning_start = date.today()
-
-    (
-        _analysis_result,
-        trajectories,
-        forecast_dates,
-        _noise_profile,
-        event_profiles,
-    ) = run_analysis_with_details(
-        all_transactions,
-        current_balance,
-        planning_start + timedelta(days=30),
-        0,
-    )
-
-    obligations = derive_obligations(all_credits, event_profiles)
-    obligation_cluster_ids: set[int] = set()
-    for obligation in obligations:
-        cluster_id = obligation.get("cluster_id")
-        if cluster_id is None:
-            continue
-        try:
-            obligation_cluster_ids.add(int(cluster_id))
-        except (TypeError, ValueError):
-            continue
-    safe_to_spend_daily_raw, safe_to_spend_details = calculate_daily_s2s(
-        current_balance,
-        event_profiles,
-        obligations,
-        user_goal,
-        start_date=planning_start,
-        return_details=True,
-    )
-    safe_to_spend_daily = safe_to_spend_daily_raw if balance_state == "ok" else None
-    safe_to_spend_state = "calculated" if safe_to_spend_daily_raw > 0 else "no_free_cash"
-    safe_to_spend_message = None
-    if balance_state != "ok":
-        safe_to_spend_state = "missing_balance"
-        safe_to_spend_message = balance_message
-    elif safe_to_spend_daily_raw <= 0:
-        safe_to_spend_message = "Все ближайшие средства пойдут на обязательные платежи."
-
-    spendable_total = float(safe_to_spend_details.get("spendable_total") or 0.0)
-    budget_breakdown = _generate_budget_breakdown(spendable_total, event_profiles)
-    upcoming_events = _collect_cycle_events(
-        obligations,
-        safe_to_spend_details.get("cycle_start"),
-        safe_to_spend_details.get("cycle_end"),
-    )
-
-    goal_probability = estimate_goal_probability(user_goal, trajectories, forecast_dates, obligations, event_profiles)
-    recurring_events = extract_recurring_events(event_profiles, exclude_cluster_ids=obligation_cluster_ids)
-
-    total_debt = sum(float(credit.get("balance", 0) or 0) for credit in all_credits)
-    monthly_income = sum(float(event.get("mu_amount", 0) or 0) for event in event_profiles if event.get("is_income"))
-    monthly_payments = sum(float(obligation.get("amount") or 0.0) for obligation in obligations)
-    health_score = 0
-    if monthly_income > 0:
-        debt_to_income_ratio = monthly_payments / monthly_income if monthly_income else 0
-        health_score = max(0, int((1 - debt_to_income_ratio * 2) * 100))
-
-    today = date.today()
-    upcoming_payloads: List[Dict[str, Any]] = []
-    for obligation in obligations:
-        if obligation.get("source") != "credit_agreement":
-            continue
-        due_date = obligation.get("due_date")
-        if not isinstance(due_date, date):
-            continue
-        if due_date < today:
-            continue
-        payload = {
-            "name": obligation.get("label") or "Обязательный платёж",
-            "amount": obligation.get("amount"),
-            "due_date": due_date,
-            "source": obligation.get("source"),
-            "mcc_code": obligation.get("mcc_code"),
-            "category": obligation.get("category"),
-            "merchant_name": obligation.get("merchant_name"),
-            "bank_transaction_code": obligation.get("bank_transaction_code"),
-            "frequency_days": obligation.get("frequency_days"),
-        }
-        upcoming_payloads.append(payload)
-
-    upcoming_payloads.sort(key=lambda item: item["due_date"])
-    upcoming_payments = [
-        {
-            **payload,
-            "due_date": payload["due_date"].isoformat(),
-        }
-        for payload in upcoming_payloads[:5]
-    ]
-
-    return {
-        "current_balance": round(current_balance, 2),
-        "safe_to_spend_daily": safe_to_spend_daily if safe_to_spend_daily is not None else None,
-        "safe_to_spend_narrative": safe_to_spend_details,
-        "safe_to_spend_context": {
-            "state": safe_to_spend_state,
-            "message": safe_to_spend_message,
-        },
-        "balance_context": {
-            "state": balance_state,
-            "message": balance_message,
-            "account_count": len(all_accounts),
-        },
-        "upcoming_events": upcoming_events,
-        "budget_breakdown": budget_breakdown,
-        "goal_probability": goal_probability,
-        "upcoming_payments": upcoming_payments,
-        "recurring_events": recurring_events,
-        "total_debt": round(total_debt, 2),
-        "health_score": health_score,
-        "bank_statuses": bank_statuses,
-    }
-
-
-async def build_financial_portrait_view(req: FinancialPortraitRequest) -> Dict[str, Any]:
-    approved_consents = _require_consents(req.user_id)
-
-    tx_tasks = [
-        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, req.user_id)
-        for consent in approved_consents
-    ]
-    credit_tasks = [
-        fetch_bank_credits(consent.bank_id, consent.consent_id, req.user_id, create_product_consent=True)
-        for consent in approved_consents
-    ]
-    account_tasks = [
-        fetch_bank_accounts_with_consent(consent.bank_id, consent.consent_id, req.user_id)
-        for consent in approved_consents
-    ]
-
-    tx_results, credit_results, account_results = await asyncio.gather(
-        asyncio.gather(*tx_tasks),
-        asyncio.gather(*credit_tasks),
-        asyncio.gather(*account_tasks),
-    )
-
-    all_transactions: List[Transaction] = []
-    all_credits: List[Dict[str, Any]] = []
-    all_accounts: List[Dict[str, Any]] = []
-    enriched_credits: List[Dict[str, Any]] = []
-    enriched_accounts: List[Dict[str, Any]] = []
-    tx_statuses: List[Dict[str, str]] = []
-    credit_statuses: List[Dict[str, str]] = []
-    account_statuses: List[Dict[str, str]] = []
-
-    for res in tx_results:
-        tx_statuses.append({"bank": res["bank_id"], "status": res["status"], "message": res.get("message") or ""})
-        if res["status"] == "ok":
-            all_transactions.extend(res["transactions"])
-
-    for res in credit_results:
-        credit_statuses.append({"bank": res["bank_id"], "status": res["status"], "message": res.get("message") or ""})
-        if res["status"] == "ok":
-            all_credits.extend(res.get("credits") or [])
-            for credit in res.get("credits", []) or []:
-                enriched = build_credit_product(credit, res["bank_id"])
-                if enriched:
-                    enriched_credits.append(enriched)
-
-    for res in account_results:
-        account_statuses.append({"bank": res["bank_id"], "status": res["status"], "message": res.get("message") or ""})
-        if res["status"] == "ok":
-            all_accounts.extend(res.get("accounts") or [])
-            for account in res.get("accounts", []) or []:
-                enriched = build_account_product(account, res["bank_id"])
-                if enriched:
-                    enriched_accounts.append(enriched)
-
-    product_consents = get_product_consents_for_user(req.user_id)
-    bank_status_logs = get_recent_bank_status_logs(req.user_id)
-
-    if not all_transactions:
-        return {
-            "error": "Could not fetch any transactions.",
-            "bank_statuses": {
-                "transactions": tx_statuses,
-                "credits": credit_statuses,
-                "accounts": account_statuses,
-            },
-            "product_consents": product_consents,
-            "bank_status_logs": bank_status_logs,
-        }
-
-    stored_goal = get_user_goal(req.user_id)
-    user_goal = compose_user_goal(stored_goal, req.goal_type, req.goal_details, req.pace)
-
-    portrait = build_financial_portrait(
-        transactions=all_transactions,
-        credits=enriched_credits or all_credits,
-        accounts=enriched_accounts or all_accounts,
-        user_goal=user_goal,
-    )
-    portrait["bank_statuses"] = {
-        "transactions": tx_statuses,
-        "credits": credit_statuses,
-        "accounts": account_statuses,
-    }
-    portrait["product_consents"] = product_consents
-    portrait["bank_status_logs"] = bank_status_logs
-    portrait["accounts"] = enriched_accounts or all_accounts
-    portrait["credits"] = enriched_credits or all_credits
-    portrait["transactions_sample"] = all_transactions[:100]
-    products_by_bank = group_products_by_bank(portrait["accounts"], portrait["credits"])
-    portrait["products_by_bank"] = apply_consent_flags(products_by_bank, product_consents)
-    (
-        portrait_analysis,
-        portrait_trajectories,
-        portrait_forecast_dates,
-        portrait_noise_profile,
-        portrait_event_profiles,
-    ) = run_analysis_with_details(
-        all_transactions,
-        float(portrait.get("current_balance") or 0.0),
-        date.today() + timedelta(days=30),
-        0,
-    )
-    recurring_source = portrait.get("discovered_events") or portrait_event_profiles
-    obligations = derive_obligations(portrait["credits"], recurring_source)
-    goal_probability = estimate_goal_probability(
-        user_goal,
-        portrait_trajectories,
-        portrait_forecast_dates,
-        obligations,
-        recurring_source,
-    )
-    portrait["analysis"] = portrait_analysis.dict()
-    portrait["diagnostics"] = {
-        "noise_profile": portrait_noise_profile,
-        "forecast_dates": [d.isoformat() for d in portrait_forecast_dates],
-        "trajectory_sample": list(portrait_trajectories.shape),
-    }
-    portrait["goal_probability"] = goal_probability
-    if not portrait.get("recurring_events"):
-        portrait["recurring_events"] = extract_recurring_events(recurring_source)
-    logger.info(
-        "Financial portrait for %s: debt=%.2f, monthly=%.2f, sts=%.2f, loans=%d, accounts=%d",
-        req.user_id,
-        portrait.get("financial_health", {}).get("total_debt", 0.0),
-        portrait.get("financial_health", {}).get("total_monthly_payments", 0.0),
-        portrait.get("safe_to_spend_daily", 0.0),
-        len(portrait["credits"]),
-        len(portrait["accounts"]),
-    )
-    return portrait
-
-
-async def run_initial_ingestion(req: IngestRequest) -> Dict[str, Any]:
-    logger.info("Starting initial ingestion for user %s", req.user_id)
-    approved_consents = _require_consents(req.user_id)
-
-    tasks = [
-        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, req.user_id)
-        for consent in approved_consents
-    ]
-    bank_results = await asyncio.gather(*tasks)
-
-    all_transactions: List[Transaction] = []
-    bank_statuses: List[Dict[str, str]] = []
-    for res in bank_results:
-        bank_statuses.append(
-            {"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]}
-        )
-        if res["status"] == "ok":
-            all_transactions.extend(res["transactions"])
-
-    if not all_transactions:
-        raise HTTPException(
-            status_code=status.HTTP_424_FAILED_DEPENDENCY,
-            detail="Could not fetch any transactions.",
-        )
-
-    logger.info(
-        "Initial ingestion completed for user %s (%d transactions)",
-        req.user_id,
-        len(all_transactions),
-    )
-
-    return {
-        "status": "ok",
-        "transactions_count": len(all_transactions),
-        "bank_statuses": bank_statuses,
-        "message": "Initial data ingestion complete.",
-    }
-
-
-async def start_analysis(req: AnalysisRequest) -> Dict[str, Any]:
-    approved_consents = _require_consents(req.user_id)
-
-    tasks = [
-        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, req.user_id)
-        for consent in approved_consents
-    ]
-    bank_results = await asyncio.gather(*tasks)
-
-    all_transactions: List[Transaction] = []
-    bank_statuses: List[Dict[str, str]] = []
-    for res in bank_results:
-        bank_statuses.append(
-            {"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]}
-        )
-        if res["status"] == "ok":
-            all_transactions.extend(res["transactions"])
-
-    if not all_transactions:
-        raise HTTPException(
-            status_code=status.HTTP_424_FAILED_DEPENDENCY,
-            detail="Could not fetch any transactions.",
-        )
-
-    (
-        analysis_result,
-        trajectories,
-        forecast_dates,
-        noise_profile,
-        event_profiles,
-    ) = run_analysis_with_details(
-        all_transactions,
-        req.current_balance,
-        req.payment_date,
-        req.payment_amount,
-    )
-
-    return {
-        "analysis_result": analysis_result.dict(),
-        "bank_statuses": bank_statuses,
-        "discovered_events": event_profiles,
-        "noise_profile": noise_profile,
-        "forecast_dates": [d.isoformat() for d in forecast_dates],
-        "trajectory_shape": list(trajectories.shape),
     }
 </file>
 
