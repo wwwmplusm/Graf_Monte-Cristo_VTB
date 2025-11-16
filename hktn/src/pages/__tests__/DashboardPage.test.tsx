@@ -2,51 +2,18 @@ import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { vi } from 'vitest';
 import type { DashboardResponse } from '../../types/dashboard';
-import { DashboardPage } from '../DashboardPage';
+import { DashboardPage } from '../DashboardPage.tsx';
 
 const dashboardStub: DashboardResponse = {
-  current_balance: 120000,
-  safe_to_spend_daily: 1500,
-  goal_probability: 82,
-  total_debt: 450000,
-  health_score: 72,
-  safe_to_spend_narrative: {
-    cycle_start: '2024-05-01',
-    cycle_end: '2024-05-15',
-    days_in_cycle: 14,
-    current_balance: 120000,
-    obligations_total: 50000,
-    goal_reserve: 12000,
-    spendable_total: 30000,
-    next_income_event: {
-      label: 'Зарплата',
-      next_occurrence: '2024-05-15',
-      amount: 90000,
-    },
+  total_balance: 150000,
+  safe_to_spend_daily: 3500,
+  next_income_date: '2025-12-25',
+  days_until_next_income: 10,
+  accounts: [{ accountId: 'acc1', nickname: 'Зарплатный' }],
+  bank_statuses: {
+    vbank: { bank_name: 'VBank', status: 'ok', fetched_at: new Date().toISOString() },
+    abank: { bank_name: 'ABank', status: 'error', fetched_at: null },
   },
-  safe_to_spend_context: {
-    state: 'calculated',
-  },
-  balance_context: {
-    state: 'ok',
-    account_count: 2,
-  },
-  upcoming_events: [
-    { name: 'Аренда', amount: 40000, date: '2024-05-05', is_income: false },
-    { name: 'Кредитная выплата', amount: 12000, date: '2024-05-12', is_income: false },
-  ],
-  budget_breakdown: [
-    { category: 'Продукты', amount: 10000 },
-    { category: 'Транспорт', amount: 5000 },
-  ],
-  upcoming_payments: [
-    { name: 'Аренда', amount: 40000, due_date: '2024-05-05' },
-    { name: 'Кредитная выплата', amount: 12000, due_date: '2024-05-12' },
-  ],
-  recurring_events: [
-    { name: 'Зарплата', amount: 90000, is_income: true, next_date: '2024-05-25' },
-    { name: 'Коммунальные услуги', amount: -4000, is_income: false, next_date: '2024-05-07' },
-  ],
 };
 
 vi.mock('../../state/useUser', () => ({
@@ -78,43 +45,31 @@ describe('DashboardPage', () => {
     vi.clearAllMocks();
   });
 
-  it('renders Safe-to-Spend metric and goal probability', async () => {
+  it('renders the new Safe-to-Spend metric correctly', async () => {
     render(<DashboardPage />);
     await waitFor(() => expect(mockGetDashboard).toHaveBeenCalledWith('demo-user'));
+
     expect(screen.getByRole('heading', { name: /Safe-to-Spend/i })).toBeInTheDocument();
-    expect(screen.getByText(/1.?500/)).toBeInTheDocument(); // formatted value (handles nbsp)
-    expect(screen.getByText(/Бюджет действует до/)).toBeInTheDocument();
-    expect(screen.getByText(/Всего доступно/)).toBeInTheDocument();
+    expect(screen.getByText(/3.?500/)).toBeInTheDocument();
+    expect(screen.getByText(/до следующей зарплаты/)).toBeInTheDocument();
   });
 
-  it('shows upcoming timeline and recurring events', async () => {
+  it('renders the BanksOverviewCard with total balance and statuses', async () => {
     render(<DashboardPage />);
     await waitFor(() => expect(mockGetDashboard).toHaveBeenCalled());
-    expect(screen.getAllByText('Аренда')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('Кредитная выплата')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('Зарплата')[0]).toBeInTheDocument();
-    expect(screen.getByText('Коммунальные услуги')).toBeInTheDocument();
+
+    expect(screen.getByRole('heading', { name: /Баланс и источники данных/i })).toBeInTheDocument();
+    expect(screen.getByText(/150.?000/)).toBeInTheDocument();
+    expect(screen.getByText('VBank')).toBeInTheDocument();
+    expect(screen.getByText('ABank')).toBeInTheDocument();
+    expect(screen.getByText('OK')).toBeInTheDocument();
+    expect(screen.getByText('Ошибка')).toBeInTheDocument();
   });
 
-  it('falls back to error notification when request fails', async () => {
-    const error = new Error('boom');
+  it('shows an error notification if the API call fails', async () => {
+    const error = new Error('API is down');
     mockGetDashboard.mockRejectedValueOnce(error);
     render(<DashboardPage />);
-    await waitFor(() => expect(notifyError).toHaveBeenCalled());
-  });
-
-  it('shows warning callout when safe-to-spend is blocked', async () => {
-    mockGetDashboard.mockResolvedValueOnce({
-      ...dashboardStub,
-      safe_to_spend_daily: null,
-      safe_to_spend_context: {
-        state: 'missing_balance',
-        message: 'Подключите счёт, чтобы рассчитать лимит.',
-      },
-    });
-    render(<DashboardPage />);
-    await waitFor(() => expect(mockGetDashboard).toHaveBeenCalled());
-    expect(screen.getByText(/Подключите счёт/)).toBeInTheDocument();
-    expect(screen.getByText(/Нет оценки/)).toBeInTheDocument();
+    await waitFor(() => expect(notifyError).toHaveBeenCalledWith('Не удалось загрузить данные для дашборда.'));
   });
 });
