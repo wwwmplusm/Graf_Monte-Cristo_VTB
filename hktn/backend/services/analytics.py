@@ -240,8 +240,11 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         entry.setdefault("balances", {}).update(
             {"state": res.get("status"), "message": res.get("message")}
         )
-        entries = res.get("balances") or []
-        balance_total += _sum_balance_amounts(entries)
+        if res["status"] != "ok":
+            continue
+        for balance_entry in res.get("balances") or []:
+            amount = _extract_account_balance({"balances": [balance_entry]})
+            balance_total += amount
 
     balance_total = round(balance_total, 2)
 
@@ -362,6 +365,22 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
         }
         for payload in upcoming_payloads[:5]
     ]
+    if not upcoming_payments and upcoming_events:
+        # Fallback: surface cycle events when no credit obligations are available.
+        upcoming_payments = [
+            {
+                "name": event.get("name"),
+                "amount": event.get("amount"),
+                "due_date": event.get("date"),
+                "source": event.get("source"),
+                "mcc_code": event.get("mcc_code"),
+                "category": event.get("category"),
+                "merchant_name": event.get("merchant_name"),
+                "bank_transaction_code": event.get("bank_transaction_code"),
+                "frequency_days": event.get("frequency_days"),
+            }
+            for event in upcoming_events[:5]
+        ]
 
     return {
         "current_balance": round(current_balance, 2),

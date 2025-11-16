@@ -259,8 +259,8 @@ async def fetch_bank_balances_with_consent(bank_id: str, consent_id: str, user_i
     _require_bank(bank_id)
     async with bank_client(bank_id) as client:
         try:
-            balances = await client.fetch_balances_with_consent(user_id, consent_id)
-            entries = _extract_balance_entries(balances)
+            balances_data = await client.fetch_balances_with_consent(user_id, consent_id)
+            entries = balances_data.get("balances", [])
             message = f"Fetched {len(entries)} balance records"
             add_bank_status_log(user_id, bank_id, "fetch_balances", "ok", message)
             return {

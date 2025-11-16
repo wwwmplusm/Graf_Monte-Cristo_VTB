@@ -522,22 +522,15 @@ class OBRAPIClient:
                 return response.json()
 
             balance_payload = await _get_account_balances()
-            entries = self._extract_balance_entries(balance_payload)
+            entries = self._jget(balance_payload, ["data", "Balance"], [])
             if not entries:
                 logger.warning("No balance entries found for account %s at %s", account_id, self.api_base_url)
                 continue
 
             for entry in entries:
-                if not isinstance(entry, dict):
-                    continue
-                if not (
-                    entry.get("accountId")
-                    or entry.get("account_id")
-                    or entry.get("resource_id")
-                    or entry.get("id")
-                ):
+                if isinstance(entry, dict):
                     entry.setdefault("accountId", account_id)
-                all_balance_entries.append(entry)
+                    all_balance_entries.append(entry)
 
         logger.info(
             "Retrieved %d balance entries for user '%s' from %s",
