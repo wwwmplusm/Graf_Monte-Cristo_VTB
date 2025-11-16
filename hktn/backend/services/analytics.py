@@ -210,6 +210,8 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, Any]:
             {"bank_name": res["bank_id"], "status": res["status"], "message": res["message"]},
         )
         if res["status"] == "ok":
+            raw_accounts = res.get("accounts") or []
+            logger.info("Raw accounts payload for bank %s: %s", res["bank_id"], raw_accounts)
             all_accounts.extend(res.get("accounts") or [])
         else:
             if entry["status"] == "ok":

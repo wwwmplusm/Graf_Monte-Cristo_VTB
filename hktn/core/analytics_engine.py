@@ -435,7 +435,23 @@ def _resolve_numeric_value(value: Any) -> Optional[float]:
 
 
 def _extract_account_balance(account: Dict[str, Any]) -> float:
-    """Best-effort balance extraction across heterogeneous account payloads."""
+    """
+    Best-effort balance extraction across heterogeneous account payloads.
+    Prioritizes nested 'balances' array as seen in sandbox data.
+    """
+    balances_list = account.get("balances")
+    if isinstance(balances_list, list) and balances_list:
+        balance_obj = balances_list[0]
+        if isinstance(balance_obj, dict):
+            for key in ("availableBalance", "available_balance", "currentBalance", "current_balance"):
+                if key in balance_obj and balance_obj[key] is not None:
+                    amount = _resolve_numeric_value(balance_obj[key])
+                    if amount is not None:
+                        return amount
+            amount = _resolve_numeric_value(balance_obj)
+            if amount is not None:
+                return amount
+
     balance_keys = (
         "available_balance",
         "availableBalance",
@@ -450,11 +466,17 @@ def _extract_account_balance(account: Dict[str, Any]) -> float:
             amount = _resolve_numeric_value(account[key])
             if amount is not None:
                 return amount
+
     for fallback_key in _BALANCE_FALLBACK_FIELDS:
         if fallback_key in account and account[fallback_key] is not None:
             amount = _resolve_numeric_value(account[fallback_key])
             if amount is not None:
                 return amount
+
+    final_attempt = _resolve_numeric_value(account)
+    if final_attempt is not None:
+        return final_attempt
+
     return 0.0
 
 
