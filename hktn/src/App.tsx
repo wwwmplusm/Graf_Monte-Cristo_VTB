@@ -4,6 +4,7 @@ import { useNotifications } from './state/notifications';
 import { useUser } from './state/useUser';
 import { BanksCatalogPage } from './pages/BanksCatalogPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { IntegrationStatusPage } from './pages/IntegrationStatusPage';
 import { UserIdPage } from './pages/UserIdPage';
 
 const ProtectedRoute: React.FC = () => {
@@ -63,6 +64,11 @@ const Header: React.FC = () => {
           Дашборд
         </button>
         {userId ? (
+          <button className="btn-secondary btn" onClick={() => navigate('/integration-status')}>
+            Диагностика API
+          </button>
+        ) : null}
+        {userId ? (
           <button
             className="btn-secondary btn"
             onClick={() => {
@@ -86,10 +92,11 @@ export const App: React.FC = () => (
       <Routes>
         <Route path="/" element={<UserIdPage />} />
         <Route element={<ProtectedRoute />}>
-        <Route path="/banks" element={<BanksCatalogPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/banks" element={<BanksCatalogPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/integration-status" element={<IntegrationStatusPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   </AppErrorBoundary>

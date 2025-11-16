@@ -1,4 +1,5 @@
 import type { DashboardResponse } from '../types/dashboard';
+import type { IntegrationStatusResponse } from '../types/integration-status';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
@@ -51,6 +52,9 @@ export const getBanks = (userId?: string) => {
 export const getDashboard = (userId: string) =>
   fetchJson<DashboardResponse>(`/api/dashboard?user_id=${encodeURIComponent(userId)}`);
 
-export type { DashboardResponse };
+export const getIntegrationStatus = (userId: string) =>
+  fetchJson<IntegrationStatusResponse>(`/api/integration-status?user_id=${encodeURIComponent(userId)}`);
+
+export type { DashboardResponse, IntegrationStatusResponse };
 
 export { fetchJson };
