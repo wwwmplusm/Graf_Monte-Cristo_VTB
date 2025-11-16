@@ -489,19 +489,63 @@ class OBRAPIClient:
     async def fetch_balances_with_consent(self, user_id: str, consent_id: str) -> Dict[str, Any]:
         """Fetch balance totals for the user with the granted consent."""
         bank_token = await self._get_bank_token()
-        headers = {**(await self._get_common_headers(bank_token)), "X-Consent-Id": consent_id}
+        base_headers = await self._get_common_headers(bank_token)
 
         logger.info("Fetching balances for user '%s' (consent %s)", user_id, consent_id)
 
+        async def _accounts_headers() -> Dict[str, str]:
+            headers = {**base_headers, "x-fapi-interaction-id": str(uuid.uuid4())}
+            headers["X-Consent-Id"] = consent_id
+            return headers
+
         @api_retry
-        async def _get_balances():
-            response = await self._client.get(f"/balances?client_id={user_id}", headers=headers)
+        async def _get_accounts():
+            response = await self._client.get(f"/accounts?client_id={user_id}", headers=await _accounts_headers())
             response.raise_for_status()
             return response.json()
 
-        payload = await _get_balances()
-        logger.info("Retrieved balances payload for user '%s' from %s", user_id, self.api_base_url)
-        return payload
+        accounts_payload = await _get_accounts()
+        accounts = self._extract_accounts(accounts_payload)
+
+        all_balance_entries: List[Dict[str, Any]] = []
+        for account in accounts:
+            account_id = self._extract_account_id(account)
+            if not account_id:
+                continue
+
+            url = f"/accounts/{account_id}/balances"
+
+            @api_retry
+            async def _get_account_balances():
+                response = await self._client.get(url, headers=await _accounts_headers())
+                response.raise_for_status()
+                return response.json()
+
+            balance_payload = await _get_account_balances()
+            entries = self._extract_balance_entries(balance_payload)
+            if not entries:
+                logger.warning("No balance entries found for account %s at %s", account_id, self.api_base_url)
+                continue
+
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                if not (
+                    entry.get("accountId")
+                    or entry.get("account_id")
+                    or entry.get("resource_id")
+                    or entry.get("id")
+                ):
+                    entry.setdefault("accountId", account_id)
+                all_balance_entries.append(entry)
+
+        logger.info(
+            "Retrieved %d balance entries for user '%s' from %s",
+            len(all_balance_entries),
+            user_id,
+            self.api_base_url,
+        )
+        return {"balances": all_balance_entries}
 
     async def fetch_credits_with_consent(self, user_id: str, consent_id: str) -> List[Dict[str, Any]]:
         """
@@ -636,6 +680,26 @@ class OBRAPIClient:
                     return data["agreements"]
                 if isinstance(data.get("credits"), list):
                     return data["credits"]
+        return []
+
+    @staticmethod
+    def _extract_balance_entries(payload: Any) -> List[Dict[str, Any]]:
+        if isinstance(payload, list):
+            return [entry for entry in payload if isinstance(entry, dict)]
+        if not isinstance(payload, dict):
+            return []
+
+        for candidate in ("balances", "items", "accountBalances", "account_balances"):
+            section = payload.get(candidate)
+            if isinstance(section, list):
+                return [entry for entry in section if isinstance(entry, dict)]
+
+        nested_data = payload.get("data")
+        if isinstance(nested_data, dict):
+            for candidate in ("balances", "accountBalances", "account_balances"):
+                section = nested_data.get(candidate)
+                if isinstance(section, list):
+                    return [entry for entry in section if isinstance(entry, dict)]
         return []
 
     def _extract_next_link(self, payload: Any) -> Optional[str]:
