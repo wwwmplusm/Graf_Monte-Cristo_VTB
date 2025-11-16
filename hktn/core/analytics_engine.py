@@ -410,20 +410,38 @@ _BALANCE_FALLBACK_FIELDS = (
     "value",
 )
 
+_ID_HINTS_TO_SKIP = {
+    "accountid",
+    "account_id",
+    "resource_id",
+    "identification",
+    "agreement_id",
+    "iban",
+    "pan",
+    "mask",
+    "card",
+    "id",
+}
 
-def _resolve_numeric_value(value: Any) -> Optional[float]:
+
+def _resolve_numeric_value(value: Any, key_hint: str | None = None) -> Optional[float]:
     """Traverse nested structures to coerce a numeric amount."""
+    if key_hint:
+        hint = key_hint.replace("-", "_").lower()
+        if hint in _ID_HINTS_TO_SKIP:
+            return None
+
     number = _safe_float(value)
     if number is not None:
         return number
     if isinstance(value, dict):
         for nested_key in _BALANCE_FALLBACK_FIELDS:
             if nested_key in value:
-                nested = _resolve_numeric_value(value[nested_key])
+                nested = _resolve_numeric_value(value[nested_key], nested_key)
                 if nested is not None:
                     return nested
-        for nested in value.values():
-            nested_value = _resolve_numeric_value(nested)
+        for nested_key, nested in value.items():
+            nested_value = _resolve_numeric_value(nested, nested_key)
             if nested_value is not None:
                 return nested_value
     if isinstance(value, (list, tuple)):
@@ -445,7 +463,7 @@ def _extract_account_balance(account: Dict[str, Any]) -> float:
         if isinstance(balance_obj, dict):
             for key in ("availableBalance", "available_balance", "currentBalance", "current_balance"):
                 if key in balance_obj and balance_obj[key] is not None:
-                    amount = _resolve_numeric_value(balance_obj[key])
+                    amount = _resolve_numeric_value(balance_obj[key], key)
                     if amount is not None:
                         return amount
             amount = _resolve_numeric_value(balance_obj)
@@ -463,13 +481,13 @@ def _extract_account_balance(account: Dict[str, Any]) -> float:
     )
     for key in balance_keys:
         if key in account and account[key] is not None:
-            amount = _resolve_numeric_value(account[key])
+            amount = _resolve_numeric_value(account[key], key)
             if amount is not None:
                 return amount
 
     for fallback_key in _BALANCE_FALLBACK_FIELDS:
         if fallback_key in account and account[fallback_key] is not None:
-            amount = _resolve_numeric_value(account[fallback_key])
+            amount = _resolve_numeric_value(account[fallback_key], fallback_key)
             if amount is not None:
                 return amount
 
