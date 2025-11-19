@@ -223,6 +223,44 @@ def find_approved_consents(user_id: str, consent_type: Optional[str] = None) -> 
     ]
 
 
+def find_consent_by_type(
+    user_id: str,
+    bank_id: str,
+    consent_type: str = "accounts"
+) -> Optional[StoredConsent]:
+    """
+    Находит consent определённого типа для пользователя и банка.
+    
+    Args:
+        user_id: ID пользователя
+        bank_id: ID банка
+        consent_type: тип consent ("accounts", "products", "payments")
+    
+    Returns:
+        StoredConsent если найден approved consent, иначе None
+    """
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            """
+            SELECT bank_id, consent_id, consent_type
+            FROM consents
+            WHERE user_id = ? AND bank_id = ? AND consent_type = ? AND status = 'APPROVED'
+            ORDER BY created_at DESC
+            LIMIT 1
+            """,
+            (user_id, bank_id, consent_type),
+        )
+        row = cursor.fetchone()
+    
+    if row:
+        return StoredConsent(
+            bank_id=row["bank_id"],
+            consent_id=row["consent_id"],
+            consent_type=row["consent_type"] or consent_type,
+        )
+    return None
+
+
 def upsert_product_consents(user_id: str, items: List[Dict[str, Any]]) -> None:
     """Upsert multiple product consent records for a user."""
     if not items:

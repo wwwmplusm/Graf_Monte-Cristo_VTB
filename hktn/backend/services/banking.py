@@ -204,16 +204,54 @@ async def fetch_bank_credits(
     consent_id: str,
     user_id: str,
     user_name: Optional[str] = None,
-    create_product_consent: bool = False,
+    create_product_consent: bool = True,  # ИЗМЕНЕНО: по умолчанию True
 ) -> Dict[str, Any]:
+    """
+    Получает кредиты с использованием product consent.
+    Сначала ищет существующий product consent в БД, если нет - создаёт новый.
+    """
+    from hktn.core.database import find_consent_by_type, save_consent
+    
     _require_bank(bank_id)
     async with bank_client(bank_id) as client:
         try:
-            prod_consent_id = consent_id
-            if create_product_consent:
+            # 1. Ищем существующий product consent в БД
+            product_consent = find_consent_by_type(user_id, bank_id, "products")
+            
+            if product_consent:
+                prod_consent_id = product_consent.consent_id
+                logger.info(
+                    "Using existing product consent %s for user %s bank %s",
+                    prod_consent_id,
+                    user_id,
+                    bank_id
+                )
+            elif create_product_consent:
+                # 2. Создаём новый product consent
+                logger.info("Creating new product consent for user %s bank %s", user_id, bank_id)
                 prod_consent_meta = await client.initiate_product_consent(user_id, user_display_name=user_name)
+                
                 if prod_consent_meta and prod_consent_meta.consent_id:
                     prod_consent_id = prod_consent_meta.consent_id
+                    
+                    # 3. Сохраняем в БД
+                    save_consent(
+                        user_id=user_id,
+                        bank_id=bank_id,
+                        consent_id=prod_consent_id,
+                        status="APPROVED" if prod_consent_meta.auto_approved else "PENDING",
+                        request_id=prod_consent_meta.request_id,
+                        approval_url=prod_consent_meta.approval_url,
+                        consent_type="products"
+                    )
+                    logger.info("Product consent %s saved to DB", prod_consent_id)
+                else:
+                    # Fallback: пробуем с account consent
+                    logger.warning("Could not create product consent, trying with account consent")
+                    prod_consent_id = consent_id
+            else:
+                # Используем account consent как fallback
+                prod_consent_id = consent_id
 
             credits = await client.fetch_credits_with_consent(user_id, prod_consent_id)
             for credit in credits or []:

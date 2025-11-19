@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
 from ..config import settings
-from ..schemas import ConsentInitiateRequest
+from ..schemas import ConsentInitiateRequest, OnboardingConsentsRequest
 from ..services import consents
 
 router = APIRouter(prefix="/api", tags=["consents"])
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api", tags=["consents"])
 
 @router.post("/consent/initiate")
 async def initiate_consent(req: ConsentInitiateRequest):
-    return await consents.initiate_consent(req)
+    return await consents.initiate_full_consent_flow(req)
 
 
 @router.post("/consent/initiate/product")
@@ -20,10 +20,22 @@ async def initiate_product_consent(req: ConsentInitiateRequest):
     return await consents.initiate_product_consent(req)
 
 
+@router.post("/consent/initiate/payment")
+async def initiate_payment_consent_endpoint(req: ConsentInitiateRequest):
+    """Initiate payment consent for a bank."""
+    return await consents.initiate_payment_consent(req)
+
+
+@router.post("/onboarding/consents")
+async def create_all_consents(req: OnboardingConsentsRequest):
+    """Создает все необходимые consents для выбранных банков."""
+    return await consents.create_multiple_consents(req)
+
+
 @router.post("/consents/start")
 async def start_consent_alias(req: ConsentInitiateRequest):
     """Specification-friendly alias for /api/consent/initiate."""
-    return await consents.initiate_consent(req)
+    return await consents.initiate_full_consent_flow(req)
 
 
 @router.get("/consent/callback")

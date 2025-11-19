@@ -1,0 +1,31 @@
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException
+
+from ..schemas import (
+    OnboardingStartRequest,
+    OnboardingStatusResponse,
+    OnboardingFinalizeRequest,
+)
+from ..services import onboarding
+
+router = APIRouter(prefix="/api", tags=["onboarding"])
+
+
+@router.post("/onboarding/start")
+async def start_onboarding(req: OnboardingStartRequest):
+    """Начинает онбординг для пользователя."""
+    return await onboarding.start_onboarding(req)
+
+
+@router.get("/onboarding/status")
+async def get_onboarding_status(onboarding_id: str):
+    """Возвращает статус онбординга."""
+    return await onboarding.get_onboarding_status(onboarding_id)
+
+
+@router.post("/onboarding/finalize")
+async def finalize_onboarding(req: OnboardingFinalizeRequest):
+    """Завершает онбординг."""
+    return await onboarding.finalize_onboarding(req)
+

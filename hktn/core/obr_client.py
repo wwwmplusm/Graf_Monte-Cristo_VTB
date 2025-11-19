@@ -357,6 +357,221 @@ class OBRAPIClient:
         logger.error("All attempts to create product consent failed for user %s at %s", user_id, self.api_base_url)
         return None
 
+    async def initiate_payment_consent(
+        self, user_id: str, user_display_name: Optional[str] = None
+    ) -> Optional[ConsentInitResult]:
+        """Tries multiple payloads to create a payment consent, inspired by initiate_product_consent()."""
+        bank_token = await self._get_bank_token()
+        headers = await self._get_common_headers(bank_token)
+
+        valid_until = (
+            datetime.now(timezone.utc) + timedelta(days=365)
+        ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+        base_payload = {
+            "requesting_bank": self.team_id,
+            "requesting_bank_name": f"{self.team_id} App",
+            "client_id": user_id,
+            "reason": "CreditGuard: payment processing",
+            "customer_name": user_display_name or user_id,
+        }
+
+        # Try multiple endpoints and payload variations
+        endpoints_to_try = [
+            "/payment-consents/request",
+            "/payment-consent-requests",
+        ]
+
+        payloads_to_try = [
+            {
+                **base_payload,
+                "permissions": [
+                    "InitiateSinglePayment",
+                    "InitiateMultiplePayment",
+                    "CreateVariableRecurringPayment",
+                ],
+                "valid_until": valid_until,
+            },
+            {
+                **base_payload,
+                "permissions": [
+                    "InitiateSinglePayment",
+                    "InitiateMultiplePayment",
+                ],
+                "valid_until": valid_until,
+            },
+            {
+                **base_payload,
+                "permissions": ["InitiateSinglePayment"],
+                "valid_until": valid_until,
+            },
+            {
+                **base_payload,
+                "initiate_single_payment": True,
+                "initiate_multiple_payment": True,
+                "create_variable_recurring_payment": True,
+                "valid_until": valid_until,
+            },
+            {
+                **base_payload,
+                "permissions": ["CreateSinglePayment", "CreateMultiplePayment"],
+                "valid_until": valid_until,
+            },
+        ]
+
+        for url in endpoints_to_try:
+            for body in payloads_to_try:
+                try:
+                    response = await self._client.post(
+                        url,
+                        headers=headers,
+                        params={"client_id": user_id},
+                        json=body,
+                    )
+                    if response.status_code >= 400:
+                        logger.warning(
+                            "Payment consent payload failed with status %s for endpoint %s: %s",
+                            response.status_code,
+                            url,
+                            body,
+                        )
+                        continue
+
+                    data = response.json()
+                    consent_id = data.get("consent_id") or self._jget(data, ["data", "consentId"])
+                    request_id = data.get("request_id") or self._jget(data, ["data", "requestId"])
+                    status_raw = data.get("status") or self._jget(data, ["data", "status"])
+                    approval_url = self._jget(data, ["links", "consentApproval"])
+
+                    # SBank может вернуть request_id вместо consent_id
+                    final_id = consent_id or request_id
+                    if final_id:
+                        normalized_status = _normalize_status_value(status_raw).lower()
+                        auto_approved = bool(
+                            data.get("auto_approved")
+                            or (normalized_status and normalized_status in _AUTHORIZED_STATUS_SET)
+                        )
+                        if not auto_approved and not approval_url and normalized_status not in _FAILED_STATUS_SET:
+                            auto_approved = True
+                            status_raw = "Approved"
+
+                        status_value = status_raw or ("Approved" if auto_approved else "Pending")
+
+                        logger.info(
+                            "Payment consent initiated successfully with endpoint %s and payload: %s",
+                            url,
+                            body,
+                        )
+                        return ConsentInitResult(
+                            consent_id=final_id,
+                            status=status_value,
+                            auto_approved=auto_approved,
+                            approval_url=approval_url,
+                            request_id=request_id,
+                        )
+                except httpx.RequestError as e:  # noqa: PERF203
+                    logger.warning(
+                        "Request failed for payment consent endpoint %s with payload %s: %s",
+                        url,
+                        body,
+                        e,
+                    )
+
+        logger.error("All attempts to create payment consent failed for user %s at %s", user_id, self.api_base_url)
+        return None
+
+    async def initiate_single_payment(
+        self,
+        user_id: str,
+        consent_id: str,
+        account_id: str,
+        amount: float,
+        creditor_account: str,
+        description: str,
+    ) -> Dict[str, Any]:
+        """Инициирует single payment через банковское API."""
+        bank_token = await self._get_bank_token()
+        headers = await self._get_common_headers(bank_token)
+        headers["X-Payment-Consent-Id"] = consent_id
+
+        # Try multiple endpoints
+        endpoints_to_try = [
+            "/payments/single",
+            "/payments/single-payment",
+            "/single-payments",
+        ]
+
+        base_payload = {
+            "client_id": user_id,
+            "debtor_account": account_id,
+            "creditor_account": creditor_account,
+            "amount": amount,
+            "currency": "RUB",
+            "description": description,
+            "requesting_bank": self.team_id,
+        }
+
+        payloads_to_try = [
+            base_payload,
+            {
+                **base_payload,
+                "instructed_amount": {
+                    "amount": str(amount),
+                    "currency": "RUB",
+                },
+            },
+            {
+                **base_payload,
+                "payment_amount": amount,
+                "payment_currency": "RUB",
+            },
+        ]
+
+        for url in endpoints_to_try:
+            for body in payloads_to_try:
+                try:
+                    response = await self._client.post(
+                        url,
+                        headers=headers,
+                        params={"client_id": user_id},
+                        json=body,
+                    )
+                    if response.status_code >= 400:
+                        logger.warning(
+                            "Payment request failed with status %s for endpoint %s: %s",
+                            response.status_code,
+                            url,
+                            body,
+                        )
+                        continue
+
+                    data = response.json()
+                    payment_id = data.get("payment_id") or self._jget(data, ["data", "paymentId"])
+                    status_raw = data.get("status") or self._jget(data, ["data", "status"])
+
+                    if payment_id:
+                        logger.info(
+                            "Single payment initiated successfully with endpoint %s: payment_id=%s",
+                            url,
+                            payment_id,
+                        )
+                        return {
+                            "payment_id": payment_id,
+                            "status": status_raw or "Pending",
+                            "amount": amount,
+                            "description": description,
+                        }
+                except httpx.RequestError as e:  # noqa: PERF203
+                    logger.warning(
+                        "Request failed for payment endpoint %s with payload %s: %s",
+                        url,
+                        body,
+                        e,
+                    )
+
+        logger.error("All attempts to initiate single payment failed for user %s at %s", user_id, self.api_base_url)
+        raise Exception("Failed to initiate payment: all endpoints failed")
+
     @api_retry
     async def get_consent_details(self, consent_id: str) -> Dict[str, Any]:
         """Fetch consent status from /account-consents/{consent_id}."""
@@ -522,7 +737,7 @@ class OBRAPIClient:
                 return response.json()
 
             balance_payload = await _get_account_balances()
-            entries = self._jget(balance_payload, ["data", "Balance"], [])
+            entries = self._extract_balances(balance_payload)  # ИСПРАВЛЕНО: используем новый метод
             if not entries:
                 logger.warning("No balance entries found for account %s at %s", account_id, self.api_base_url)
                 continue
@@ -668,13 +883,50 @@ class OBRAPIClient:
             if isinstance(payload.get("credits"), list):
                 return payload["credits"]
             data = payload.get("data")
+            # Вариант 1: data - это массив напрямую (реальный формат банка)
+            if isinstance(data, list):
+                return data
+            # Вариант 2: data - это объект с вложенными массивами
             if isinstance(data, dict):
                 if isinstance(data.get("agreements"), list):
                     return data["agreements"]
                 if isinstance(data.get("credits"), list):
                     return data["credits"]
+                if isinstance(data.get("items"), list):
+                    return data["items"]
+        # Вариант 3: payload сам является массивом
+        if isinstance(payload, list):
+            return payload
         return []
 
+    @staticmethod
+    def _extract_balances(payload: Any) -> List[Dict[str, Any]]:
+        """
+        Извлекает балансы из response с поддержкой разных вариантов структуры.
+        Обрабатывает как lowercase ("balance"), так и uppercase ("Balance").
+        """
+        if not isinstance(payload, dict):
+            return []
+        
+        # Вариант 1: data.balance (lowercase - из реального банка)
+        data = payload.get("data")
+        if isinstance(data, dict):
+            balance = data.get("balance")  # lowercase!
+            if isinstance(balance, list):
+                return balance
+            
+            # Вариант 2: data.Balance (uppercase - fallback для совместимости)
+            balance = data.get("Balance")
+            if isinstance(balance, list):
+                return balance
+        
+        # Вариант 3: прямо в корне payload
+        balance = payload.get("balance") or payload.get("Balance")
+        if isinstance(balance, list):
+            return balance
+        
+        return []
+    
     @staticmethod
     def _extract_balance_entries(payload: Any) -> List[Dict[str, Any]]:
         if isinstance(payload, list):

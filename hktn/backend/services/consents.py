@@ -13,7 +13,7 @@ from hktn.core.database import (
 )
 from hktn.core.obr_client import AUTHORIZED_CONSENT_STATUSES, FAILED_CONSENT_STATUSES
 
-from ..schemas import ConsentInitiateRequest
+from ..schemas import ConsentInitiateRequest, OnboardingConsentsRequest, BankConsentRequest
 from .banking import bank_client, get_bank_config
 
 logger = logging.getLogger("finpulse.backend.consents")
@@ -132,6 +132,100 @@ async def initiate_product_consent(req: ConsentInitiateRequest) -> Dict[str, Any
             }
 
 
+async def initiate_payment_consent(req: ConsentInitiateRequest) -> Dict[str, Any]:
+    """Initiate payment consent for the selected bank."""
+    bank_config = get_bank_config(req.bank_id, require_url=True)
+    async with bank_client(req.bank_id) as client:
+        try:
+            logger.info("Initiating PAYMENT consent for user '%s' with bank '%s'", req.user_id, req.bank_id)
+            consent_meta = await client.initiate_payment_consent(req.user_id)
+            if not consent_meta or not (consent_meta.consent_id or consent_meta.request_id):
+                raise HTTPException(status_code=502, detail="Bank did not provide payment consent identifier.")
+
+            consent_identifier = consent_meta.consent_id or consent_meta.request_id
+            initial_status = "APPROVED" if consent_meta.auto_approved else "AWAITING_USER"
+            save_consent(
+                req.user_id,
+                req.bank_id,
+                consent_identifier,
+                initial_status,
+                request_id=consent_meta.request_id,
+                approval_url=consent_meta.approval_url,
+                consent_type="payments",
+            )
+
+            if consent_meta.consent_id and consent_meta.auto_approved:
+                update_consent_status(consent_meta.consent_id, "APPROVED")
+
+            return {
+                "bank_id": req.bank_id,
+                "bank_name": bank_config.display_name,
+                "type": "payment",
+                "state": "approved" if consent_meta.auto_approved else "pending",
+                "status": consent_meta.status,
+                "consent_id": consent_meta.consent_id,
+                "request_id": consent_meta.request_id,
+                "approval_url": consent_meta.approval_url,
+                "auto_approved": consent_meta.auto_approved,
+            }
+        except HTTPException as exc:
+            logger.error("Failed to initiate PAYMENT consent for bank %s: %s", req.bank_id, exc)
+            return {
+                "bank_id": req.bank_id,
+                "bank_name": bank_config.display_name,
+                "type": "payment",
+                "state": "error",
+                "status": "error",
+                "error_message": str(exc.detail if hasattr(exc, "detail") else exc),
+            }
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Failed to initiate PAYMENT consent for bank %s: %s", req.bank_id, exc)
+            return {
+                "bank_id": req.bank_id,
+                "bank_name": bank_config.display_name,
+                "type": "payment",
+                "state": "error",
+                "status": "error",
+                "error_message": str(exc),
+            }
+
+
+async def initiate_full_consent_flow(req: ConsentInitiateRequest) -> Dict[str, Any]:
+    """
+    Create all three types of consents: account + product + payment.
+    Product and payment consents are created regardless of account consent auto-approval status.
+    """
+    user_id = req.user_id
+    bank_id = req.bank_id
+
+    # 1. Account consent (обязательный)
+    account_result = await initiate_consent(req)
+
+    # 2. Product consent (всегда, не критично если не получится)
+    try:
+        logger.info("Creating product consent for %s@%s", user_id, bank_id)
+        product_result = await initiate_product_consent(req)
+        if product_result.get("state") != "error":
+            logger.info("Product consent created: %s", product_result.get("consent_id"))
+        else:
+            logger.warning("Product consent error: %s", product_result.get("error_message"))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Product consent creation failed (non-critical): %s", exc)
+
+    # 3. Payment consent (всегда, не критично если не получится)
+    try:
+        logger.info("Creating payment consent for %s@%s", user_id, bank_id)
+        payment_result = await initiate_payment_consent(req)
+        if payment_result.get("state") != "error":
+            logger.info("Payment consent created: %s", payment_result.get("consent_id"))
+        else:
+            logger.warning("Payment consent error: %s", payment_result.get("error_message"))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Payment consent creation failed (non-critical): %s", exc)
+
+    return account_result
+
+
 async def poll_consent_status(user_id: str, bank_id: str, request_id: str) -> Dict[str, Any]:
     if not request_id:
         raise HTTPException(status_code=400, detail="request_id is required.")
@@ -202,3 +296,100 @@ async def poll_consent_status(user_id: str, bank_id: str, request_id: str) -> Di
 def mark_consent_from_callback(consent_id: str) -> bool:
     """Mark consent as approved when redirected back from bank."""
     return update_consent_status(consent_id, "APPROVED")
+
+
+async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, Any]:
+    """Создает все необходимые consents для выбранных банков."""
+    results = []
+    user_id = req.user_id
+
+    for bank_data in req.banks:
+        bank_id = bank_data.bank_id
+        consents_to_create = bank_data.consents
+        bank_result: Dict[str, Any] = {
+            "bank_id": bank_id,
+            "account_consent": None,
+            "product_consent": None,
+            "payment_consent": None,
+            "errors": [],
+        }
+
+        # Create account consent if requested
+        if consents_to_create.account:
+            try:
+                account_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
+                account_result = await initiate_consent(account_req)
+                bank_result["account_consent"] = account_result.get("consent_id")
+                logger.info(
+                    "Account consent created for %s@%s: %s",
+                    user_id,
+                    bank_id,
+                    account_result.get("consent_id"),
+                )
+            except Exception as exc:  # noqa: BLE001
+                error_msg = str(exc)
+                bank_result["errors"].append(f"Account consent failed: {error_msg}")
+                logger.error(
+                    "Failed to create account consent for %s@%s: %s",
+                    user_id,
+                    bank_id,
+                    error_msg,
+                )
+
+        # Create product consent if requested
+        if consents_to_create.product:
+            try:
+                product_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
+                product_result = await initiate_product_consent(product_req)
+                if product_result.get("state") != "error":
+                    bank_result["product_consent"] = product_result.get("consent_id")
+                    logger.info(
+                        "Product consent created for %s@%s: %s",
+                        user_id,
+                        bank_id,
+                        product_result.get("consent_id"),
+                    )
+                else:
+                    bank_result["errors"].append(
+                        f"Product consent error: {product_result.get('error_message')}"
+                    )
+            except Exception as exc:  # noqa: BLE001
+                error_msg = str(exc)
+                bank_result["errors"].append(f"Product consent failed: {error_msg}")
+                logger.error(
+                    "Failed to create product consent for %s@%s: %s",
+                    user_id,
+                    bank_id,
+                    error_msg,
+                )
+
+        # Create payment consent if requested
+        if consents_to_create.payment:
+            try:
+                payment_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
+                payment_result = await initiate_payment_consent(payment_req)
+                if payment_result.get("state") != "error":
+                    bank_result["payment_consent"] = payment_result.get("consent_id")
+                    logger.info(
+                        "Payment consent created for %s@%s: %s",
+                        user_id,
+                        bank_id,
+                        payment_result.get("consent_id"),
+                    )
+                else:
+                    bank_result["errors"].append(
+                        f"Payment consent error: {payment_result.get('error_message')}"
+                    )
+            except Exception as exc:  # noqa: BLE001
+                error_msg = str(exc)
+                bank_result["errors"].append(f"Payment consent failed: {error_msg}")
+                logger.error(
+                    "Failed to create payment consent for %s@%s: %s",
+                    user_id,
+                    bank_id,
+                    error_msg,
+                )
+
+        results.append(bank_result)
+
+    return {"results": results, "user_id": user_id}
