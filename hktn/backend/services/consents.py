@@ -7,6 +7,7 @@ from fastapi import HTTPException, status
 
 from hktn.core.database import (
     get_consent_by_request_id,
+    get_user_consents,
     save_consent,
     update_consent_from_request,
     update_consent_status,
@@ -302,16 +303,24 @@ async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, 
     """Создает все необходимые consents для выбранных банков."""
     results = []
     user_id = req.user_id
+    overall_status = "completed"
+    has_errors = False
+    has_pending = False
 
     for bank_data in req.banks:
         bank_id = bank_data.bank_id
         consents_to_create = bank_data.consents
+        
+        # Get bank config for bank_name
+        bank_config = get_bank_config(bank_id, require_url=False)
+        bank_name = bank_config.display_name if bank_config else bank_id
+        
         bank_result: Dict[str, Any] = {
             "bank_id": bank_id,
+            "bank_name": bank_name,
             "account_consent": None,
             "product_consent": None,
             "payment_consent": None,
-            "errors": [],
         }
 
         # Create account consent if requested
@@ -319,16 +328,38 @@ async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, 
             try:
                 account_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
                 account_result = await initiate_consent(account_req)
-                bank_result["account_consent"] = account_result.get("consent_id")
+                
+                # Determine status based on result
+                if account_result.get("state") == "approved":
+                    status_value = "approved"
+                elif account_result.get("state") == "pending":
+                    status_value = "pending"
+                    has_pending = True
+                else:
+                    status_value = "creating"
+                    has_pending = True
+                
+                bank_result["account_consent"] = {
+                    "status": status_value,
+                    "consent_id": account_result.get("consent_id"),
+                    "request_id": account_result.get("request_id"),
+                    "approval_url": account_result.get("approval_url"),
+                }
+                
                 logger.info(
-                    "Account consent created for %s@%s: %s",
+                    "Account consent created for %s@%s: %s (status: %s)",
                     user_id,
                     bank_id,
                     account_result.get("consent_id"),
+                    status_value,
                 )
             except Exception as exc:  # noqa: BLE001
                 error_msg = str(exc)
-                bank_result["errors"].append(f"Account consent failed: {error_msg}")
+                bank_result["account_consent"] = {
+                    "status": "error",
+                    "error_message": error_msg,
+                }
+                has_errors = True
                 logger.error(
                     "Failed to create account consent for %s@%s: %s",
                     user_id,
@@ -341,21 +372,44 @@ async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, 
             try:
                 product_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
                 product_result = await initiate_product_consent(product_req)
-                if product_result.get("state") != "error":
-                    bank_result["product_consent"] = product_result.get("consent_id")
+                
+                if product_result.get("state") == "error":
+                    bank_result["product_consent"] = {
+                        "status": "error",
+                        "error_message": product_result.get("error_message", "Unknown error"),
+                    }
+                    has_errors = True
+                else:
+                    if product_result.get("state") == "approved":
+                        status_value = "approved"
+                    elif product_result.get("state") == "pending":
+                        status_value = "pending"
+                        has_pending = True
+                    else:
+                        status_value = "creating"
+                        has_pending = True
+                    
+                    bank_result["product_consent"] = {
+                        "status": status_value,
+                        "consent_id": product_result.get("consent_id"),
+                        "request_id": product_result.get("request_id"),
+                        "approval_url": product_result.get("approval_url"),
+                    }
+                    
                     logger.info(
-                        "Product consent created for %s@%s: %s",
+                        "Product consent created for %s@%s: %s (status: %s)",
                         user_id,
                         bank_id,
                         product_result.get("consent_id"),
-                    )
-                else:
-                    bank_result["errors"].append(
-                        f"Product consent error: {product_result.get('error_message')}"
+                        status_value,
                     )
             except Exception as exc:  # noqa: BLE001
                 error_msg = str(exc)
-                bank_result["errors"].append(f"Product consent failed: {error_msg}")
+                bank_result["product_consent"] = {
+                    "status": "error",
+                    "error_message": error_msg,
+                }
+                has_errors = True
                 logger.error(
                     "Failed to create product consent for %s@%s: %s",
                     user_id,
@@ -368,21 +422,44 @@ async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, 
             try:
                 payment_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
                 payment_result = await initiate_payment_consent(payment_req)
-                if payment_result.get("state") != "error":
-                    bank_result["payment_consent"] = payment_result.get("consent_id")
+                
+                if payment_result.get("state") == "error":
+                    bank_result["payment_consent"] = {
+                        "status": "error",
+                        "error_message": payment_result.get("error_message", "Unknown error"),
+                    }
+                    has_errors = True
+                else:
+                    if payment_result.get("state") == "approved":
+                        status_value = "approved"
+                    elif payment_result.get("state") == "pending":
+                        status_value = "pending"
+                        has_pending = True
+                    else:
+                        status_value = "creating"
+                        has_pending = True
+                    
+                    bank_result["payment_consent"] = {
+                        "status": status_value,
+                        "consent_id": payment_result.get("consent_id"),
+                        "request_id": payment_result.get("request_id"),
+                        "approval_url": payment_result.get("approval_url"),
+                    }
+                    
                     logger.info(
-                        "Payment consent created for %s@%s: %s",
+                        "Payment consent created for %s@%s: %s (status: %s)",
                         user_id,
                         bank_id,
                         payment_result.get("consent_id"),
-                    )
-                else:
-                    bank_result["errors"].append(
-                        f"Payment consent error: {payment_result.get('error_message')}"
+                        status_value,
                     )
             except Exception as exc:  # noqa: BLE001
                 error_msg = str(exc)
-                bank_result["errors"].append(f"Payment consent failed: {error_msg}")
+                bank_result["payment_consent"] = {
+                    "status": "error",
+                    "error_message": error_msg,
+                }
+                has_errors = True
                 logger.error(
                     "Failed to create payment consent for %s@%s: %s",
                     user_id,
@@ -392,4 +469,76 @@ async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, 
 
         results.append(bank_result)
 
-    return {"results": results, "user_id": user_id}
+    # Determine overall status
+    if has_errors and has_pending:
+        overall_status = "partial"
+    elif has_errors:
+        overall_status = "error"
+    elif has_pending:
+        overall_status = "in_progress"
+
+    return {
+        "results": results,
+        "user_id": user_id,
+        "overall_status": overall_status,
+    }
+
+
+async def get_consents_status(user_id: str) -> Dict[str, Any]:
+    """Возвращает текущий статус всех согласий пользователя."""
+    consents = get_user_consents(user_id)
+    
+    # Group consents by bank_id
+    banks_dict: Dict[str, Dict[str, Any]] = {}
+    
+    for consent in consents:
+        bank_id = consent.get("bank_id")
+        consent_type = consent.get("consent_type", "accounts")
+        status = consent.get("status", "unknown")
+        consent_id = consent.get("consent_id")
+        request_id = consent.get("request_id")
+        approval_url = consent.get("approval_url")
+        
+        if bank_id not in banks_dict:
+            # Get bank config for bank_name
+            bank_config = get_bank_config(bank_id, require_url=False)
+            bank_name = bank_config.display_name if bank_config else bank_id
+            
+            banks_dict[bank_id] = {
+                "bank_id": bank_id,
+                "bank_name": bank_name,
+                "account_consent": None,
+                "product_consent": None,
+                "payment_consent": None,
+            }
+        
+        # Map consent_type to the result structure
+        consent_key_map = {
+            "accounts": "account_consent",
+            "products": "product_consent",
+            "payments": "payment_consent",
+        }
+        
+        consent_key = consent_key_map.get(consent_type, "account_consent")
+        
+        # Map status from DB to API status
+        if status == "APPROVED":
+            api_status = "approved"
+        elif status == "AWAITING_USER":
+            api_status = "pending"
+        else:
+            api_status = "creating"
+        
+        banks_dict[bank_id][consent_key] = {
+            "status": api_status,
+            "consent_id": consent_id,
+            "request_id": request_id,
+            "approval_url": approval_url,
+        }
+    
+    results = list(banks_dict.values())
+    
+    return {
+        "results": results,
+        "user_id": user_id,
+    }

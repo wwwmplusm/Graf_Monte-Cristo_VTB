@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Step1UserInfo } from '../components/steps/Step1UserInfo';
 import { Step2BanksAndConsents } from '../components/steps/Step2BanksAndConsents';
+import { Step2ConsentProgress } from '../components/steps/Step2ConsentProgress';
 import { Step4ProductSelection } from '../components/steps/Step4ProductSelection';
 import { Step5Questions } from '../components/steps/Step5Questions';
+import { Step6Summary } from '../components/steps/Step6Summary';
 import { Stepper } from '../components/Stepper';
 
 export interface OnboardingData {
@@ -97,7 +99,13 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         connected: selectedBankIds.includes(bank.id),
       })),
     }));
+    // Go to consent progress step (step 3)
     setCurrentStep(3);
+  };
+
+  const handleStep2ConsentProgressComplete = () => {
+    // Move to product selection after consents are created (step 4)
+    setCurrentStep(4);
   };
 
   const handleStep4Complete = (products: any[]) => {
@@ -109,6 +117,15 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   };
 
   const handleStep5Complete = (goals: any) => {
+    setOnboardingState((prev: any) => ({
+      ...prev,
+      goals: goals,
+    }));
+    // Move to summary step (step 6)
+    setCurrentStep(6);
+  };
+
+  const handleStep6Complete = () => {
     // Map onboarding data to final structure
     const finalData: OnboardingData = {
       user_profile: {
@@ -130,18 +147,18 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           }))
         : [],
       selected_products: onboardingState.selected_products || [],
-      goal: goals.mode ? {
-        type: goals.mode === 'save' ? 'save_money' : goals.mode === 'close_loans' ? 'close_debts' : 'both',
-        risk_mode: goals.save_speed || goals.close_speed || 'balanced',
-        ...(goals.mode === 'save' || goals.mode === 'both' ? {
+      goal: onboardingState.goals?.mode ? {
+        type: onboardingState.goals.mode === 'save' ? 'save_money' : onboardingState.goals.mode === 'close_loans' ? 'close_debts' : 'both',
+        risk_mode: onboardingState.goals.save_speed || onboardingState.goals.close_speed || 'balanced',
+        ...(onboardingState.goals.mode === 'save' || onboardingState.goals.mode === 'both' ? {
           save: {
-            amount_target: goals.save_amount,
-            horizon: goals.save_amount > 500000 ? 'long' : 'short',
+            amount_target: onboardingState.goals.save_amount,
+            horizon: onboardingState.goals.save_amount > 500000 ? 'long' : 'short',
           }
         } : {}),
-        ...(goals.mode === 'close_loans' || goals.mode === 'both' ? {
+        ...(onboardingState.goals.mode === 'close_loans' || onboardingState.goals.mode === 'both' ? {
           debts: {
-            selected_loan_ids: goals.close_loan_ids || [],
+            selected_loan_ids: onboardingState.goals.close_loan_ids || [],
           }
         } : {}),
       } : null,
@@ -149,6 +166,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
     onComplete(finalData);
   };
+
 
   const handleSkip = () => {
     // Create minimal onboarding data for skip
@@ -170,7 +188,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
         {/* Stepper */}
         <div className="mb-8 md:mb-12">
-          <Stepper currentStep={currentStep} totalSteps={4} />
+          <Stepper currentStep={currentStep} totalSteps={6} />
         </div>
 
         {/* Step Content */}
@@ -194,9 +212,18 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           )}
 
           {currentStep === 3 && (
+            <Step2ConsentProgress
+              onNext={handleStep2ConsentProgressComplete}
+              onBack={() => setCurrentStep(2)}
+              banksWithConsents={onboardingState.banks_with_consents || []}
+              userId={onboardingState.user_id}
+            />
+          )}
+
+          {currentStep === 4 && (
             <Step4ProductSelection
               onNext={handleStep4Complete}
-              onBack={() => setCurrentStep(2)}
+              onBack={() => setCurrentStep(3)}
               connectedBanks={onboardingState.banks.filter((bank: any) =>
                 onboardingState.selected_bank_ids?.includes(bank.id)
               )}
@@ -204,11 +231,19 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             />
           )}
 
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <Step5Questions
               onNext={handleStep5Complete}
-              onBack={() => setCurrentStep(3)}
+              onBack={() => setCurrentStep(4)}
               initialGoals={onboardingState.goals}
+            />
+          )}
+
+          {currentStep === 6 && (
+            <Step6Summary
+              onNext={handleStep6Complete}
+              onBack={() => setCurrentStep(5)}
+              onboardingState={onboardingState}
             />
           )}
         </div>

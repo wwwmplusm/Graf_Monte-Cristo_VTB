@@ -7,7 +7,7 @@ from ..schemas import (
     OnboardingStatusResponse,
     OnboardingFinalizeRequest,
 )
-from ..services import onboarding
+from ..services import onboarding, consents
 
 router = APIRouter(prefix="/api", tags=["onboarding"])
 
@@ -28,4 +28,10 @@ async def get_onboarding_status(onboarding_id: str):
 async def finalize_onboarding(req: OnboardingFinalizeRequest):
     """Завершает онбординг."""
     return await onboarding.finalize_onboarding(req)
+
+
+@router.get("/onboarding/consents/status")
+async def get_consents_status(user_id: str):
+    """Возвращает текущий статус всех согласий пользователя."""
+    return await consents.get_consents_status(user_id)
 
