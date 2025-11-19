@@ -1,0 +1,2231 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+accounts/
+  acc-3691_balance.json
+  acc-3691_details.json
+  acc-3691_full_transactions.json
+  acc-3693_balance.json
+  acc-3693_details.json
+  acc-3693_full_transactions.json
+  accounts_list.json
+  all_accounts.json
+  list.json
+agreements/
+  agreements_list.json
+  dep-team260-1-1110.json
+  dep-team260-3-1080.json
+  dep-team260-3-1110.json
+  list.json
+  loan-team260-3-0447.json
+  loan-team260-3-0467.json
+  loan-team260-3.json
+products/
+  catalog.json
+profile/
+  account_consent.json
+  product_consent.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="accounts/acc-3691_balance.json">
+{
+    "data": {
+        "balance": [
+            {
+                "accountId": "acc-3691",
+                "type": "InterimAvailable",
+                "dateTime": "2025-11-18T18:17:17.170141Z",
+                "amount": {
+                    "amount": "87792.69",
+                    "currency": "RUB"
+                },
+                "creditDebitIndicator": "Credit"
+            },
+            {
+                "accountId": "acc-3691",
+                "type": "InterimBooked",
+                "dateTime": "2025-11-18T18:17:17.170151Z",
+                "amount": {
+                    "amount": "87792.69",
+                    "currency": "RUB"
+                },
+                "creditDebitIndicator": "Credit"
+            }
+        ]
+    }
+}
+</file>
+
+<file path="accounts/acc-3691_details.json">
+{
+    "data": {
+        "account": [
+            {
+                "accountId": "acc-3691",
+                "status": "Enabled",
+                "currency": "RUB",
+                "accountType": "Personal",
+                "accountSubType": "Checking",
+                "description": "checking account",
+                "nickname": "Checking счет",
+                "openingDate": "2024-10-30"
+            }
+        ]
+    }
+}
+</file>
+
+<file path="accounts/acc-3691_full_transactions.json">
+[
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664812",
+        "amount": {
+            "amount": "134473.01",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-05T23:41:15.285567Z",
+        "valueDateTime": "2025-11-05T23:41:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664813",
+        "amount": {
+            "amount": "124097.94",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-03T22:48:15.285567Z",
+        "valueDateTime": "2025-11-03T22:48:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664810",
+        "amount": {
+            "amount": "79533.45",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-01T21:55:15.285567Z",
+        "valueDateTime": "2025-11-01T21:55:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664809",
+        "amount": {
+            "amount": "2921.56",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-01T09:17:15.285567Z",
+        "valueDateTime": "2025-11-01T09:17:15.285567Z",
+        "transactionInformation": "Магнит - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0051",
+            "name": "Магнит",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 4"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664877",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-31T23:59:15.285567Z",
+        "valueDateTime": "2025-10-31T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664876",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-30T23:59:15.285567Z",
+        "valueDateTime": "2025-10-30T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664811",
+        "amount": {
+            "amount": "108264.43",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-30T12:55:15.285567Z",
+        "valueDateTime": "2025-10-30T12:55:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664875",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-29T23:59:15.285567Z",
+        "valueDateTime": "2025-10-29T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664874",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-28T23:59:15.285567Z",
+        "valueDateTime": "2025-10-28T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664873",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-27T23:59:15.285567Z",
+        "valueDateTime": "2025-10-27T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664808",
+        "amount": {
+            "amount": "97900.53",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-27T08:37:15.285567Z",
+        "valueDateTime": "2025-10-27T08:37:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664872",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-26T23:59:15.285567Z",
+        "valueDateTime": "2025-10-26T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664871",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-25T23:59:15.285567Z",
+        "valueDateTime": "2025-10-25T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664807",
+        "amount": {
+            "amount": "1411.77",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-25T19:05:15.285567Z",
+        "valueDateTime": "2025-10-25T19:05:15.285567Z",
+        "transactionInformation": "Магнит - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0051",
+            "name": "Магнит",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 4"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664806",
+        "amount": {
+            "amount": "2018.18",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-22T14:55:15.285567Z",
+        "valueDateTime": "2025-10-22T14:55:15.285567Z",
+        "transactionInformation": "ВкусВилл - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0185",
+            "name": "ВкусВилл",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664803",
+        "amount": {
+            "amount": "882.78",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-21T14:17:15.285567Z",
+        "valueDateTime": "2025-10-21T14:17:15.285567Z",
+        "transactionInformation": "Яндекс.Такси - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-taxi-1200",
+            "name": "Яндекс.Такси",
+            "mccCode": "4121",
+            "category": "taxi",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664804",
+        "amount": {
+            "amount": "1959.41",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-20T19:09:15.285567Z",
+        "valueDateTime": "2025-10-20T19:09:15.285567Z",
+        "transactionInformation": "KFC - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0270",
+            "name": "KFC",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664805",
+        "amount": {
+            "amount": "76115.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-20T12:50:15.285567Z",
+        "valueDateTime": "2025-10-20T12:50:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664800",
+        "amount": {
+            "amount": "1326.50",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-16T12:39:15.285567Z",
+        "valueDateTime": "2025-10-16T12:39:15.285567Z",
+        "transactionInformation": "Шоколадница - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-cafe-0488",
+            "name": "Шоколадница",
+            "mccCode": "5814",
+            "category": "cafe",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664802",
+        "amount": {
+            "amount": "145096.58",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-13T23:21:15.285567Z",
+        "valueDateTime": "2025-10-13T23:21:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664801",
+        "amount": {
+            "amount": "113313.50",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-13T19:56:15.285567Z",
+        "valueDateTime": "2025-10-13T19:56:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664799",
+        "amount": {
+            "amount": "1139.36",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-07T18:49:15.285567Z",
+        "valueDateTime": "2025-10-07T18:49:15.285567Z",
+        "transactionInformation": "ВкусВилл - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0189",
+            "name": "ВкусВилл",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 10"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664797",
+        "amount": {
+            "amount": "2237.59",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-07T14:39:15.285567Z",
+        "valueDateTime": "2025-10-07T14:39:15.285567Z",
+        "transactionInformation": "ВкусВилл - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0190",
+            "name": "ВкусВилл",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 11"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664798",
+        "amount": {
+            "amount": "141977.56",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-05T08:24:15.285567Z",
+        "valueDateTime": "2025-10-05T08:24:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664796",
+        "amount": {
+            "amount": "1030.76",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-03T20:00:15.285567Z",
+        "valueDateTime": "2025-10-03T20:00:15.285567Z",
+        "transactionInformation": "Cofix - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-cafe-0523",
+            "name": "Cofix",
+            "mccCode": "5814",
+            "category": "cafe",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664870",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-30T23:59:15.285567Z",
+        "valueDateTime": "2025-09-30T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664869",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-29T23:59:15.285567Z",
+        "valueDateTime": "2025-09-29T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664868",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-28T23:59:15.285567Z",
+        "valueDateTime": "2025-09-28T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664795",
+        "amount": {
+            "amount": "2969.56",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-28T19:31:15.285567Z",
+        "valueDateTime": "2025-09-28T19:31:15.285567Z",
+        "transactionInformation": "Макдоналдс - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0240",
+            "name": "Макдоналдс",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664867",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-27T23:59:15.285567Z",
+        "valueDateTime": "2025-09-27T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664794",
+        "amount": {
+            "amount": "2046.54",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-27T23:51:15.285567Z",
+        "valueDateTime": "2025-09-27T23:51:15.285567Z",
+        "transactionInformation": "Ашан - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0223",
+            "name": "Ашан",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 4"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664866",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-26T23:59:15.285567Z",
+        "valueDateTime": "2025-09-26T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664865",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-25T23:59:15.285567Z",
+        "valueDateTime": "2025-09-25T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664793",
+        "amount": {
+            "amount": "2694.53",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-24T12:05:15.285567Z",
+        "valueDateTime": "2025-09-24T12:05:15.285567Z",
+        "transactionInformation": "Ашан - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0222",
+            "name": "Ашан",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664792",
+        "amount": {
+            "amount": "2904.71",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-21T07:09:15.285567Z",
+        "valueDateTime": "2025-09-21T07:09:15.285567Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0124",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 5"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664790",
+        "amount": {
+            "amount": "392.05",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-20T19:16:15.285567Z",
+        "valueDateTime": "2025-09-20T19:16:15.285567Z",
+        "transactionInformation": "Starbucks - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-cafe-0437",
+            "name": "Starbucks",
+            "mccCode": "5814",
+            "category": "cafe",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 7"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664789",
+        "amount": {
+            "amount": "1386.65",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-15T17:57:15.285567Z",
+        "valueDateTime": "2025-09-15T17:57:15.285567Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0128",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 9"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664791",
+        "amount": {
+            "amount": "3515.12",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-14T16:31:15.285567Z",
+        "valueDateTime": "2025-09-14T16:31:15.285567Z",
+        "transactionInformation": "Burger King - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0305",
+            "name": "Burger King",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664785",
+        "amount": {
+            "amount": "1450.84",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-13T12:27:15.285567Z",
+        "valueDateTime": "2025-09-13T12:27:15.285567Z",
+        "transactionInformation": "Coffee House - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-cafe-0461",
+            "name": "Coffee House",
+            "mccCode": "5814",
+            "category": "cafe",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664786",
+        "amount": {
+            "amount": "266.61",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-11T23:35:15.285567Z",
+        "valueDateTime": "2025-09-11T23:35:15.285567Z",
+        "transactionInformation": "Ситимобил - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-taxi-1201",
+            "name": "Ситимобил",
+            "mccCode": "4121",
+            "category": "taxi",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664787",
+        "amount": {
+            "amount": "987.93",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-10T20:05:15.285567Z",
+        "valueDateTime": "2025-09-10T20:05:15.285567Z",
+        "transactionInformation": "Лента - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0098",
+            "name": "Лента",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 9"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664784",
+        "amount": {
+            "amount": "976.32",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-10T17:54:15.285567Z",
+        "valueDateTime": "2025-09-10T17:54:15.285567Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0010",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 10"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664788",
+        "amount": {
+            "amount": "121374.13",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-09T19:27:15.285567Z",
+        "valueDateTime": "2025-09-09T19:27:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664783",
+        "amount": {
+            "amount": "353.74",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-09T16:02:15.285567Z",
+        "valueDateTime": "2025-09-09T16:02:15.285567Z",
+        "transactionInformation": "Uber - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-taxi-1202",
+            "name": "Uber",
+            "mccCode": "4121",
+            "category": "taxi",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664779",
+        "amount": {
+            "amount": "1497.56",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-06T15:11:15.285567Z",
+        "valueDateTime": "2025-09-06T15:11:15.285567Z",
+        "transactionInformation": "ВкусВилл - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0184",
+            "name": "ВкусВилл",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 5"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664777",
+        "amount": {
+            "amount": "1062.44",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-04T21:36:15.285567Z",
+        "valueDateTime": "2025-09-04T21:36:15.285567Z",
+        "transactionInformation": "Магнит - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0048",
+            "name": "Магнит",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664782",
+        "amount": {
+            "amount": "1172.86",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-04T18:25:15.285567Z",
+        "valueDateTime": "2025-09-04T18:25:15.285567Z",
+        "transactionInformation": "Starbucks - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-cafe-0432",
+            "name": "Starbucks",
+            "mccCode": "5814",
+            "category": "cafe",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 2"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664780",
+        "amount": {
+            "amount": "84005.39",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-03T21:56:15.285567Z",
+        "valueDateTime": "2025-09-03T21:56:15.285567Z",
+        "transactionInformation": "Зарплата",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664781",
+        "amount": {
+            "amount": "1388.07",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-03T18:40:15.285567Z",
+        "valueDateTime": "2025-09-03T18:40:15.285567Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0009",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 9"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-vbank-003691",
+            "cardNumber": "****2559",
+            "cardType": "debit",
+            "cardName": "UnionPay"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3691",
+        "transactionId": "tx-vbank-00664864",
+        "amount": {
+            "amount": "2083.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-31T23:59:15.285567Z",
+        "valueDateTime": "2025-08-31T23:59:15.285567Z",
+        "transactionInformation": "Проценты по депозиту №dep-team260-1-1110",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    }
+]
+</file>
+
+<file path="accounts/acc-3693_balance.json">
+{
+    "data": {
+        "balance": [
+            {
+                "accountId": "acc-3693",
+                "type": "InterimAvailable",
+                "dateTime": "2025-11-18T18:10:20.187536Z",
+                "amount": {
+                    "amount": "400639.82",
+                    "currency": "RUB"
+                },
+                "creditDebitIndicator": "Credit"
+            },
+            {
+                "accountId": "acc-3693",
+                "type": "InterimBooked",
+                "dateTime": "2025-11-18T18:10:20.187547Z",
+                "amount": {
+                    "amount": "400639.82",
+                    "currency": "RUB"
+                },
+                "creditDebitIndicator": "Credit"
+            }
+        ]
+    }
+}
+</file>
+
+<file path="accounts/acc-3693_details.json">
+{
+    "data": {
+        "account": [
+            {
+                "accountId": "acc-3693",
+                "status": "Enabled",
+                "currency": "RUB",
+                "accountType": "Personal",
+                "accountSubType": "Checking",
+                "description": "checking account",
+                "nickname": "Checking счет",
+                "openingDate": "2024-10-30"
+            }
+        ]
+    }
+}
+</file>
+
+<file path="accounts/acc-3693_full_transactions.json">
+[]
+</file>
+
+<file path="accounts/accounts_list.json">
+{
+    "data": {
+        "account": [
+            {
+                "accountId": "acc-3691",
+                "status": "Enabled",
+                "currency": "RUB",
+                "accountType": "Personal",
+                "accountSubType": "Checking",
+                "nickname": "Checking счет",
+                "openingDate": "2024-10-30",
+                "account": [
+                    {
+                        "schemeName": "RU.CBR.PAN",
+                        "identification": "4081781026001096137",
+                        "name": "Иванов Иван Иванович (team260)"
+                    }
+                ]
+            }
+        ]
+    },
+    "links": {
+        "self": "/accounts"
+    },
+    "meta": {
+        "totalPages": 1
+    }
+}
+</file>
+
+<file path="accounts/all_accounts.json">
+import requests
+import json
+import os
+
+# --- КОНФИГУРАЦИЯ ---
+CLIENT_ID = "team260"
+CLIENT_SECRET = "wPnKt4ljvSh63JpV0Pmmqp2OeNFHWcYN"
+
+# ! ВАЖНО: Если в ABank пусто, данные скорее всего в VBank.
+# Попробуйте сначала vbank, если нужны данные. Если нужен именно abank, раскомментируйте вторую строку.
+BASE_URL = "https://vbank.open.bankingapi.ru" 
+# BASE_URL = "https://abank.open.bankingapi.ru"
+
+TARGET_USER_ID = f"{CLIENT_ID}-1" 
+OUTPUT_DIR = "team260_data"
+
+session = requests.Session()
+
+def setup_directories():
+    folders = [f"{OUTPUT_DIR}/profile", f"{OUTPUT_DIR}/accounts", f"{OUTPUT_DIR}/products", f"{OUTPUT_DIR}/agreements"]
+    for folder in folders:
+        os.makedirs(folder, exist_ok=True)
+    print(f"📂 Директория: {OUTPUT_DIR} (Банк: {BASE_URL})")
+
+def save_json(data, filename, folder):
+    filepath = os.path.join(OUTPUT_DIR, folder, filename)
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+    print(f"   💾 Saved: {folder}/{filename}")
+
+def get_bank_token():
+    print("\n🔐 Авторизация...")
+    url = f"{BASE_URL}/auth/bank-token"
+    # Добавляем client_id в URL для надежности, хотя для auth это обычно POST body/query mix
+    params = {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}
+    try:
+        resp = session.post(url, params=params)
+        resp.raise_for_status()
+        return resp.json().get("access_token")
+    except Exception as e:
+        print(f"   ❌ Ошибка авторизации: {e}")
+        exit(1)
+
+def create_consent(token, type_):
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Requesting-Bank": CLIENT_ID,
+        "Content-Type": "application/json"
+    }
+    
+    # ОБЯЗАТЕЛЬНО: добавляем client_id в query params для всех POST запросов с bank_token
+    params = {"client_id": TARGET_USER_ID} 
+
+    if type_ == "accounts":
+        url = f"{BASE_URL}/account-consents/request"
+        body = {
+            "client_id": TARGET_USER_ID,
+            "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"],
+            "reason": "Hackathon Export",
+            "requesting_bank": CLIENT_ID,
+            "requesting_bank_name": "Team 260 App"
+        }
+        filename = "account_consent.json"
+    else:
+        url = f"{BASE_URL}/product-agreement-consents/request"
+        body = {
+            "client_id": TARGET_USER_ID,
+            "requesting_bank": CLIENT_ID,
+            "read_product_agreements": True,
+            "open_product_agreements": False,
+            "close_product_agreements": False,
+            "allowed_product_types": ["deposit", "credit", "card", "account"], # Добавил account на всякий случай
+            "reason": "Hackathon Export"
+        }
+        filename = "product_consent.json"
+
+    try:
+        # ! ИСПРАВЛЕНИЕ: передаем params={"client_id": ...}
+        resp = session.post(url, headers=headers, json=body, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        # Иногда API возвращает consentId (camelCase), иногда consent_id (snake_case)
+        c_id = data.get("consent_id") or data.get("data", {}).get("consentId")
+        save_json(data, filename, "profile")
+        print(f"   ✅ Согласие ({type_}) создано: {c_id}")
+        return c_id
+    except requests.exceptions.RequestException as e:
+        print(f"   ❌ Ошибка ({type_}): {e}")
+        if e.response is not None:
+            print(f"   Ответ: {e.response.text}")
+        return None
+
+def fetch_data(token, acc_consent, prod_consent):
+    base_headers = {"Authorization": f"Bearer {token}", "X-Requesting-Bank": CLIENT_ID}
+    
+    # --- СЧЕТА ---
+    print("\n📡 Сбор данных по счетам...")
+    if acc_consent:
+        headers = base_headers.copy()
+        headers["X-Consent-Id"] = acc_consent
+        try:
+            # Добавлен client_id в params
+            resp = session.get(f"{BASE_URL}/accounts", headers=headers, params={"client_id": TARGET_USER_ID})
+            if resp.status_code == 200:
+                data = resp.json()
+                save_json(data, "list.json", "accounts")
+                # Унификация поиска списка
+                accounts = data.get("data", {}).get("accounts", [])
+                if not accounts: accounts = data.get("accounts", [])
+                
+                print(f"   Найдено счетов: {len(accounts)}")
+                
+                for acc in accounts:
+                    aid = acc.get("accountId")
+                    print(f"   ⬇️ Счет {aid}: детали, баланс, транзакции...")
+                    # Детали
+                    save_json(session.get(f"{BASE_URL}/accounts/{aid}", headers=headers, params={"client_id": TARGET_USER_ID}).json(), f"{aid}_details.json", "accounts")
+                    # Баланс
+                    save_json(session.get(f"{BASE_URL}/accounts/{aid}/balances", headers=headers, params={"client_id": TARGET_USER_ID}).json(), f"{aid}_balance.json", "accounts")
+                    # Транзакции
+                    save_json(session.get(f"{BASE_URL}/accounts/{aid}/transactions", headers=headers, params={"client_id": TARGET_USER_ID, "limit": 1000}).json(), f"{aid}_transactions.json", "accounts")
+        except Exception as e: print(f"❌ Ошибка счетов: {e}")
+
+    # --- ДОГОВОРЫ ---
+    print("\n📦 Сбор продуктов и договоров...")
+    save_json(session.get(f"{BASE_URL}/products").json(), "catalog.json", "products")
+
+    if prod_consent:
+        headers = base_headers.copy()
+        headers["X-Product-Agreement-Consent-Id"] = prod_consent
+        try:
+            # Добавлен client_id в params
+            resp = session.get(f"{BASE_URL}/product-agreements", headers=headers, params={"client_id": TARGET_USER_ID})
+            if resp.status_code == 200:
+                data = resp.json()
+                save_json(data, "list.json", "agreements")
+                
+                agreements = data.get("data", {}).get("agreements", [])
+                if not agreements: agreements = data.get("agreements", []) # Fallback
+                
+                print(f"   Найдено договоров: {len(agreements)}")
+                for agr in agreements:
+                    ag_id = agr.get("agreementId")
+                    print(f"   ⬇️ Договор {ag_id}...")
+                    save_json(session.get(f"{BASE_URL}/product-agreements/{ag_id}", headers=headers, params={"client_id": TARGET_USER_ID}).json(), f"{ag_id}.json", "agreements")
+        except Exception as e: print(f"❌ Ошибка договоров: {e}")
+
+if __name__ == "__main__":
+    setup_directories()
+    tk = get_bank_token()
+    ac_id = create_consent(tk, "accounts")
+    pr_id = create_consent(tk, "products")
+    fetch_data(tk, ac_id, pr_id)
+    print("\n✅ Готово.")
+</file>
+
+<file path="accounts/list.json">
+{
+    "data": {
+        "account": [
+            {
+                "accountId": "acc-3693",
+                "status": "Enabled",
+                "currency": "RUB",
+                "accountType": "Personal",
+                "accountSubType": "Checking",
+                "nickname": "Checking счет",
+                "openingDate": "2024-10-30",
+                "account": [
+                    {
+                        "schemeName": "RU.CBR.PAN",
+                        "identification": "4081781026003054973",
+                        "name": "Сидоров Сидор Сидорович (ИП, team260)"
+                    }
+                ]
+            }
+        ]
+    },
+    "links": {
+        "self": "/accounts"
+    },
+    "meta": {
+        "totalPages": 1
+    }
+}
+</file>
+
+<file path="agreements/agreements_list.json">
+{
+    "data": [
+        {
+            "agreement_id": "dep-team260-1-1110",
+            "product_id": "deposit-reliable",
+            "product_name": "Вклад \"Надежный\"",
+            "product_type": "deposit",
+            "amount": 357220.91,
+            "status": "active",
+            "start_date": "2025-04-09T12:23:08.444011",
+            "end_date": null,
+            "account_number": "4081781026001096137"
+        }
+    ],
+    "meta": {
+        "total": 1
+    }
+}
+</file>
+
+<file path="agreements/dep-team260-1-1110.json">
+{
+    "data": {
+        "agreement_id": "dep-team260-1-1110",
+        "product_id": "deposit-reliable",
+        "product_name": "Вклад \"Надежный\"",
+        "product_type": "deposit",
+        "interest_rate": 8.5,
+        "amount": 357220.91,
+        "status": "active",
+        "start_date": "2025-04-09T12:23:08.444011",
+        "end_date": null,
+        "account_number": "4081781026001096137",
+        "account_balance": 87792.69
+    }
+}
+</file>
+
+<file path="agreements/dep-team260-3-1080.json">
+{
+    "data": {
+        "agreement_id": "dep-team260-3-1080",
+        "product_id": "deposit-reliable",
+        "product_name": "Вклад \"Надежный\"",
+        "product_type": "deposit",
+        "interest_rate": 8.5,
+        "amount": 326674.25,
+        "status": "active",
+        "start_date": "2025-05-14T12:48:14.206336",
+        "end_date": null,
+        "account_number": "4081781026003054973",
+        "account_balance": 400639.82
+    }
+}
+</file>
+
+<file path="agreements/dep-team260-3-1110.json">
+{
+    "data": {
+        "agreement_id": "dep-team260-3-1110",
+        "product_id": "deposit-reliable",
+        "product_name": "Вклад \"Надежный\"",
+        "product_type": "deposit",
+        "interest_rate": 8.5,
+        "amount": 680546.49,
+        "status": "active",
+        "start_date": "2025-08-03T12:39:14.037776",
+        "end_date": null,
+        "account_number": "4081781026003054973",
+        "account_balance": 400639.82
+    }
+}
+</file>
+
+<file path="agreements/list.json">
+{
+    "data": [
+        {
+            "agreement_id": "dep-team260-3-1080",
+            "product_id": "deposit-reliable",
+            "product_name": "Вклад \"Надежный\"",
+            "product_type": "deposit",
+            "amount": 326674.25,
+            "status": "active",
+            "start_date": "2025-05-14T12:48:14.206336",
+            "end_date": null,
+            "account_number": "4081781026003054973"
+        },
+        {
+            "agreement_id": "loan-team260-3-0447",
+            "product_id": "prod-81008287967b",
+            "product_name": "Ипотека VBank 9.3%",
+            "product_type": "loan",
+            "amount": 895465.41,
+            "status": "active",
+            "start_date": "2025-07-24T12:48:14.207067",
+            "end_date": null,
+            "account_number": "4081781026003054973"
+        },
+        {
+            "agreement_id": "dep-team260-3-1110",
+            "product_id": "deposit-reliable",
+            "product_name": "Вклад \"Надежный\"",
+            "product_type": "deposit",
+            "amount": 680546.49,
+            "status": "active",
+            "start_date": "2025-08-03T12:39:14.037776",
+            "end_date": null,
+            "account_number": "4081781026003054973"
+        },
+        {
+            "agreement_id": "loan-team260-3-0467",
+            "product_id": "prod-81008287967b",
+            "product_name": "Ипотека VBank 9.3%",
+            "product_type": "loan",
+            "amount": 1370677.42,
+            "status": "active",
+            "start_date": "2025-05-30T12:23:08.447996",
+            "end_date": null,
+            "account_number": "4081781026003054973"
+        },
+        {
+            "agreement_id": "loan-team260-3",
+            "product_id": "loan-consumer",
+            "product_name": "Потребительский кредит",
+            "product_type": "loan",
+            "amount": 1355247.33,
+            "status": "active",
+            "start_date": "2024-10-30T17:59:31.391105",
+            "end_date": null,
+            "account_number": null
+        }
+    ],
+    "meta": {
+        "total": 5
+    }
+}
+</file>
+
+<file path="agreements/loan-team260-3-0447.json">
+{
+    "data": {
+        "agreement_id": "loan-team260-3-0447",
+        "product_id": "prod-81008287967b",
+        "product_name": "Ипотека VBank 9.3%",
+        "product_type": "loan",
+        "interest_rate": 9.3,
+        "amount": 895465.41,
+        "status": "active",
+        "start_date": "2025-07-24T12:48:14.207067",
+        "end_date": null,
+        "account_number": "4081781026003054973",
+        "account_balance": 400639.82
+    }
+}
+</file>
+
+<file path="agreements/loan-team260-3-0467.json">
+{
+    "data": {
+        "agreement_id": "loan-team260-3-0467",
+        "product_id": "prod-81008287967b",
+        "product_name": "Ипотека VBank 9.3%",
+        "product_type": "loan",
+        "interest_rate": 9.3,
+        "amount": 1370677.42,
+        "status": "active",
+        "start_date": "2025-05-30T12:23:08.447996",
+        "end_date": null,
+        "account_number": "4081781026003054973",
+        "account_balance": 400639.82
+    }
+}
+</file>
+
+<file path="agreements/loan-team260-3.json">
+{
+    "data": {
+        "agreement_id": "loan-team260-3",
+        "product_id": "loan-consumer",
+        "product_name": "Потребительский кредит",
+        "product_type": "loan",
+        "interest_rate": 12.9,
+        "amount": 1355247.33,
+        "status": "active",
+        "start_date": "2024-10-30T17:59:31.391105",
+        "end_date": null,
+        "account_number": null,
+        "account_balance": null
+    }
+}
+</file>
+
+<file path="products/catalog.json">
+{
+    "data": {
+        "product": [
+            {
+                "productId": "prod-vbank-deposit-001",
+                "productType": "deposit",
+                "productName": "Накопительный депозит",
+                "description": "Выгодная ставка",
+                "interestRate": "8.50",
+                "minAmount": "50000.00",
+                "maxAmount": null,
+                "termMonths": 12
+            },
+            {
+                "productId": "prod-vbank-card-001",
+                "productType": "credit_card",
+                "productName": "Кредитная карта Premium",
+                "description": "Кэшбэк и бонусы",
+                "interestRate": "15.90",
+                "minAmount": null,
+                "maxAmount": null,
+                "termMonths": null
+            },
+            {
+                "productId": "prod-vbank-loan-001",
+                "productType": "loan",
+                "productName": "Потребительский кредит",
+                "description": "Быстрое одобрение",
+                "interestRate": "12.90",
+                "minAmount": "50000.00",
+                "maxAmount": null,
+                "termMonths": 36
+            },
+            {
+                "productId": "deposit-reliable",
+                "productType": "deposit",
+                "productName": "Вклад \"Надежный\"",
+                "description": "Классический вклад с гарантированной доходностью",
+                "interestRate": "8.50",
+                "minAmount": "10000.00",
+                "maxAmount": "10000000.00",
+                "termMonths": 12
+            },
+            {
+                "productId": "loan-consumer",
+                "productType": "loan",
+                "productName": "Потребительский кредит",
+                "description": "Кредит на любые цели",
+                "interestRate": "12.90",
+                "minAmount": "50000.00",
+                "maxAmount": "3000000.00",
+                "termMonths": 60
+            },
+            {
+                "productId": "card-debit",
+                "productType": "card",
+                "productName": "Дебетовая карта \"Свобода\"",
+                "description": "Карта с кэшбэком 2%",
+                "interestRate": null,
+                "minAmount": null,
+                "maxAmount": null,
+                "termMonths": null
+            },
+            {
+                "productId": "card-credit",
+                "productType": "card",
+                "productName": "Кредитная карта \"Лимит\"",
+                "description": "Кредитная карта с льготным периодом",
+                "interestRate": "19.90",
+                "minAmount": "50000.00",
+                "maxAmount": "500000.00",
+                "termMonths": null
+            },
+            {
+                "productId": "prod-81008287967b",
+                "productType": "loan",
+                "productName": "Ипотека VBank 9.3%",
+                "description": null,
+                "interestRate": "9.30",
+                "minAmount": "1500000.00",
+                "maxAmount": null,
+                "termMonths": null
+            }
+        ]
+    }
+}
+</file>
+
+<file path="profile/account_consent.json">
+{
+    "request_id": "req-fe964e06df5a",
+    "consent_id": "consent-2eb469735bec",
+    "status": "approved",
+    "message": "Согласие одобрено автоматически",
+    "created_at": "2025-11-18T18:17:15.532290",
+    "auto_approved": true
+}
+</file>
+
+<file path="profile/product_consent.json">
+{
+    "request_id": "pagcr-2f786f695cc4",
+    "consent_id": "pagc-78566c7f5f37",
+    "status": "approved",
+    "auto_approved": true,
+    "message": "Согласие одобрено автоматически",
+    "valid_until": "2026-11-18T18:17:15.953289Z"
+}
+</file>
+
+</files>

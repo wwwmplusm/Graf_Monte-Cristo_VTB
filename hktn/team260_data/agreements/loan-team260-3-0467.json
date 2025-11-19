@@ -1,0 +1,15 @@
+{
+    "data": {
+        "agreement_id": "loan-team260-3-0467",
+        "product_id": "prod-81008287967b",
+        "product_name": "Ипотека VBank 9.3%",
+        "product_type": "loan",
+        "interest_rate": 9.3,
+        "amount": 1370677.42,
+        "status": "active",
+        "start_date": "2025-05-30T12:23:08.447996",
+        "end_date": null,
+        "account_number": "4081781026003054973",
+        "account_balance": 400639.82
+    }
+}

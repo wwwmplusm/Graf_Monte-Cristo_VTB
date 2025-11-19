@@ -1,0 +1,72 @@
+# Implementation Plan: Aligning Backend with Documentation
+
+This plan details the steps required to bring the current backend implementation into full compliance with the [finish_back.md](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/context/finish_back.md) specification.
+
+## User Review Required
+> [!IMPORTANT]
+> This refactor involves renaming existing API endpoints to match the documentation. This will be a breaking change for any existing frontend code relying on the old paths.
+>
+> **Authentication**: The documentation implies a `POST /api/auth/login` endpoint. Since the current app uses `user_id` passed directly, we will implement a mock auth service that issues JWTs or simply validates the user existence to match the spec.
+
+## Proposed Changes
+
+### 1. API Router Alignment & New Endpoints
+
+#### [MODIFY] [hktn/backend/routers/onboarding.py](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/hktn/backend/routers/onboarding.py)
+- **Rename** `/api/onboarding/commit` -> `/api/onboarding/finalize`
+- **Add** `GET /api/onboarding/status` (polling for bank connection status)
+- **Update** `POST /api/onboarding/consents` to match the spec (currently split/named differently).
+
+#### [MODIFY] [hktn/backend/routers/analytics.py](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/hktn/backend/routers/analytics.py)
+- **Add** `GET /api/analytics/sts-history` (mock or real history if available).
+- **Ensure** `GET /api/dashboard` returns the exact structure: `sts_today`, `loan_summary` (with MDP/ADP), `savings_summary` (SDP), `events_next_30d`.
+
+#### [NEW] `hktn/backend/routers/auth.py`
+- **Implement** `POST /api/auth/login`: Accepts `username`, returns `token` and `user_profile`.
+
+#### [NEW] `hktn/backend/routers/payments.py`
+- **Implement** `POST /api/payments/plan`: Handles "virtual" payments (MDP/ADP/SDP) and updates local state/projections.
+
+#### [NEW] `hktn/backend/routers/refinance.py`
+- **Implement** `GET /api/refinance/offers`: Returns list of refinance candidates.
+- **Implement** `POST /api/refinance/optimize`: Triggers optimization logic.
+- **Implement** `POST /api/refinance/apply`: Mock application submission.
+- **Implement** `GET /api/refinance/deposits`: For savings optimization.
+
+#### [NEW] `hktn/backend/routers/deposits.py`
+- **Implement** `GET /api/deposits`: Returns list of deposits with SDP calculations.
+
+#### [MODIFY] [hktn/backend/routers/profile.py](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/hktn/backend/routers/profile.py)
+- **Add** `GET /api/profile`: Returns full profile, subscription status, connected banks.
+- **Add** `GET /api/profile/plans`: Returns available subscription plans.
+- **Add** `POST /api/profile/subscription`: Activates premium.
+
+### 2. Business Logic Services
+
+#### [NEW] `hktn/backend/services/payments_logic.py`
+- **Implement** `calculate_mdp(loans)`: Mandatory Daily Payment logic.
+- **Implement** `calculate_adp(loans, income, strategy)`: Additional Daily Payment logic (Avalanche/Snowball).
+- **Implement** `calculate_sdp(deposits, goal)`: Savings Daily Payment logic.
+
+#### [NEW] `hktn/backend/services/refinance_logic.py`
+- **Implement** `detect_financing_needs(user_profile, loans)`: Logic for "Urgency Matrix" (Overdue, Gap Risk, etc.).
+- **Implement** `select_best_offers(loans, market_offers)`: Logic for finding refinance/consolidation offers.
+
+#### [MODIFY] [hktn/backend/services/analytics.py](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/hktn/backend/services/analytics.py)
+- **Integrate** `payments_logic` to enrich the [dashboard](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/hktn/backend/services/analytics.py#165-263) and [financial_portrait](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/hktn/core/analytics_engine.py#1030-1163) responses with MDP/ADP/SDP values.
+- **Update** [get_dashboard_metrics](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/hktn/backend/services/analytics.py#165-263) to return the specific fields required by the frontend spec.
+
+### 3. Core Engine Updates
+
+#### [MODIFY] [hktn/core/analytics_engine.py](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/hktn/core/analytics_engine.py)
+- **Enhance** [derive_obligations](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/hktn/core/analytics_engine.py#354-365) to support the specific "Contracts First" + "Transactions Check" logic described in `transactions_categorization_salary_and_loans`.
+- **Ensure** [rank_credits](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/hktn/core/analytics_engine.py#1003-1028) supports the "Avalanche" and "Snowball" sorting strategies explicitly.
+
+## Verification Plan
+
+### Automated Tests
+- Create `tests/test_api_alignment.py` to verify that every endpoint listed in [finish_back.md](file:///home/kesha/MyCode/HACKATHON/CASH_PREDICT/context/finish_back.md) exists and returns a 200 OK with a schema-compliant response (using mock data).
+- Unit tests for `calculate_mdp`, `calculate_adp`, and `detect_financing_needs` to verify the math against the examples in the documentation.
+
+### Manual Verification
+- Use the `task_boundary` tool to simulate the User Flow steps (1.2 -> 1.3 -> ... -> 6.5) by calling the API endpoints in sequence and verifying the state updates.

@@ -1,0 +1,28 @@
+{
+    "data": {
+        "account": [
+            {
+                "accountId": "acc-3691",
+                "status": "Enabled",
+                "currency": "RUB",
+                "accountType": "Personal",
+                "accountSubType": "Checking",
+                "nickname": "Checking счет",
+                "openingDate": "2024-10-30",
+                "account": [
+                    {
+                        "schemeName": "RU.CBR.PAN",
+                        "identification": "4081781026001096137",
+                        "name": "Иванов Иван Иванович (team260)"
+                    }
+                ]
+            }
+        ]
+    },
+    "links": {
+        "self": "/accounts"
+    },
+    "meta": {
+        "totalPages": 1
+    }
+}
