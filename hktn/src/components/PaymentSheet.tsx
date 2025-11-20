@@ -7,7 +7,7 @@ interface PaymentSheetProps {
   defaultAmount: number;
   currentSTS: number;
   onClose: () => void;
-  onConfirm: (amount: number) => void;
+  onConfirm: (amount: number) => void | Promise<void>;
 }
 
 export function PaymentSheet({
@@ -18,6 +18,7 @@ export function PaymentSheet({
   onConfirm,
 }: PaymentSheetProps) {
   const [amount, setAmount] = useState(defaultAmount);
+  const [isProcessing, setIsProcessing] = useState(false);
   const newSTS = type === 'sdp' ? currentSTS - amount : currentSTS + amount * 0.1; // Simplified calculation
 
   const getTitle = () => {
@@ -105,11 +106,27 @@ export function PaymentSheet({
             Отменить
           </button>
           <button
-            onClick={() => onConfirm(amount)}
-            className="flex-1 py-3 px-6 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors"
+            onClick={async () => {
+              if (isProcessing) return;
+              
+              setIsProcessing(true);
+              try {
+              const result = onConfirm(amount);
+              if (result instanceof Promise) {
+                await result;
+              }
+              } catch (error) {
+                console.error('Payment confirmation failed:', error);
+                // Error is handled by the parent component (toast notifications)
+              } finally {
+                setIsProcessing(false);
+              }
+            }}
+            disabled={isProcessing}
+            className="flex-1 py-3 px-6 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-action={`pay_${type}()`}
           >
-            Подтвердить
+            {isProcessing ? 'Обработка...' : 'Подтвердить'}
           </button>
         </div>
       </div>

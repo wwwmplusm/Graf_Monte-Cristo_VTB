@@ -16,6 +16,14 @@ from hktn.core.database import (
 
 from ..config import settings
 from ..schemas import IntegrationStatusResponse
+from .algorithms import (
+    adp_calculation,
+    mdp_calculation,
+    sts_calculation,
+    total_debit_balance_calculation,
+    total_debt_calculation,
+    transactions_categorization_salary_and_loans,
+)
 from .banking import (
     _coerce_to_float,
     _normalize_balance_entry,
@@ -23,6 +31,7 @@ from .banking import (
     fetch_bank_accounts_with_consent,
     fetch_bank_balances_with_consent,
     fetch_bank_credits,
+    fetch_bank_data_with_consent,
 )
 
 logger = logging.getLogger("finpulse.backend.analytics")
@@ -92,32 +101,81 @@ def _calculate_safe_to_spend(
 
 async def get_dashboard_metrics(user_id: str) -> Dict[str, object]:
     consents = _require_consents(user_id)
+    fetched_at = datetime.utcnow().isoformat()
     
-    # Получаем балансы
-    balance_tasks = [
+    # Получаем все данные параллельно
+    accounts_tasks = [
+        fetch_bank_accounts_with_consent(consent.bank_id, consent.consent_id, user_id)
+        for consent in consents
+    ]
+    balances_tasks = [
         fetch_bank_balances_with_consent(consent.bank_id, consent.consent_id, user_id)
         for consent in consents
     ]
-    balance_results = await asyncio.gather(*balance_tasks)
-
-    total_balance = 0.0
-    fetched_at = datetime.utcnow().isoformat()
+    transactions_tasks = [
+        fetch_bank_data_with_consent(consent.bank_id, consent.consent_id, user_id)
+        for consent in consents
+    ]
+    
+    # Gather each group separately to avoid unpacking issues
+    accounts_results = await asyncio.gather(*accounts_tasks)
+    balances_results = await asyncio.gather(*balances_tasks)
+    transactions_results = await asyncio.gather(*transactions_tasks)
+    
+    # Собираем все данные
+    all_accounts: List[Dict[str, Any]] = []
+    all_balances: List[Dict[str, Any]] = []
+    all_transactions: List[Any] = []
     bank_statuses: List[Dict[str, object]] = []
-
-    for consent, result in zip(consents, balance_results):
+    
+    for i, consent in enumerate(consents):
         config = settings.banks.get(consent.bank_id)
         bank_name = config.display_name if config else consent.bank_id
-        entry = {
+        
+        accounts_res = accounts_results[i]
+        balances_res = balances_results[i]
+        transactions_res = transactions_results[i]
+        
+        if accounts_res.get("status") == "ok":
+            all_accounts.extend(accounts_res.get("accounts") or [])
+        if balances_res.get("status") == "ok":
+            all_balances.extend(balances_res.get("balances") or [])
+        if transactions_res.get("status") == "ok":
+            # Transactions are Transaction objects from OBR client
+            tx_list = transactions_res.get("transactions") or []
+            for tx in tx_list:
+                if isinstance(tx, dict):
+                    all_transactions.append(tx)
+                else:
+                    # Transaction model (Pydantic) - convert to dict
+                    # Use model_dump() if available (Pydantic v2) or dict() (Pydantic v1)
+                    if hasattr(tx, 'model_dump'):
+                        tx_dict = tx.model_dump()
+                    elif hasattr(tx, 'dict'):
+                        tx_dict = tx.dict()
+                    else:
+                        # Fallback: manual conversion
+                        tx_dict = {
+                            "transactionId": getattr(tx, 'transactionId', ''),
+                            "amount": getattr(tx, 'amount', 0),
+                            "currency": getattr(tx, 'currency', 'RUB'),
+                            "bookingDate": getattr(tx, 'bookingDate', date.today()),
+                            "creditDebitIndicator": getattr(tx, 'creditDebitIndicator', None),
+                            "bankTransactionCode": getattr(tx, 'bankTransactionCode', None),
+                            "transactionInformation": getattr(tx, 'transactionInformation', None),
+                        }
+                    all_transactions.append(tx_dict)
+        
+        bank_statuses.append({
             "bank_id": consent.bank_id,
             "bank_name": bank_name,
-            "status": result.get("status", "error"),
-            "fetched_at": None,
-        }
-        if result.get("status") == "ok":
-            total_balance += _sum_balance_amounts(result.get("balances") or [])
-            entry["fetched_at"] = fetched_at
-        bank_statuses.append(entry)
-
+            "status": "ok" if all([
+                accounts_res.get("status") == "ok",
+                balances_res.get("status") == "ok",
+            ]) else "error",
+            "fetched_at": fetched_at,
+        })
+    
     # Получаем кредиты через product consent
     all_credits: List[Dict[str, Any]] = []
     product_consents = find_approved_consents(user_id, consent_type="products")
@@ -130,67 +188,183 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, object]:
         for result in credit_results:
             if isinstance(result, dict) and result.get("status") == "ok":
                 credits = result.get("credits") or []
+                logger.info("Fetched %d credits from bank, sample product types: %s", 
+                           len(credits), 
+                           [c.get("productType") or c.get("product_type") or c.get("type", "unknown") for c in credits[:3]] if credits else [])
                 all_credits.extend(credits)
-
-    # Получаем вклады (deposits) - упрощенная версия
-    all_deposits: List[Dict[str, Any]] = []  # Placeholder - можно получить через product consent
-
-    financial_inputs = _load_financial_inputs(user_id)
-    safe = _calculate_safe_to_spend(
-        balance=total_balance,
-        salary_amount=financial_inputs["salary_amount"],
-        salary_date=financial_inputs["salary_date"],
-        credit_payment_amount=financial_inputs["credit_payment_amount"],
-        credit_payment_date=financial_inputs["credit_payment_date"],
+    else:
+        logger.warning("No product consents found for user %s", user_id)
+    
+    logger.info("Total credits/agreements collected: %d", len(all_credits))
+    
+    # Получаем депозиты (фильтруем из product agreements)
+    all_deposits: List[Dict[str, Any]] = []
+    if product_consents:
+        for result in credit_results:
+            if isinstance(result, dict) and result.get("status") == "ok":
+                products = result.get("credits") or []
+                for product in products:
+                    product_type = product.get("productType") or product.get("product_type", "").lower()
+                    if product_type in ["deposit", "savings"]:
+                        all_deposits.append(product)
+    
+    # Используем алгоритмы для расчетов
+    # 1. Категоризация транзакций
+    from hktn.core.data_models import Transaction
+    transaction_models: List[Transaction] = []
+    for tx_dict in all_transactions:
+        try:
+            # Ensure bookingDate is a date object
+            booking_date = tx_dict.get("bookingDate")
+            if isinstance(booking_date, str):
+                booking_date = datetime.fromisoformat(booking_date.replace("Z", "+00:00")).date()
+            elif not isinstance(booking_date, date):
+                booking_date = date.today()
+            
+            tx_dict["bookingDate"] = booking_date
+            tx_model = Transaction(**tx_dict)
+            transaction_models.append(tx_model)
+        except Exception as e:
+            logger.warning("Failed to parse transaction: %s, dict: %s", e, tx_dict)
+            continue
+    
+    categorization_result = transactions_categorization_salary_and_loans(
+        transaction_models,
+        all_credits,
     )
-
-    # Вычисляем loan summary
-    loan_summary = _calculate_loan_summary(all_credits)
-
-    # Вычисляем savings summary
+    
+    # 2. Расчет общего баланса дебетовых карт
+    total_debit_balance = total_debit_balance_calculation(
+        all_accounts,
+        all_balances,
+    )
+    
+    # 3. Расчет общей задолженности
+    logger.info("Calculating debt from %d credit agreements", len(all_credits))
+    if all_credits:
+        logger.debug("Sample credit agreement keys: %s", list(all_credits[0].keys())[:15] if all_credits else [])
+        logger.debug("Sample credit agreement: %s", {k: v for k, v in list(all_credits[0].items())[:10]} if all_credits else {})
+    debt_result = total_debt_calculation(all_credits)
+    logger.info("Debt calculation result: total_debt=%.2f, loans=%.2f, cards=%.2f, active_loans=%d",
+               debt_result["total_debt_base"], 
+               debt_result["total_loans_debt_base"],
+               debt_result["total_cards_debt_base"],
+               len(debt_result["active_loans"]))
+    
+    # 4. Расчет MDP
+    mdp_result = mdp_calculation(
+        debt_result["active_loans"],
+        categorization_result["debt_obligations_status"],
+    )
+    
+    # 5. Расчет ADP (используем настройки по умолчанию, можно получить из онбординга)
+    adp_result = adp_calculation(
+        mdp_result["mdp_today_base"],
+        debt_result["active_loans"],
+        categorization_result["estimated_monthly_income"],
+        repayment_speed="balanced",  # TODO: получить из онбординга
+        strategy="avalanche",  # TODO: получить из онбординга
+    )
+    
+    # 6. Расчет STS
+    sts_result = sts_calculation(
+        total_debit_balance,
+        categorization_result["estimated_monthly_income"],
+        categorization_result["income_frequency_type"],
+        categorization_result["next_income_window"],
+        debt_result["active_loans"],
+        categorization_result["debt_obligations_status"],
+        mdp_result["mdp_today_base"],
+        adp_result["adp_today_base"],
+    )
+    
+    # Формируем loan_summary
+    loan_summary = {
+        "total_outstanding": debt_result["total_debt_base"],
+        "mandatory_daily_payment": mdp_result["mdp_today_base"],
+        "additional_daily_payment": adp_result["adp_today_base"],
+        "total_monthly_payment": mdp_result["mdp_today_base"] * 30,  # Приблизительно
+    }
+    
+    # Формируем savings_summary
     savings_summary = _calculate_savings_summary(all_deposits)
-
-    # Получаем события на следующие 30 дней
+    
+    # Формируем events_next_30d
+    financial_inputs = _load_financial_inputs(user_id)
+    next_income_start = categorization_result["next_income_window"].get("start")
+    if next_income_start:
+        try:
+            if isinstance(next_income_start, str):
+                income_date = datetime.fromisoformat(next_income_start.replace("Z", "+00:00")).date()
+            else:
+                income_date = next_income_start
+        except (ValueError, TypeError):
+            income_date = financial_inputs["salary_date"]
+    else:
+        income_date = financial_inputs["salary_date"]
+    
     events_next_30d = _get_upcoming_events(
         financial_inputs["credit_payment_date"],
         financial_inputs["credit_payment_amount"],
-        financial_inputs["salary_date"],
+        income_date,
     )
-
+    
+    # Обновляем amount для salary events
+    for event in events_next_30d:
+        if event.get("type") == "salary":
+            event["amount"] = categorization_result["estimated_monthly_income"]
+    
     # Вычисляем health score
-    monthly_income = financial_inputs["salary_amount"]
+    monthly_income = categorization_result["estimated_monthly_income"] or financial_inputs["salary_amount"]
     monthly_expenses = loan_summary["total_monthly_payment"] + savings_summary["daily_payment"] * 30
-    total_credit_debt = loan_summary["total_outstanding"]
+    total_credit_debt = debt_result["total_debt_base"]
     health_score = _calculate_health_score(
-        total_balance,
+        total_debit_balance,
         total_credit_debt,
         monthly_income,
         monthly_expenses,
     )
-
-    # Вычисляем STS для завтра
-    tomorrow_safe = safe["value"]  # Упрощенная версия - можно улучшить
-
+    
+    # Определяем режим пользователя
+    user_mode = "loans" if debt_result["total_debt_base"] > 0 else "deposits"
+    
+    # Формируем impact для tomorrow
+    tomorrow_impact = "Стабильный прогноз"
+    if next_income_start:
+        try:
+            if isinstance(next_income_start, str):
+                income_date_check = datetime.fromisoformat(next_income_start.replace("Z", "+00:00")).date()
+            else:
+                income_date_check = next_income_start
+            if income_date_check == date.today() + timedelta(days=1):
+                tomorrow_impact = "После завтрашнего дохода"
+        except (ValueError, TypeError):
+            pass
+    
     logger.info(
-        "Dashboard payload for %s generated (balance=%.2f, sts=%.2f)",
+        "Dashboard payload for %s generated (balance=%.2f, sts=%.2f, mode=%s)",
         user_id,
-        total_balance,
-        safe["value"],
+        total_debit_balance,
+        sts_result["sts_daily_recommended"],
+        user_mode,
     )
-
+    
     return {
         "sts_today": {
-            "amount": round(safe["value"], 2),
-            "spent": 0.0,  # Placeholder - можно отслеживать через транзакции
+            "amount": sts_result["sts_daily_recommended"],
+            "spent": 0.0,  # TODO: отслеживать через транзакции за сегодня
             "tomorrow": {
-                "amount": round(tomorrow_safe, 2),
-                "impact": "После завтрашнего дохода" if financial_inputs["salary_date"] == date.today() + timedelta(days=1) else "Стабильный прогноз",
+                "amount": sts_result["sts_daily_recommended"],  # Упрощенная версия
+                "impact": tomorrow_impact,
             },
         },
         "loan_summary": loan_summary,
         "savings_summary": savings_summary,
+        "total_debit_cards_balance": total_debit_balance,
         "events_next_30d": events_next_30d,
         "health_score": health_score,
+        "bank_statuses": bank_statuses,
+        "user_mode": user_mode,
     }
 
 

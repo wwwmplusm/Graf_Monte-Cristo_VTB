@@ -44,7 +44,7 @@ export function LoansDepositsWidget({
             <div>
               <div className="text-xs text-gray-600 mb-0.5">Обязательный платёж</div>
               <div className="font-semibold text-gray-900">
-                {formatCurrency(1200)}
+                {formatCurrency(loans.summary.mandatory_daily_payment)}
               </div>
             </div>
             <button
@@ -63,7 +63,7 @@ export function LoansDepositsWidget({
             <div>
               <div className="text-xs text-gray-600 mb-0.5">Дополнительный платёж</div>
               <div className="font-semibold text-gray-900">
-                {formatCurrency(540)}
+                {formatCurrency(loans.summary.additional_daily_payment)}
               </div>
             </div>
             <button

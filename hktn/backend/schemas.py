@@ -121,3 +121,48 @@ class IntegrationStatusResponse(BaseModel):
     user_id: str
     base_score: BaseScorePayload
     banks: List[BankPipelineStatus]
+
+
+# Dashboard schemas
+class STSToday(BaseModel):
+    amount: float
+    spent: float
+    tomorrow: Dict[str, Any]  # {amount: float, impact: str}
+
+
+class LoanSummary(BaseModel):
+    total_outstanding: float
+    mandatory_daily_payment: float
+    additional_daily_payment: float
+    total_monthly_payment: float
+
+
+class SavingsSummary(BaseModel):
+    total_saved: float
+    daily_payment: float
+    target: float
+    progress_percent: float
+
+
+class HealthScore(BaseModel):
+    value: float
+    status: Literal["excellent", "good", "fair", "poor"]
+    reasons: Optional[List[str]] = None
+
+
+class BankStatus(BaseModel):
+    bank_id: str
+    bank_name: str
+    status: Literal["ok", "error"]
+    fetched_at: Optional[str] = None
+
+
+class DashboardResponse(BaseModel):
+    sts_today: STSToday
+    loan_summary: LoanSummary
+    savings_summary: SavingsSummary
+    total_debit_cards_balance: float
+    events_next_30d: List[Dict[str, Any]]
+    health_score: HealthScore
+    bank_statuses: List[BankStatus]
+    user_mode: Literal["loans", "deposits"]

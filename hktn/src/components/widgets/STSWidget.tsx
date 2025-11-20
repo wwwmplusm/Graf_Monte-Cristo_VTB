@@ -23,7 +23,7 @@ export function STSWidget({ sts, onTap }: STSWidgetProps) {
 
       <div className="mb-3">
         <div className="text-3xl font-semibold text-purple-900 mb-1">
-          {formatCurrency(1700)}
+          {formatCurrency(sts.today.amount)}
         </div>
         <div className="text-xs text-purple-600">
           Потрачено {formatCurrency(sts.today.spent)} из {formatCurrency(sts.today.amount)}

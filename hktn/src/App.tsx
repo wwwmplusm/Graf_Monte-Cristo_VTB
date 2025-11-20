@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { SplashScreen } from './screens/SplashScreen';
 import { OnboardingScreen, OnboardingData } from './screens/OnboardingScreen';
 import { LoadingCalcScreen } from './screens/LoadingCalcScreen';
@@ -11,6 +11,7 @@ import { CardsScreen } from './screens/CardsScreen';
 import { BottomNav } from './components/BottomNav';
 import { PaymentSheet } from './components/PaymentSheet';
 import { type AppState } from './data/mockAppState';
+import { type DashboardResponse, getDashboard } from './utils/api';
 import { Toaster, toast } from 'sonner@2.0.3';
 
 type AppFlow = 'splash' | 'onboarding' | 'loading' | 'app';
@@ -48,44 +49,78 @@ export default function App() {
     setPaymentType(type);
   };
 
-  const handlePaymentConfirm = (amount: number) => {
+  const handlePaymentConfirm = async (amount: number) => {
     if (!appState) return;
 
     // Simulate payment processing
     setPaymentType(null);
     
-    // Recalculate STS and balances
+    // TODO: Call payment API here
+    // For now, just reload dashboard data
+    try {
+      const dashboardData = await getDashboard(appState.user.id);
+      handleDashboardUpdate(dashboardData);
+      toast.success('Платёж успешно выполнен', {
+        description: `STS пересчитан с учётом нового платежа`,
+      });
+    } catch (error) {
+      console.error('Failed to reload dashboard after payment:', error);
+      toast.error('Ошибка обновления данных', {
+        description: 'Платёж выполнен, но не удалось обновить данные',
+      });
+    }
+  };
+
+  const handleDashboardUpdate = useCallback((dashboard: DashboardResponse) => {
+    // Update appState with dashboard data
     setAppState((prev) => {
       if (!prev) return prev;
       const newState = { ...prev };
       
-      if (paymentType === 'mdp' || paymentType === 'adp') {
-        // Update loans
-        newState.loans.summary.total_outstanding -= amount;
-        // Increase STS
-        newState.sts.today.amount += amount * 0.1;
-      } else if (paymentType === 'sdp') {
-        // Update deposits
-        newState.goals.summary.total_saved += amount;
-        if (newState.deposits.current) {
-          newState.deposits.current.balance += amount;
-        }
-        // Decrease STS
-        newState.sts.today.amount -= amount;
-      }
+      // Update mode
+      newState.mode = dashboard.user_mode;
+      
+      // Update STS
+      newState.sts = {
+        today: {
+          amount: dashboard.sts_today.amount,
+          spent: dashboard.sts_today.spent,
+        },
+        tomorrow: {
+          impact: dashboard.sts_today.tomorrow.impact,
+        },
+      };
+      
+      // Update loans summary
+      newState.loans.summary = dashboard.loan_summary;
+      
+      // Update goals/savings summary
+      newState.goals.summary = dashboard.savings_summary;
+      
+      // Update balances
+      newState.balances = {
+        total: dashboard.total_debit_cards_balance,
+        total_debit: dashboard.total_debit_cards_balance,
+      };
+      
+      // Update health
+      newState.health = {
+        score: dashboard.health_score.value,
+        status: dashboard.health_score.status === 'excellent' ? 'спокойно' : 
+                dashboard.health_score.status === 'good' ? 'спокойно' :
+                dashboard.health_score.status === 'fair' ? 'внимание' : 'нужен план',
+        reasons: dashboard.health_score.reasons || [],
+        next_action: prev.health.next_action, // Keep existing next_action
+      };
       
       return newState;
     });
-    
-    toast.success('Платёж успешно выполнен', {
-      description: `STS пересчитан с учётом нового платежа`,
-    });
-  };
+  }, []); // Empty dependency array - function doesn't depend on any props/state
 
   const getDefaultPaymentAmount = () => {
     if (!appState) return 0;
-    if (paymentType === 'mdp') return 1200;
-    if (paymentType === 'adp') return 540;
+    if (paymentType === 'mdp') return appState.loans.summary.mandatory_daily_payment;
+    if (paymentType === 'adp') return appState.loans.summary.additional_daily_payment;
     if (paymentType === 'sdp') return appState.goals.summary.daily_payment;
     return 0;
   };
@@ -236,6 +271,7 @@ export default function App() {
           appState={appState}
           onNavigate={handleNavigate}
           onPayment={handlePayment}
+          onDashboardUpdate={handleDashboardUpdate}
         />
       )}
       
@@ -290,11 +326,11 @@ export default function App() {
       )}
 
       {/* Payment Sheet Modal */}
-      {paymentType && (
+      {paymentType && appState && (
         <PaymentSheet
           type={paymentType}
           defaultAmount={getDefaultPaymentAmount()}
-          currentSTS={1700}
+          currentSTS={appState.sts.today.amount}
           onClose={() => setPaymentType(null)}
           onConfirm={handlePaymentConfirm}
         />

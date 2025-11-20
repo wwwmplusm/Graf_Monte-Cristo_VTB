@@ -4,7 +4,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
 import { Slider } from "../ui/slider";
-import { checkUserHasLoans } from "../../utils/api";
+import { checkUserHasLoans, getTotalLoanAmount } from "../../utils/api";
 
 type GoalType = "save" | "payoff";
 type Speed = "conservative" | "optimal" | "fast";
@@ -45,24 +45,33 @@ export function Step5Questions({ onNext, onBack, initialGoals, userId }: Step5Qu
   const [saveSpeed, setSaveSpeed] = useState<Speed>(initialGoals?.save_speed || "optimal");
   const [payoffSpeed, setPayoffSpeed] = useState<Speed>(initialGoals?.close_speed || "optimal");
   const [payoffLoans, setPayoffLoans] = useState<string[]>(initialGoals?.close_loan_ids || []);
-  const [totalLoanAmount] = useState<number>(Math.floor(Math.random() * 900000) + 100000);
+  const [totalLoanAmount, setTotalLoanAmount] = useState<number>(0);
+  const [loadingLoanAmount, setLoadingLoanAmount] = useState<boolean>(true);
 
-  // Check for loans on mount
+  // Check for loans and load total amount on mount
   useEffect(() => {
     const checkLoans = async () => {
       if (userId) {
         try {
-          const hasLoansResult = await checkUserHasLoans(userId);
+          const [hasLoansResult, totalAmount] = await Promise.all([
+            checkUserHasLoans(userId),
+            getTotalLoanAmount(userId),
+          ]);
           setHasLoans(hasLoansResult);
+          setTotalLoanAmount(totalAmount);
         } catch (error) {
           console.error("Failed to check loans:", error);
           setHasLoans(false); // Default to false on error
+          setTotalLoanAmount(0); // Default to 0 on error
         } finally {
           setLoadingLoans(false);
+          setLoadingLoanAmount(false);
         }
       } else {
         setLoadingLoans(false);
+        setLoadingLoanAmount(false);
         setHasLoans(false);
+        setTotalLoanAmount(0);
       }
     };
 
@@ -366,9 +375,13 @@ export function Step5Questions({ onNext, onBack, initialGoals, userId }: Step5Qu
           </div>
           <div className="bg-[var(--color-surface-panel)] border border-[var(--color-stroke-divider)] rounded-2xl p-6 md:p-8">
             <div className="text-center">
-              <p className="text-[var(--color-text-primary)]">
-                {totalLoanAmount.toLocaleString('ru-RU')} ₽
-              </p>
+              {loadingLoanAmount ? (
+                <p className="text-[var(--color-text-secondary)]">Загрузка...</p>
+              ) : (
+                <p className="text-[var(--color-text-primary)]">
+                  {totalLoanAmount.toLocaleString('ru-RU')} ₽
+                </p>
+              )}
             </div>
           </div>
         </div>

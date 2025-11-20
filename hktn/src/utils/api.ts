@@ -47,7 +47,59 @@ export async function getBanks(userId?: string): Promise<any> {
     return response.json();
 }
 
-export async function getDashboard(userId: string): Promise<any> {
+export interface STSToday {
+    amount: number;
+    spent: number;
+    tomorrow: {
+        amount: number;
+        impact: string;
+    };
+}
+
+export interface LoanSummary {
+    total_outstanding: number;
+    mandatory_daily_payment: number;
+    additional_daily_payment: number;
+    total_monthly_payment: number;
+}
+
+export interface SavingsSummary {
+    total_saved: number;
+    daily_payment: number;
+    target: number;
+    progress_percent: number;
+}
+
+export interface HealthScore {
+    value: number;
+    status: 'excellent' | 'good' | 'fair' | 'poor';
+    reasons?: string[];
+}
+
+export interface BankStatus {
+    bank_id: string;
+    bank_name: string;
+    status: 'ok' | 'error';
+    fetched_at?: string;
+}
+
+export interface DashboardResponse {
+    sts_today: STSToday;
+    loan_summary: LoanSummary;
+    savings_summary: SavingsSummary;
+    total_debit_cards_balance: number;
+    events_next_30d: Array<{
+        date: string;
+        type: string;
+        amount: number;
+        description: string;
+    }>;
+    health_score: HealthScore;
+    bank_statuses: BankStatus[];
+    user_mode: 'loans' | 'deposits';
+}
+
+export async function getDashboard(userId: string): Promise<DashboardResponse> {
     const response = await fetch(`${API_BASE_URL}/api/dashboard?user_id=${userId}`);
 
     if (!response.ok) {
@@ -157,5 +209,27 @@ export async function checkUserHasLoans(user_id: string): Promise<boolean> {
         console.error("Failed to check loans:", error);
         // В случае ошибки возвращаем false (безопасное значение)
         return false;
+    }
+}
+
+export async function getTotalLoanAmount(user_id: string): Promise<number> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/dashboard?user_id=${user_id}`);
+        
+        if (!response.ok) {
+            // Если dashboard недоступен, возвращаем 0 (безопасное значение)
+            return 0;
+        }
+
+        const data = await response.json();
+        const loanSummary = data.loan_summary || {};
+        const totalOutstanding = loanSummary.total_outstanding || 0;
+        
+        // Возвращаем сумму всех кредитов
+        return totalOutstanding;
+    } catch (error) {
+        console.error("Failed to get total loan amount:", error);
+        // В случае ошибки возвращаем 0 (безопасное значение)
+        return 0;
     }
 }

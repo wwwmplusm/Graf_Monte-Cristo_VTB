@@ -894,13 +894,40 @@ class OBRAPIClient:
                     response.raise_for_status()
 
                     all_agreements = await self._paginate(response, headers, params)
+                    logger.info("Fetched %d total agreements from %s", len(all_agreements), url)
+                    
+                    # Log sample agreements for debugging
+                    if all_agreements:
+                        sample = all_agreements[0]
+                        logger.info("Sample agreement keys: %s", list(sample.keys())[:20] if isinstance(sample, dict) else "not_dict")
+                        logger.info("Sample agreement: %s", 
+                                   {k: v for k, v in list(sample.items())[:15]} if isinstance(sample, dict) else "not_dict")
+                        logger.info("Sample agreement product_type: %s", 
+                                    sample.get("productType") or sample.get("product_type") or sample.get("type", "unknown") if isinstance(sample, dict) else "N/A")
+                        logger.info("Sample agreement status: %s", 
+                                    sample.get("status", "unknown") if isinstance(sample, dict) else "N/A")
+                    
                     credits = [ag for ag in all_agreements if self._is_credit(ag)]
+                    
+                    # If no credits found but agreements exist, log them for debugging
+                    if not credits and all_agreements:
+                        logger.warning("No credits found in %d agreements after filtering. All agreements:", len(all_agreements))
+                        for i, ag in enumerate(all_agreements[:3]):  # Log first 3
+                            if isinstance(ag, dict):
+                                logger.warning("  Agreement %d: productType=%s, status=%s, keys=%s", 
+                                             i+1,
+                                             ag.get("productType") or ag.get("product_type") or "unknown",
+                                             ag.get("status", "unknown"),
+                                             list(ag.keys())[:10])
+                    elif credits:
+                        logger.info("Filtered %d credits from %d agreements", len(credits), len(all_agreements))
 
                     logger.info(
-                        "Successfully fetched %d credits from %s using header %s",
+                        "Successfully fetched %d credits from %s using header %s (out of %d total agreements)",
                         len(credits),
                         url,
                         list(header_variant.keys())[0],
+                        len(all_agreements),
                     )
                     return credits
                 except httpx.RequestError as e:
@@ -944,9 +971,37 @@ class OBRAPIClient:
     @staticmethod
     def _is_credit(agreement: Dict[str, Any]) -> bool:
         """Checks if a product agreement is a credit product."""
-        prod_type = (agreement.get("product_type") or "").lower()
-        name = (agreement.get("product_name") or "").lower()
-        return "credit" in prod_type or "loan" in prod_type or "кредит" in name
+        # Try multiple field name variations
+        prod_type = (
+            agreement.get("productType") or 
+            agreement.get("product_type") or 
+            agreement.get("type") or
+            agreement.get("productCategory") or
+            agreement.get("product_category") or
+            ""
+        ).lower()
+        name = (
+            agreement.get("productName") or
+            agreement.get("product_name") or
+            agreement.get("name") or
+            ""
+        ).lower()
+        
+        # Check for credit keywords
+        credit_keywords = ["credit", "loan", "кредит", "заем", "займ", "overdraft", "mortgage", "ипотека"]
+        is_credit = (
+            any(keyword in prod_type for keyword in credit_keywords) or
+            any(keyword in name for keyword in credit_keywords)
+        )
+        
+        # Also check if it's NOT a deposit/savings
+        deposit_keywords = ["deposit", "savings", "вклад", "депозит", "накопительный"]
+        is_deposit = (
+            any(keyword in prod_type for keyword in deposit_keywords) or
+            any(keyword in name for keyword in deposit_keywords)
+        )
+        
+        return is_credit and not is_deposit
 
     @staticmethod
     def _extract_accounts(payload: Any) -> List[Dict[str, Any]]:

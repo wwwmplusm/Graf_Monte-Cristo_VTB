@@ -336,33 +336,53 @@ async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, 
         # Create account consent if requested
         if consents_to_create.account:
             try:
-                account_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
-                account_result = await initiate_consent(account_req)
+                # Check for existing approved consent first
+                existing_account_consent = find_consent_by_type(user_id, bank_id, "accounts")
                 
-                # Determine status based on result
-                if account_result.get("state") == "approved":
-                    status_value = "approved"
-                elif account_result.get("state") == "pending":
-                    status_value = "pending"
-                    has_pending = True
+                if existing_account_consent:
+                    logger.info(
+                        "Reusing existing account consent %s for %s@%s",
+                        existing_account_consent.consent_id,
+                        user_id,
+                        bank_id,
+                    )
+                    bank_result["account_consent"] = {
+                        "status": "approved",
+                        "consent_id": existing_account_consent.consent_id,
+                        "request_id": None,
+                        "approval_url": None,
+                        "reused": True,
+                    }
                 else:
-                    status_value = "creating"
-                    has_pending = True
-                
-                bank_result["account_consent"] = {
-                    "status": status_value,
-                    "consent_id": account_result.get("consent_id"),
-                    "request_id": account_result.get("request_id"),
-                    "approval_url": account_result.get("approval_url"),
-                }
-                
-                logger.info(
-                    "Account consent created for %s@%s: %s (status: %s)",
-                    user_id,
-                    bank_id,
-                    account_result.get("consent_id"),
-                    status_value,
-                )
+                    # Create new consent if none exists
+                    account_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
+                    account_result = await initiate_consent(account_req)
+                    
+                    # Determine status based on result
+                    if account_result.get("state") == "approved":
+                        status_value = "approved"
+                    elif account_result.get("state") == "pending":
+                        status_value = "pending"
+                        has_pending = True
+                    else:
+                        status_value = "creating"
+                        has_pending = True
+                    
+                    bank_result["account_consent"] = {
+                        "status": status_value,
+                        "consent_id": account_result.get("consent_id"),
+                        "request_id": account_result.get("request_id"),
+                        "approval_url": account_result.get("approval_url"),
+                        "reused": False,
+                    }
+                    
+                    logger.info(
+                        "Account consent created for %s@%s: %s (status: %s)",
+                        user_id,
+                        bank_id,
+                        account_result.get("consent_id"),
+                        status_value,
+                    )
             except Exception as exc:  # noqa: BLE001
                 error_msg = str(exc)
                 bank_result["account_consent"] = {
@@ -380,39 +400,59 @@ async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, 
         # Create product consent if requested
         if consents_to_create.product:
             try:
-                product_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
-                product_result = await initiate_product_consent(product_req)
+                # Check for existing approved consent first
+                existing_product_consent = find_consent_by_type(user_id, bank_id, "products")
                 
-                if product_result.get("state") == "error":
-                    bank_result["product_consent"] = {
-                        "status": "error",
-                        "error_message": product_result.get("error_message", "Unknown error"),
-                    }
-                    has_errors = True
-                else:
-                    if product_result.get("state") == "approved":
-                        status_value = "approved"
-                    elif product_result.get("state") == "pending":
-                        status_value = "pending"
-                        has_pending = True
-                    else:
-                        status_value = "creating"
-                        has_pending = True
-                    
-                    bank_result["product_consent"] = {
-                        "status": status_value,
-                        "consent_id": product_result.get("consent_id"),
-                        "request_id": product_result.get("request_id"),
-                        "approval_url": product_result.get("approval_url"),
-                    }
-                    
+                if existing_product_consent:
                     logger.info(
-                        "Product consent created for %s@%s: %s (status: %s)",
+                        "Reusing existing product consent %s for %s@%s",
+                        existing_product_consent.consent_id,
                         user_id,
                         bank_id,
-                        product_result.get("consent_id"),
-                        status_value,
                     )
+                    bank_result["product_consent"] = {
+                        "status": "approved",
+                        "consent_id": existing_product_consent.consent_id,
+                        "request_id": None,
+                        "approval_url": None,
+                        "reused": True,
+                    }
+                else:
+                    # Create new consent if none exists
+                    product_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
+                    product_result = await initiate_product_consent(product_req)
+                    
+                    if product_result.get("state") == "error":
+                        bank_result["product_consent"] = {
+                            "status": "error",
+                            "error_message": product_result.get("error_message", "Unknown error"),
+                        }
+                        has_errors = True
+                    else:
+                        if product_result.get("state") == "approved":
+                            status_value = "approved"
+                        elif product_result.get("state") == "pending":
+                            status_value = "pending"
+                            has_pending = True
+                        else:
+                            status_value = "creating"
+                            has_pending = True
+                        
+                        bank_result["product_consent"] = {
+                            "status": status_value,
+                            "consent_id": product_result.get("consent_id"),
+                            "request_id": product_result.get("request_id"),
+                            "approval_url": product_result.get("approval_url"),
+                            "reused": False,
+                        }
+                        
+                        logger.info(
+                            "Product consent created for %s@%s: %s (status: %s)",
+                            user_id,
+                            bank_id,
+                            product_result.get("consent_id"),
+                            status_value,
+                        )
             except Exception as exc:  # noqa: BLE001
                 error_msg = str(exc)
                 bank_result["product_consent"] = {
@@ -430,39 +470,59 @@ async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, 
         # Create payment consent if requested
         if consents_to_create.payment:
             try:
-                payment_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
-                payment_result = await initiate_payment_consent(payment_req)
+                # Check for existing approved consent first
+                existing_payment_consent = find_consent_by_type(user_id, bank_id, "payments")
                 
-                if payment_result.get("state") == "error":
-                    bank_result["payment_consent"] = {
-                        "status": "error",
-                        "error_message": payment_result.get("error_message", "Unknown error"),
-                    }
-                    has_errors = True
-                else:
-                    if payment_result.get("state") == "approved":
-                        status_value = "approved"
-                    elif payment_result.get("state") == "pending":
-                        status_value = "pending"
-                        has_pending = True
-                    else:
-                        status_value = "creating"
-                        has_pending = True
-                    
-                    bank_result["payment_consent"] = {
-                        "status": status_value,
-                        "consent_id": payment_result.get("consent_id"),
-                        "request_id": payment_result.get("request_id"),
-                        "approval_url": payment_result.get("approval_url"),
-                    }
-                    
+                if existing_payment_consent:
                     logger.info(
-                        "Payment consent created for %s@%s: %s (status: %s)",
+                        "Reusing existing payment consent %s for %s@%s",
+                        existing_payment_consent.consent_id,
                         user_id,
                         bank_id,
-                        payment_result.get("consent_id"),
-                        status_value,
                     )
+                    bank_result["payment_consent"] = {
+                        "status": "approved",
+                        "consent_id": existing_payment_consent.consent_id,
+                        "request_id": None,
+                        "approval_url": None,
+                        "reused": True,
+                    }
+                else:
+                    # Create new consent if none exists
+                    payment_req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
+                    payment_result = await initiate_payment_consent(payment_req)
+                    
+                    if payment_result.get("state") == "error":
+                        bank_result["payment_consent"] = {
+                            "status": "error",
+                            "error_message": payment_result.get("error_message", "Unknown error"),
+                        }
+                        has_errors = True
+                    else:
+                        if payment_result.get("state") == "approved":
+                            status_value = "approved"
+                        elif payment_result.get("state") == "pending":
+                            status_value = "pending"
+                            has_pending = True
+                        else:
+                            status_value = "creating"
+                            has_pending = True
+                        
+                        bank_result["payment_consent"] = {
+                            "status": status_value,
+                            "consent_id": payment_result.get("consent_id"),
+                            "request_id": payment_result.get("request_id"),
+                            "approval_url": payment_result.get("approval_url"),
+                            "reused": False,
+                        }
+                        
+                        logger.info(
+                            "Payment consent created for %s@%s: %s (status: %s)",
+                            user_id,
+                            bank_id,
+                            payment_result.get("consent_id"),
+                            status_value,
+                        )
             except Exception as exc:  # noqa: BLE001
                 error_msg = str(exc)
                 bank_result["payment_consent"] = {
