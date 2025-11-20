@@ -162,15 +162,22 @@ class OBRAPIClient:
                 return self._bank_token
 
             logger.info("Requesting new bank token from %s", self.api_base_url)
+            logger.debug("Using client_id: %s (length: %d)", self.team_id, len(self.team_id) if self.team_id else 0)
+            logger.debug("Using client_secret: %s (length: %d)", "***" if self.team_secret else "None", len(self.team_secret) if self.team_secret else 0)
 
             @api_retry
             async def _fetch_token_with_retry():
-                response = await self._client.post(
-                    "/auth/bank-token",
-                    params={"client_id": self.team_id, "client_secret": self.team_secret},
-                )
-                response.raise_for_status()
-                return response.json()
+                try:
+                    response = await self._client.post(
+                        "/auth/bank-token",
+                        params={"client_id": self.team_id, "client_secret": self.team_secret},
+                    )
+                    response.raise_for_status()
+                    return response.json()
+                except Exception as e:
+                    logger.error("Failed to get bank token: %s", e)
+                    logger.error("Request URL: %s/auth/bank-token?client_id=%s&client_secret=***", self.api_base_url, self.team_id)
+                    raise
 
             token_data = await _fetch_token_with_retry()
             access_token = token_data["access_token"]
@@ -274,36 +281,44 @@ class OBRAPIClient:
     async def initiate_product_consent(
         self, user_id: str, user_display_name: Optional[str] = None
     ) -> Optional[ConsentInitResult]:
-        """Tries multiple payloads to create a product agreement consent, inspired by hndmd.py."""
+        """Creates a product agreement consent request according to API specification.
+        
+        client_id is passed ONLY in query params, NOT in body.
+        """
         bank_token = await self._get_bank_token()
         headers = await self._get_common_headers(bank_token)
         url = "/product-agreement-consents/request"
 
-        valid_until = (
-            datetime.now(timezone.utc) + timedelta(days=365)
-        ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
+        # Base payload WITHOUT client_id (it goes in query params only)
         base_payload = {
             "requesting_bank": self.team_id,
-            "requesting_bank_name": f"{self.team_id} App",
-            "client_id": user_id,
-            "reason": "CreditGuard: credit analysis",
-            "customer_name": user_display_name or user_id,
+            "reason": "Финансовый агрегатор для управления продуктами",
         }
 
+        # Primary payload according to API specification
         payloads_to_try = [
+            {
+                **base_payload,
+                "read_product_agreements": True,
+                "open_product_agreements": True,
+                "close_product_agreements": False,
+                "allowed_product_types": ["deposit", "loan", "card"],
+                "max_amount": 1000000.00,
+            },
+            {
+                **base_payload,
+                "read_product_agreements": True,
+                "open_product_agreements": True,
+                "close_product_agreements": False,
+                "allowed_product_types": ["deposit", "loan", "credit_card"],
+                "max_amount": 5_000_000,
+            },
             {
                 **base_payload,
                 "read_product_agreements": True,
                 "open_product_agreements": False,
                 "close_product_agreements": False,
-                "allowed_product_types": ["deposit", "loan", "credit_card"],
-                "max_amount": 5_000_000,
-                "valid_until": valid_until,
-            },
-            {
-                **base_payload,
-                "permissions": ["ReadProductAgreements"],
+                "allowed_product_types": ["deposit", "loan", "card"],
             },
             {
                 **base_payload,
@@ -324,33 +339,67 @@ class OBRAPIClient:
                     continue
 
                 data = response.json()
-                consent_id = data.get("consent_id") or self._jget(data, ["data", "consentId"])
-                request_id = data.get("request_id") or self._jget(data, ["data", "requestId"])
-                status_raw = data.get("status") or self._jget(data, ["data", "status"])
-                approval_url = self._jget(data, ["links", "consentApproval"])
+                # Extract fields according to API specification
+                request_id = (
+                    data.get("request_id")
+                    or self._jget(data, ["data", "requestId"])
+                    or self._jget(data, ["data", "request_id"])
+                )
+                consent_id = (
+                    data.get("consent_id")
+                    or self._jget(data, ["data", "consentId"])
+                    or self._jget(data, ["data", "consent_id"])
+                )
+                status_raw = (
+                    data.get("status")
+                    or self._jget(data, ["data", "status"])
+                )
+                auto_approved = bool(
+                    data.get("auto_approved")
+                    or self._jget(data, ["data", "autoApproved"])
+                    or self._jget(data, ["data", "auto_approved"])
+                )
+                approval_url = (
+                    self._jget(data, ["links", "consentApproval"])
+                    or self._jget(data, ["links", "approvalUrl"])
+                    or data.get("approval_url")
+                )
 
-                # SBank может вернуть request_id вместо consent_id
-                final_id = consent_id or request_id
-                if final_id:
-                    normalized_status = _normalize_status_value(status_raw).lower()
-                    auto_approved = bool(
-                        data.get("auto_approved")
-                        or (normalized_status and normalized_status in _AUTHORIZED_STATUS_SET)
-                    )
-                    if not auto_approved and not approval_url and normalized_status not in _FAILED_STATUS_SET:
-                        auto_approved = True
-                        status_raw = "Approved"
+                # request_id is always present according to API spec
+                if not request_id:
+                    logger.warning("Product consent response missing request_id: %s", data)
+                    continue
 
-                    status_value = status_raw or ("Approved" if auto_approved else "Pending")
+                # Normalize status
+                normalized_status = _normalize_status_value(status_raw).lower() if status_raw else ""
+                
+                # Determine auto_approved if not explicitly set
+                if not auto_approved and normalized_status:
+                    auto_approved = normalized_status in _AUTHORIZED_STATUS_SET
+                
+                # Determine final status
+                if not status_raw:
+                    status_value = "Approved" if auto_approved else "Pending"
+                else:
+                    status_value = status_raw
 
-                    logger.info("Product consent initiated successfully with payload: %s", body)
-                    return ConsentInitResult(
-                        consent_id=final_id,
-                        status=status_value,
-                        auto_approved=auto_approved,
-                        approval_url=approval_url,
-                        request_id=request_id,
-                    )
+                # consent_id may be None if status is "pending" (requires manual approval)
+                final_consent_id = consent_id if consent_id else None
+
+                logger.info(
+                    "Product consent initiated: request_id=%s, consent_id=%s, status=%s, auto_approved=%s",
+                    request_id,
+                    final_consent_id,
+                    status_value,
+                    auto_approved,
+                )
+                return ConsentInitResult(
+                    consent_id=final_consent_id,
+                    status=status_value,
+                    auto_approved=auto_approved,
+                    approval_url=approval_url,
+                    request_id=request_id,
+                )
             except httpx.RequestError as e:  # noqa: PERF203
                 logger.warning("Request failed for product consent payload %s: %s", body, e)
 
@@ -358,124 +407,158 @@ class OBRAPIClient:
         return None
 
     async def initiate_payment_consent(
-        self, user_id: str, user_display_name: Optional[str] = None
+        self, user_id: str, user_display_name: Optional[str] = None, account_consent_id: Optional[str] = None
     ) -> Optional[ConsentInitResult]:
-        """Tries multiple payloads to create a payment consent, inspired by initiate_product_consent()."""
+        """
+        Creates a multi-use payment consent request according to API specification.
+        
+        Uses consent_type="multi_use" for multiple payments with limits.
+        client_id is passed in body, NOT in query params.
+        """
         bank_token = await self._get_bank_token()
         headers = await self._get_common_headers(bank_token)
+        url = "/payment-consents/request"
+
+        # Try to get real debtor_account if account_consent_id is provided
+        debtor_account: Optional[str] = None
+        if account_consent_id:
+            try:
+                accounts = await self.fetch_accounts_with_consent(user_id, account_consent_id)
+                if accounts:
+                    # Use first account as debtor_account
+                    debtor_account = self._extract_account_id(accounts[0])
+                    logger.info("Found debtor_account: %s for user %s", debtor_account, user_id)
+            except Exception as e:
+                logger.warning("Failed to fetch accounts for debtor_account: %s", e)
+
+        # Use placeholder if no real account found
+        if not debtor_account:
+            # Extract bank_id from api_base_url (e.g., "https://abank.open.bankingapi.ru" -> "abank")
+            bank_id_from_url = self.api_base_url.split("//")[1].split(".")[0] if "//" in self.api_base_url else "bank"
+            debtor_account = f"account-{user_id}-{bank_id_from_url}"
+            logger.info("Using placeholder debtor_account: %s", debtor_account)
 
         valid_until = (
             datetime.now(timezone.utc) + timedelta(days=365)
         ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
+        # Base payload with client_id in body (NOT in query params)
         base_payload = {
             "requesting_bank": self.team_id,
-            "requesting_bank_name": f"{self.team_id} App",
             "client_id": user_id,
-            "reason": "CreditGuard: payment processing",
-            "customer_name": user_display_name or user_id,
+            "reason": "Финансовый агрегатор для управления платежами",
         }
 
-        # Try multiple endpoints and payload variations
-        endpoints_to_try = [
-            "/payment-consents/request",
-            "/payment-consent-requests",
-        ]
-
+        # Multi-use payment consent according to API specification
         payloads_to_try = [
             {
                 **base_payload,
-                "permissions": [
-                    "InitiateSinglePayment",
-                    "InitiateMultiplePayment",
-                    "CreateVariableRecurringPayment",
-                ],
+                "consent_type": "multi_use",
+                "debtor_account": debtor_account,
+                "max_uses": 100,
+                "max_amount_per_payment": 100000.00,
+                "max_total_amount": 1000000.00,
                 "valid_until": valid_until,
             },
             {
                 **base_payload,
-                "permissions": [
-                    "InitiateSinglePayment",
-                    "InitiateMultiplePayment",
-                ],
+                "consent_type": "multi_use",
+                "debtor_account": debtor_account,
+                "max_uses": 50,
+                "max_amount_per_payment": 50000.00,
+                "max_total_amount": 500000.00,
                 "valid_until": valid_until,
             },
             {
                 **base_payload,
-                "permissions": ["InitiateSinglePayment"],
-                "valid_until": valid_until,
-            },
-            {
-                **base_payload,
-                "initiate_single_payment": True,
-                "initiate_multiple_payment": True,
-                "create_variable_recurring_payment": True,
-                "valid_until": valid_until,
-            },
-            {
-                **base_payload,
-                "permissions": ["CreateSinglePayment", "CreateMultiplePayment"],
-                "valid_until": valid_until,
+                "consent_type": "multi_use",
+                "debtor_account": debtor_account,
+                "max_uses": 10,
+                "max_amount_per_payment": 10000.00,
+                "max_total_amount": 100000.00,
             },
         ]
 
-        for url in endpoints_to_try:
-            for body in payloads_to_try:
-                try:
-                    response = await self._client.post(
-                        url,
-                        headers=headers,
-                        params={"client_id": user_id},
-                        json=body,
-                    )
-                    if response.status_code >= 400:
-                        logger.warning(
-                            "Payment consent payload failed with status %s for endpoint %s: %s",
-                            response.status_code,
-                            url,
-                            body,
-                        )
-                        continue
-
-                    data = response.json()
-                    consent_id = data.get("consent_id") or self._jget(data, ["data", "consentId"])
-                    request_id = data.get("request_id") or self._jget(data, ["data", "requestId"])
-                    status_raw = data.get("status") or self._jget(data, ["data", "status"])
-                    approval_url = self._jget(data, ["links", "consentApproval"])
-
-                    # SBank может вернуть request_id вместо consent_id
-                    final_id = consent_id or request_id
-                    if final_id:
-                        normalized_status = _normalize_status_value(status_raw).lower()
-                        auto_approved = bool(
-                            data.get("auto_approved")
-                            or (normalized_status and normalized_status in _AUTHORIZED_STATUS_SET)
-                        )
-                        if not auto_approved and not approval_url and normalized_status not in _FAILED_STATUS_SET:
-                            auto_approved = True
-                            status_raw = "Approved"
-
-                        status_value = status_raw or ("Approved" if auto_approved else "Pending")
-
-                        logger.info(
-                            "Payment consent initiated successfully with endpoint %s and payload: %s",
-                            url,
-                            body,
-                        )
-                        return ConsentInitResult(
-                            consent_id=final_id,
-                            status=status_value,
-                            auto_approved=auto_approved,
-                            approval_url=approval_url,
-                            request_id=request_id,
-                        )
-                except httpx.RequestError as e:  # noqa: PERF203
+        for body in payloads_to_try:
+            try:
+                # client_id is in body, NOT in query params
+                response = await self._client.post(
+                    url,
+                    headers=headers,
+                    json=body,
+                )
+                if response.status_code >= 400:
                     logger.warning(
-                        "Request failed for payment consent endpoint %s with payload %s: %s",
-                        url,
+                        "Payment consent payload failed with status %s: %s",
+                        response.status_code,
                         body,
-                        e,
                     )
+                    continue
+
+                data = response.json()
+                # Extract fields according to API specification
+                request_id = (
+                    data.get("request_id")
+                    or self._jget(data, ["data", "requestId"])
+                    or self._jget(data, ["data", "request_id"])
+                )
+                consent_id = (
+                    data.get("consent_id")
+                    or self._jget(data, ["data", "consentId"])
+                    or self._jget(data, ["data", "consent_id"])
+                )
+                status_raw = (
+                    data.get("status")
+                    or self._jget(data, ["data", "status"])
+                )
+                auto_approved = bool(
+                    data.get("auto_approved")
+                    or self._jget(data, ["data", "autoApproved"])
+                    or self._jget(data, ["data", "auto_approved"])
+                )
+                approval_url = (
+                    self._jget(data, ["links", "consentApproval"])
+                    or self._jget(data, ["links", "approvalUrl"])
+                    or data.get("approval_url")
+                )
+
+                # request_id is always present according to API spec
+                if not request_id:
+                    logger.warning("Payment consent response missing request_id: %s", data)
+                    continue
+
+                # Normalize status
+                normalized_status = _normalize_status_value(status_raw).lower() if status_raw else ""
+                
+                # Determine auto_approved if not explicitly set
+                if not auto_approved and normalized_status:
+                    auto_approved = normalized_status in _AUTHORIZED_STATUS_SET
+                
+                # Determine final status
+                if not status_raw:
+                    status_value = "Approved" if auto_approved else "Pending"
+                else:
+                    status_value = status_raw
+
+                # consent_id may be None if status is "pending" (requires manual approval)
+                final_consent_id = consent_id if consent_id else None
+
+                logger.info(
+                    "Payment consent initiated: request_id=%s, consent_id=%s, status=%s, auto_approved=%s",
+                    request_id,
+                    final_consent_id,
+                    status_value,
+                    auto_approved,
+                )
+                return ConsentInitResult(
+                    consent_id=final_consent_id,
+                    status=status_value,
+                    auto_approved=auto_approved,
+                    approval_url=approval_url,
+                    request_id=request_id,
+                )
+            except httpx.RequestError as e:  # noqa: PERF203
+                logger.warning("Request failed for payment consent payload %s: %s", body, e)
 
         logger.error("All attempts to create payment consent failed for user %s at %s", user_id, self.api_base_url)
         return None
@@ -585,6 +668,24 @@ class OBRAPIClient:
         bank_token = await self._get_bank_token()
         headers = await self._get_common_headers(bank_token)
         response = await self._client.get(f"/account-consents/{request_id}", headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+    @api_retry
+    async def get_product_consent_status(self, request_id: str, user_id: str) -> Dict[str, Any]:
+        """
+        Fetch product agreement consent status using GET /product-agreement-consents/{request_id}?client_id={user_id}.
+        
+        According to API spec, the same endpoint is used for both POST (create) and GET (check status).
+        """
+        bank_token = await self._get_bank_token()
+        headers = await self._get_common_headers(bank_token)
+        params = {"client_id": user_id}
+        response = await self._client.get(
+            f"/product-agreement-consents/{request_id}",
+            headers=headers,
+            params=params,
+        )
         response.raise_for_status()
         return response.json()
 

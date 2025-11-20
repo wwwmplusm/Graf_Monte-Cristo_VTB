@@ -3,11 +3,15 @@ import { Button } from "../ui/button";
 import { BankCard } from "../BankCard";
 import { ErrorBanner } from "../ErrorBanner";
 import { Skeleton } from "../ui/skeleton";
+import { getBanks } from "../../utils/api";
 
 interface Bank {
-  id: string;
-  name: string;
+  id: string;           // vbank, abank, sbank
+  name: string;          // VBank, ABank, SBank
   connected: boolean;
+  baseUrl?: string;
+  status?: string;      // "configured" | "missing_url"
+  error?: string;
 }
 
 interface Step2BankSelectionProps {
@@ -30,34 +34,40 @@ export function Step2BankSelection({
   const [selectedBanks, setSelectedBanks] = useState<string[]>(initialSelection);
   const [loadingState, setLoadingState] = useState<LoadingState>("idle");
 
-  // Simulate API call to fetch banks
-  // In real app: GET /api/banks
+  // Fetch banks from API
   const fetchBanks = async () => {
     setLoadingState("loading");
     
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      // Mock data - in real app this would be an API call
-      const mockBanks: Bank[] = [
-        { id: "bank-a", name: "Банк A", connected: false },
-        { id: "bank-b", name: "Банк B", connected: false },
-        { id: "bank-c", name: "Банк C", connected: false },
-      ];
+      const userId = onboardingState.user_id || undefined;
+      const response = await getBanks(userId);
+      const banks: Bank[] = response.banks || [];
+
+      // Filter out banks without URL (not configured)
+      const availableBanks = banks.filter((bank) => {
+        // Only show banks that are configured (have URL)
+        return bank.status === "configured" || (bank.baseUrl && !bank.error);
+      });
+
+      // Log banks with errors for debugging
+      const banksWithErrors = banks.filter((bank) => bank.error || bank.status === "missing_url");
+      if (banksWithErrors.length > 0) {
+        console.warn("Some banks are not configured:", banksWithErrors.map((b) => ({ id: b.id, name: b.name, error: b.error })));
+      }
 
       // Update onboardingState with banks
       setOnboardingState((prev: any) => ({
         ...prev,
-        banks: mockBanks,
+        banks: availableBanks,
       }));
 
-      if (mockBanks.length === 0) {
+      if (availableBanks.length === 0) {
         setLoadingState("empty");
       } else {
         setLoadingState("success");
       }
     } catch (error) {
+      console.error("Failed to fetch banks:", error);
       setLoadingState("error");
     }
   };

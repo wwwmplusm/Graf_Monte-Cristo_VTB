@@ -279,7 +279,9 @@ export default function App() {
       )}
 
       {/* Bottom Navigation */}
-      {['home', 'sts', 'loans', 'deposits', 'refinance', 'profile'].includes(currentScreen) && (
+      {/* Home is NOT in BottomNav - it's the first screen, not a tab */}
+      {/* STS is accessible from Home, not a separate tab */}
+      {['loans', 'deposits', 'refinance', 'profile'].includes(currentScreen) && (
         <BottomNav
           currentScreen={currentScreen}
           onNavigate={handleNavigate}

@@ -6,6 +6,7 @@ from ..schemas import (
     OnboardingStartRequest,
     OnboardingStatusResponse,
     OnboardingFinalizeRequest,
+    OnboardingConsentsRequest,
 )
 from ..services import onboarding, consents
 
@@ -28,6 +29,12 @@ async def get_onboarding_status(onboarding_id: str):
 async def finalize_onboarding(req: OnboardingFinalizeRequest):
     """Завершает онбординг."""
     return await onboarding.finalize_onboarding(req)
+
+
+@router.post("/onboarding/consents")
+async def create_all_consents(req: OnboardingConsentsRequest):
+    """Создает все необходимые consents для выбранных банков."""
+    return await consents.create_multiple_consents(req)
 
 
 @router.get("/onboarding/consents/status")

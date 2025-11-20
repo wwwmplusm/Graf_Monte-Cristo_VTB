@@ -6,6 +6,7 @@ from typing import Any, Dict
 from fastapi import HTTPException, status
 
 from hktn.core.database import (
+    find_consent_by_type,
     get_consent_by_request_id,
     get_user_consents,
     save_consent,
@@ -139,7 +140,16 @@ async def initiate_payment_consent(req: ConsentInitiateRequest) -> Dict[str, Any
     async with bank_client(req.bank_id) as client:
         try:
             logger.info("Initiating PAYMENT consent for user '%s' with bank '%s'", req.user_id, req.bank_id)
-            consent_meta = await client.initiate_payment_consent(req.user_id)
+            
+            # Try to get account consent to fetch real debtor_account
+            account_consent = find_consent_by_type(req.user_id, req.bank_id, "accounts")
+            account_consent_id = account_consent.consent_id if account_consent else None
+            
+            consent_meta = await client.initiate_payment_consent(
+                req.user_id,
+                user_display_name=None,
+                account_consent_id=account_consent_id
+            )
             if not consent_meta or not (consent_meta.consent_id or consent_meta.request_id):
                 raise HTTPException(status_code=502, detail="Bank did not provide payment consent identifier.")
 

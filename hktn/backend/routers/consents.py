@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
 from ..config import settings
-from ..schemas import ConsentInitiateRequest, OnboardingConsentsRequest
+from ..schemas import ConsentInitiateRequest
 from ..services import consents
 
 router = APIRouter(prefix="/api", tags=["consents"])
@@ -24,12 +24,6 @@ async def initiate_product_consent(req: ConsentInitiateRequest):
 async def initiate_payment_consent_endpoint(req: ConsentInitiateRequest):
     """Initiate payment consent for a bank."""
     return await consents.initiate_payment_consent(req)
-
-
-@router.post("/onboarding/consents")
-async def create_all_consents(req: OnboardingConsentsRequest):
-    """Создает все необходимые consents для выбранных банков."""
-    return await consents.create_multiple_consents(req)
 
 
 @router.post("/consents/start")

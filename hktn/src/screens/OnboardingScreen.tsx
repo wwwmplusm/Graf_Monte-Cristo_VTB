@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Step1UserInfo } from '../components/steps/Step1UserInfo';
 import { Step2BanksAndConsents } from '../components/steps/Step2BanksAndConsents';
 import { Step2ConsentProgress } from '../components/steps/Step2ConsentProgress';
-import { Step4ProductSelection } from '../components/steps/Step4ProductSelection';
 import { Step5Questions } from '../components/steps/Step5Questions';
 import { Step6Summary } from '../components/steps/Step6Summary';
+import { Step7Loading } from '../components/steps/Step7Loading';
 import { Stepper } from '../components/Stepper';
 
 export interface OnboardingData {
@@ -104,15 +104,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   };
 
   const handleStep2ConsentProgressComplete = () => {
-    // Move to product selection after consents are created (step 4)
-    setCurrentStep(4);
-  };
-
-  const handleStep4Complete = (products: any[]) => {
-    setOnboardingState((prev: any) => ({
-      ...prev,
-      selected_products: products,
-    }));
+    // Move directly to goal selection (step 5) after consents are created
+    // Step 4 (Product Selection) is skipped in main flow
     setCurrentStep(5);
   };
 
@@ -126,6 +119,11 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   };
 
   const handleStep6Complete = () => {
+    // Move to loading screen (step 7) after summary
+    setCurrentStep(7);
+  };
+
+  const handleStep7Complete = () => {
     // Map onboarding data to final structure
     const finalData: OnboardingData = {
       user_profile: {
@@ -188,7 +186,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
         {/* Stepper */}
         <div className="mb-8 md:mb-12">
-          <Stepper currentStep={currentStep} totalSteps={6} />
+          <Stepper currentStep={currentStep} totalSteps={7} />
         </div>
 
         {/* Step Content */}
@@ -220,22 +218,12 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             />
           )}
 
-          {currentStep === 4 && (
-            <Step4ProductSelection
-              onNext={handleStep4Complete}
-              onBack={() => setCurrentStep(3)}
-              connectedBanks={onboardingState.banks.filter((bank: any) =>
-                onboardingState.selected_bank_ids?.includes(bank.id)
-              )}
-              initialProducts={onboardingState.selected_products}
-            />
-          )}
-
           {currentStep === 5 && (
             <Step5Questions
               onNext={handleStep5Complete}
-              onBack={() => setCurrentStep(4)}
+              onBack={() => setCurrentStep(3)}
               initialGoals={onboardingState.goals}
+              userId={onboardingState.user_id}
             />
           )}
 
@@ -244,6 +232,13 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
               onNext={handleStep6Complete}
               onBack={() => setCurrentStep(5)}
               onboardingState={onboardingState}
+            />
+          )}
+
+          {currentStep === 7 && (
+            <Step7Loading
+              onComplete={handleStep7Complete}
+              userId={onboardingState.user_id}
             />
           )}
         </div>

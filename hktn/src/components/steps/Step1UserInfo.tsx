@@ -19,25 +19,23 @@ export function Step1UserInfo({
   initialName = ""
 }: Step1UserInfoProps) {
   const [userId, setUserId] = useState(initialUserId);
-  const [name, setName] = useState(initialName);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (userId.trim() && name.trim() && agreedToTerms) {
+    if (userId.trim() && agreedToTerms) {
       setIsLoading(true);
       setError(null);
 
       try {
         const response = await loginUser({
           user_id: userId.trim(),
-          user_name: name.trim(),
         });
 
         console.log('Login successful:', response);
-        onNext(userId.trim(), name.trim());
+        onNext(userId.trim(), '');
       } catch (err) {
         console.error('Login failed:', err);
         setError(err instanceof Error ? err.message : 'Ошибка входа');
@@ -75,21 +73,6 @@ export function Step1UserInfo({
           </p>
         </div>
 
-        {/* User Name field */}
-        <div>
-          <Label htmlFor="name" className="text-[var(--color-text-primary)] mb-2 block">
-            Ваше имя
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            placeholder="Иван"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="h-12 md:h-14 rounded-xl border-[var(--color-stroke-input)] bg-[var(--color-surface-panel)]"
-          />
-        </div>
-
         <div className="flex items-start gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl">
           <Checkbox
             id="terms-agreement"
@@ -122,7 +105,7 @@ export function Step1UserInfo({
             type="submit"
             size="lg"
             className="w-full h-12 md:h-14 rounded-xl bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] text-white"
-            disabled={!userId.trim() || !name.trim() || !agreedToTerms || isLoading}
+            disabled={!userId.trim() || !agreedToTerms || isLoading}
           >
             {isLoading ? 'Вход...' : 'Продолжить'}
           </Button>

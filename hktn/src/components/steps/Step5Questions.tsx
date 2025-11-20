@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
 import { Slider } from "../ui/slider";
+import { checkUserHasLoans } from "../../utils/api";
 
 type GoalType = "save" | "payoff";
 type Speed = "conservative" | "optimal" | "fast";
@@ -12,6 +13,7 @@ interface Step5QuestionsProps {
   onNext: (goals: any) => void;
   onBack: () => void;
   initialGoals: any;
+  userId: string;
 }
 
 interface QuestionData {
@@ -28,8 +30,10 @@ const SPEED_LABELS: Record<Speed, string> = {
   fast: "Быстро",
 };
 
-export function Step5Questions({ onNext, onBack, initialGoals }: Step5QuestionsProps) {
+export function Step5Questions({ onNext, onBack, initialGoals, userId }: Step5QuestionsProps) {
   const [step, setStep] = useState<"goal" | "save-input" | "save-result" | "payoff-input" | "payoff-result">("goal");
+  const [hasLoans, setHasLoans] = useState<boolean | null>(null);
+  const [loadingLoans, setLoadingLoans] = useState(true);
   
   // Map from API structure to UI structure
   const initialUIGoals: GoalType[] = [];
@@ -42,6 +46,28 @@ export function Step5Questions({ onNext, onBack, initialGoals }: Step5QuestionsP
   const [payoffSpeed, setPayoffSpeed] = useState<Speed>(initialGoals?.close_speed || "optimal");
   const [payoffLoans, setPayoffLoans] = useState<string[]>(initialGoals?.close_loan_ids || []);
   const [totalLoanAmount] = useState<number>(Math.floor(Math.random() * 900000) + 100000);
+
+  // Check for loans on mount
+  useEffect(() => {
+    const checkLoans = async () => {
+      if (userId) {
+        try {
+          const hasLoansResult = await checkUserHasLoans(userId);
+          setHasLoans(hasLoansResult);
+        } catch (error) {
+          console.error("Failed to check loans:", error);
+          setHasLoans(false); // Default to false on error
+        } finally {
+          setLoadingLoans(false);
+        }
+      } else {
+        setLoadingLoans(false);
+        setHasLoans(false);
+      }
+    };
+
+    checkLoans();
+  }, [userId]);
 
   // Generate random results based on speed
   const getSaveResults = (speed: Speed) => {
@@ -118,6 +144,23 @@ export function Step5Questions({ onNext, onBack, initialGoals }: Step5QuestionsP
 
   // Goal Selection Screen
   if (step === "goal") {
+    // Show loading state while checking loans
+    if (loadingLoans) {
+      return (
+        <div className="w-full max-w-md mx-auto">
+          <div className="text-center mb-6 md:mb-8">
+            <h1 className="mb-3 md:mb-4">Проверяем ваши данные...</h1>
+            <p className="text-[var(--color-text-secondary)]">
+              Это поможет нам предложить подходящие цели
+            </p>
+          </div>
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-brand-primary)]"></div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="w-full max-w-md mx-auto">
         <div className="text-center mb-6 md:mb-8">
@@ -157,34 +200,50 @@ export function Step5Questions({ onNext, onBack, initialGoals }: Step5QuestionsP
             </div>
           </div>
 
-          <div
-            onClick={() => handleGoalToggle("payoff")}
-            className={`
-              w-full p-4 md:p-6 rounded-xl border-2 transition-all cursor-pointer
-              ${
-                goals.includes("payoff")
-                  ? "border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)] bg-opacity-5"
-                  : "border-[var(--color-stroke-divider)] hover:border-[var(--color-brand-primary-light)]"
-              }
-            `}
-          >
-            <div className="flex items-center gap-3">
-              <Checkbox
-                checked={goals.includes("payoff")}
-                onCheckedChange={() => handleGoalToggle("payoff")}
-                onClick={(e) => e.stopPropagation()}
-              />
-              <div className="w-12 h-12 rounded-xl bg-[var(--color-brand-primary)] bg-opacity-10 flex items-center justify-center flex-shrink-0">
-                <span className="text-2xl">🎯</span>
-              </div>
-              <div>
-                <p className="text-[var(--color-text-primary)] mb-1">Закрыть кредит(ы)</p>
-                <p className="caption text-[var(--color-text-secondary)]">
-                  Поможем быстрее избавиться от долгов
-                </p>
+          {hasLoans ? (
+            <div
+              onClick={() => handleGoalToggle("payoff")}
+              className={`
+                w-full p-4 md:p-6 rounded-xl border-2 transition-all cursor-pointer
+                ${
+                  goals.includes("payoff")
+                    ? "border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)] bg-opacity-5"
+                    : "border-[var(--color-stroke-divider)] hover:border-[var(--color-brand-primary-light)]"
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={goals.includes("payoff")}
+                  onCheckedChange={() => handleGoalToggle("payoff")}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <div className="w-12 h-12 rounded-xl bg-[var(--color-brand-primary)] bg-opacity-10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">🎯</span>
+                </div>
+                <div>
+                  <p className="text-[var(--color-text-primary)] mb-1">Закрыть кредит(ы)</p>
+                  <p className="caption text-[var(--color-text-secondary)]">
+                    Поможем быстрее избавиться от долгов
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="w-full p-4 md:p-6 rounded-xl border-2 border-[var(--color-stroke-divider)] bg-[var(--color-bg-secondary)] opacity-60">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-secondary)] flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">🎯</span>
+                </div>
+                <div>
+                  <p className="text-[var(--color-text-secondary)] mb-1">Закрыть кредит(ы)</p>
+                  <p className="caption text-[var(--color-text-tertiary)]">
+                    У вас нет активных кредитов. Начните копить деньги!
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row gap-3">

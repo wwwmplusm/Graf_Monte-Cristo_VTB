@@ -35,26 +35,30 @@ export function HomeScreen({ appState, onNavigate, onPayment }: HomeScreenProps)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] pb-0">
+      {/* Home doesn't have BottomNav - it's the first screen, not a tab */}
       <div className="max-w-lg mx-auto">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-4">
-          <h1 className="text-2xl font-semibold text-gray-900">Привет, {appState.user.name.split(' ')[0]}!</h1>
-          <p className="text-sm text-gray-600 mt-1">Ваши финансы под контролем</p>
+        <div className="bg-[var(--color-bg-primary)] border-b border-[var(--color-stroke-divider)] px-4 py-4">
+          <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Привет, {appState.user.name.split(' ')[0]}!</h1>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">Ваши финансы под контролем</p>
         </div>
 
         {/* Widgets */}
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 pb-24">
+          {/* Health Widget - navigates to health detail screen */}
           <HealthWidget
             health={appState.health}
             onTap={() => onNavigate('health')}
           />
 
+          {/* STS Widget - navigates to STS detail screen (not a tab) */}
           <STSWidget
             sts={appState.sts}
             onTap={() => onNavigate('sts')}
           />
 
+          {/* Loans/Deposits Widget - navigates to Loans or Deposits tab */}
           <LoansDepositsWidget
             mode={appState.mode}
             loans={appState.loans}
@@ -65,6 +69,7 @@ export function HomeScreen({ appState, onNavigate, onPayment }: HomeScreenProps)
             onPaySDP={() => onPayment('sdp')}
           />
 
+          {/* Debit Cards Widget - navigates to cards detail screen */}
           <DebitCardsWidget
             balances={appState.balances}
             cards={appState.cards}

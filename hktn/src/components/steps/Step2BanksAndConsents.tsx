@@ -5,11 +5,15 @@ import { Label } from "../ui/label";
 import { Skeleton } from "../ui/skeleton";
 import { ErrorBanner } from "../ErrorBanner";
 import { Shield, CreditCard, Receipt, Wallet } from "lucide-react";
+import { getBanks } from "../../utils/api";
 
 interface Bank {
-  id: string;
-  name: string;
-  connected?: boolean;
+  id: string;           // vbank, abank, sbank
+  name: string;          // VBank, ABank, SBank
+  connected: boolean;
+  baseUrl?: string;
+  status?: string;      // "configured" | "missing_url"
+  error?: string;
 }
 
 interface BankConsents {
@@ -43,29 +47,35 @@ export function Step2BanksAndConsents({
   const [loadingState, setLoadingState] = useState<LoadingState>("idle");
   const [banksData, setBanksData] = useState<BankConsentMatrix[]>([]);
 
-  // Simulate API call to fetch banks
+  // Fetch banks from API
   const fetchBanks = async () => {
     setLoadingState("loading");
 
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const userId = onboardingState.user_id || undefined;
+      const response = await getBanks(userId);
+      const banks: Bank[] = response.banks || [];
 
-      // Mock data - in real app this would be an API call
-      const mockBanks: Bank[] = [
-        { id: "bank-a", name: "Банк A", connected: false },
-        { id: "bank-b", name: "Банк B", connected: false },
-        { id: "bank-c", name: "Банк C", connected: false },
-      ];
+      // Filter out banks without URL (not configured)
+      const availableBanks = banks.filter((bank) => {
+        // Only show banks that are configured (have URL)
+        return bank.status === "configured" || (bank.baseUrl && !bank.error);
+      });
+
+      // Log banks with errors for debugging
+      const banksWithErrors = banks.filter((bank) => bank.error || bank.status === "missing_url");
+      if (banksWithErrors.length > 0) {
+        console.warn("Some banks are not configured:", banksWithErrors.map((b) => ({ id: b.id, name: b.name, error: b.error })));
+      }
 
       // Update onboardingState with banks
       setOnboardingState((prev: any) => ({
         ...prev,
-        banks: mockBanks,
+        banks: availableBanks,
       }));
 
       // Initialize banks data with consent checkboxes
-      const initialBanksData: BankConsentMatrix[] = mockBanks.map((bank) => ({
+      const initialBanksData: BankConsentMatrix[] = availableBanks.map((bank) => ({
         bank_id: bank.id,
         bank_name: bank.name,
         selected: false,
@@ -78,12 +88,13 @@ export function Step2BanksAndConsents({
 
       setBanksData(initialBanksData);
 
-      if (mockBanks.length === 0) {
+      if (availableBanks.length === 0) {
         setLoadingState("empty");
       } else {
         setLoadingState("success");
       }
     } catch (error) {
+      console.error("Failed to fetch banks:", error);
       setLoadingState("error");
     }
   };
@@ -137,6 +148,27 @@ export function Step2BanksAndConsents({
           : bank
       )
     );
+  };
+
+  const handleSelectAllConsents = (bankId: string, checked: boolean) => {
+    setBanksData((prev) =>
+      prev.map((bank) =>
+        bank.bank_id === bankId
+          ? {
+              ...bank,
+              consents: {
+                account: checked,
+                product: checked,
+                payment: checked,
+              },
+            }
+          : bank
+      )
+    );
+  };
+
+  const areAllConsentsSelected = (bank: BankConsentMatrix): boolean => {
+    return bank.consents.account && bank.consents.product && bank.consents.payment;
   };
 
   const validateSelection = (): boolean => {
@@ -245,6 +277,22 @@ export function Step2BanksAndConsents({
               {/* Consents */}
               {bank.selected && (
                 <div className="ml-16 md:ml-18 space-y-3 pt-3 border-t border-[var(--color-stroke-divider)]">
+                  {/* Select All Checkbox */}
+                  <div className="flex items-center gap-3 pb-2 mb-2 border-b border-[var(--color-stroke-divider)]">
+                    <Checkbox
+                      id={`${bank.bank_id}-select-all`}
+                      checked={areAllConsentsSelected(bank)}
+                      onCheckedChange={(checked) =>
+                        handleSelectAllConsents(bank.bank_id, checked as boolean)
+                      }
+                    />
+                    <Label
+                      htmlFor={`${bank.bank_id}-select-all`}
+                      className="cursor-pointer text-[var(--color-text-primary)] font-medium"
+                    >
+                      Выбрать всё
+                    </Label>
+                  </div>
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id={`${bank.bank_id}-account`}

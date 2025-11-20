@@ -137,3 +137,25 @@ export async function finalizeOnboarding(
 
     return response.json();
 }
+
+export async function checkUserHasLoans(user_id: string): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/dashboard?user_id=${user_id}`);
+        
+        if (!response.ok) {
+            // Если dashboard недоступен, возвращаем false (безопасное значение)
+            return false;
+        }
+
+        const data = await response.json();
+        const loanSummary = data.loan_summary || {};
+        const totalOutstanding = loanSummary.total_outstanding || 0;
+        
+        // Проверяем наличие кредитов или кредитных карт
+        return totalOutstanding > 0;
+    } catch (error) {
+        console.error("Failed to check loans:", error);
+        // В случае ошибки возвращаем false (безопасное значение)
+        return false;
+    }
+}
