@@ -3,6 +3,9 @@ import { HealthWidget } from '../components/widgets/HealthWidget';
 import { STSWidget } from '../components/widgets/STSWidget';
 import { LoansDepositsWidget } from '../components/widgets/LoansDepositsWidget';
 import { DebitCardsWidget } from '../components/widgets/DebitCardsWidget';
+import { UpcomingEventsWidget } from '../components/widgets/UpcomingEventsWidget';
+import { RefinanceTriggersWidget } from '../components/widgets/RefinanceTriggersWidget';
+import { QuickActionsWidget } from '../components/widgets/QuickActionsWidget';
 import { getDashboard, type DashboardResponse } from '../utils/api';
 import type { AppState } from '../data/mockAppState';
 
@@ -240,6 +243,54 @@ export function HomeScreen({ appState, onNavigate, onPayment, onDashboardUpdate 
             onPayADP={() => onPayment('adp')}
             onPaySDP={() => onPayment('sdp')}
           />
+
+          {/* Quick Actions Widget - fast access to common actions */}
+          <QuickActionsWidget
+            mode={effectiveMode}
+            mdp={effectiveLoans.summary?.mandatory_daily_payment}
+            adp={effectiveLoans.summary?.additional_daily_payment}
+            sdp={effectiveGoals.summary?.daily_payment}
+            onPayMDP={() => onPayment('mdp')}
+            onPayADP={() => onPayment('adp')}
+            onPaySDP={() => onPayment('sdp')}
+            onRefinance={() => onNavigate('refinance')}
+          />
+
+          {/* Upcoming Events Widget - shows next 30 days events */}
+          {dashboardData?.events_next_30d && dashboardData.events_next_30d.length > 0 && (
+            <UpcomingEventsWidget
+              events={dashboardData.events_next_30d}
+              onTap={() => onNavigate('timeline')}
+              onQuickPay={(event) => {
+                // If it's a loan payment event, trigger MDP payment
+                if (event.type === 'loan_payment') {
+                  onPayment('mdp');
+                }
+              }}
+            />
+          )}
+
+          {/* Refinance Triggers Widget - shows optimization opportunities */}
+          {effectiveHealth.next_action?.type === 'refinance' && (
+            <RefinanceTriggersWidget
+              triggers={[
+                {
+                  type: 'refi_opportunity',
+                  urgency: 'watch',
+                  title: 'Возможность рефинансирования',
+                  description: 'Можно снизить ставку и сэкономить',
+                  savings: 45000,
+                  action_label: 'Оптимизировать кредиты',
+                },
+              ]}
+              onTap={() => onNavigate('refinance')}
+              onQuickAction={(trigger) => {
+                if (trigger.type === 'refi_opportunity') {
+                  onNavigate('refinance');
+                }
+              }}
+            />
+          )}
 
           {/* Debit Cards Widget - navigates to cards detail screen */}
           <DebitCardsWidget

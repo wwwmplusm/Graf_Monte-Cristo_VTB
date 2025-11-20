@@ -1,326 +1,189 @@
 <!-- ef4b90fa-e79d-40a6-8a14-5c9cf31c52f5 341fde11-9aba-4ca0-a823-c6bd4106f366 -->
-# План устранения критических и важных ошибок
+# Следующие шаги после критических исправлений
 
-## Критические исправления (Приоритет 1)
+## Текущий статус
 
-### 1. Исправить сохранение onboarding_id в БД
+### Выполнено:
 
-**Проблема:** `onboarding_id` не сохраняется, используется placeholder в `get_onboarding_status`.
+1. Исправлено сохранение onboarding_id в БД
+2. Исправлен finalize_onboarding с последовательной загрузкой данных
+3. Исправлены Payment endpoints (используют реальные account_id)
+4. Реализован расчет SDP на основе цели и дохода
+5. Сохранение настроек онбординга в БД
+6. Добавлено персистентное хранение данных (accounts, transactions, balances, credits)
+7. Улучшена обработка ошибок в payment endpoints
+8. Обновление dashboard cache после платежей
 
-**Файлы:**
+### Уже реализовано ранее:
 
-- `hktn/core/database.py` - добавить функции для работы с onboarding_sessions
-- `hktn/backend/services/onboarding.py:16` - сохранять onboarding_id при старте
-- `hktn/backend/services/onboarding.py:33` - получать user_id из БД
-
-**Изменения:**
-
-1. Обновить структуру таблицы `onboarding_sessions` в `init_db()`:
-```python
-CREATE TABLE IF NOT EXISTS onboarding_sessions (
-    onboarding_id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    user_name TEXT,
-    status TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP
-);
-```
-
-2. Добавить функции в `database.py`:
-```python
-def save_onboarding_session(onboarding_id: str, user_id: str, user_name: Optional[str] = None, status: str = "started") -> None
-
-def get_onboarding_session(onboarding_id: str) -> Optional[Dict[str, Any]]
-
-def update_onboarding_session_status(onboarding_id: str, status: str) -> None
-```
-
-3. Обновить `start_onboarding()` для сохранения в БД
-4. Обновить `get_onboarding_status()` для получения user_id из БД
+- Payment Consent реализован в `obr_client.py` и используется в `create_multiple_consents`
+- Объединенный экран `Step2BanksAndConsents.tsx` существует
+- Payment endpoints (MDP/ADP/SDP) реализованы
+- Onboarding API endpoints реализованы
 
 ---
 
-### 2. Исправить finalize_onboarding - запустить bootstrap автоматически
+## Что нужно доработать
 
-**Проблема:** После финализации не запускается автоматическая загрузка данных из банков.
+### 1. Улучшить Dashboard структуру
 
-**Файл:** `hktn/backend/services/onboarding.py:86`
+**Проблема:** Dashboard возвращает упрощенную структуру, некоторые поля используют placeholder значения.
 
-**Изменения:**
+**Файл:** `hktn/backend/services/analytics.py:368`
 
-В `finalize_onboarding()` после проверки consents добавить:
+**Что нужно сделать:**
 
-```python
-from .banking import bootstrap_bank
+1. **Улучшить расчет `sts_today.tomorrow.amount`:**
 
-bootstrap_results = []
-connected_banks = set()
-for consent in approved_consents:
-    bank_id = consent.get("bank_id")
-    if bank_id and bank_id not in connected_banks:
-        connected_banks.add(bank_id)
-        try:
-            result = await bootstrap_bank(bank_id, user_id)
-            bootstrap_results.append({
-                "bank_id": bank_id,
-                "status": "ok",
-                "accounts_count": len(result.get("accounts", [])),
-                "transactions_count": len(result.get("transactions", [])),
-            })
-        except Exception as e:
-            logger.error("Failed to bootstrap bank %s: %s", bank_id, e)
-            bootstrap_results.append({
-                "bank_id": bank_id,
-                "status": "error",
-                "error": str(e),
-            })
+- Сейчас используется упрощенная версия (равна `sts_daily_recommended`)
+- Нужно пересчитать STS на завтра с учетом событий завтрашнего дня
 
-# Обновить статус onboarding session
-update_onboarding_session_status(req.onboarding_id, "completed")
-```
+2. **Реализовать отслеживание `sts_today.spent`:**
 
-Вернуть `bootstrap_results` в ответе.
+- Сейчас всегда 0.0 (TODO)
+- Нужно суммировать транзакции за сегодня (debit транзакции)
+
+3. **Проверить структуру `loan_summary`:**
+
+- Должен содержать: `total_outstanding`, `mandatory_daily_payment`, `additional_daily_payment`, `total_monthly_payment`
+- Проверить что все поля заполняются правильно
+
+4. **Проверить структуру `savings_summary`:**
+
+- Должен содержать: `total_saved`, `daily_payment`, `target`, `progress_percent`
+- Проверить что все поля заполняются правильно
 
 ---
 
-### 3. Исправить Payment endpoints - использовать реальные account_id
+### 2. Проверить и доработать логику определения цели (Step 1.6)
 
-**Проблема:** Используется placeholder `account-{user_id}-{bank_id}` вместо реального account_id.
+**Проблема:** Согласно `back onboard.md`, кнопка "Закрыть кредиты" должна быть доступна ТОЛЬКО если у пользователя есть кредиты/кредитные карты.
 
-**Файл:** `hktn/backend/services/payments.py:17-193`
+**Файл:** `hktn/src/components/steps/Step5Questions.tsx`
 
-**Изменения:**
+**Что нужно сделать:**
 
-Для каждого метода (pay_mdp, pay_adp, pay_sdp):
-
-1. Получить реальные счета через `fetch_bank_accounts_with_consent`:
-```python
-from .banking import fetch_bank_accounts_with_consent
-
-accounts = await fetch_bank_accounts_with_consent(
-    bank_id, 
-    account_consent.consent_id, 
-    req.user_id
-)
-
-if not accounts:
-    raise HTTPException(status_code=400, detail="No accounts found")
-
-# Найти дебетовый счет для списания
-debtor_account = None
-for account in accounts:
-    account_type = account.get("accountType") or account.get("account_type", "").lower()
-    if account_type in ["checking", "current", "savings"]:
-        debtor_account = account.get("accountId") or account.get("account_id")
-        break
-
-if not debtor_account:
-    debtor_account = accounts[0].get("accountId") or accounts[0].get("account_id")
-```
-
-2. Для MDP/ADP: найти счет кредита через product agreements (если loan_id не указан)
-3. Для SDP: использовать deposit_id или найти через product agreements
-4. Использовать реальный `debtor_account` вместо placeholder
+1. Проверить что `checkUserHasLoans` правильно вызывается
+2. Проверить что UI скрывает кнопку "Закрыть кредиты" если `hasLoans === false`
+3. Проверить что backend endpoint `/api/user/has-loans` правильно работает
+4. Если кредитов нет, предлагать только цель "Накопить деньги"
 
 ---
 
-### 4. Реализовать расчет SDP (Savings Daily Payment)
+### 3. Улучшить обработку ошибок и edge cases
 
-**Проблема:** SDP использует placeholder `500.0` вместо реального расчета.
+**Что нужно сделать:**
 
-**Файл:** `hktn/backend/services/analytics.py:554`
+1. **Graceful degradation при недоступности банка:**
 
-**Изменения:**
+- Если один банк недоступен, продолжать работу с другими
+- Показывать понятные сообщения об ошибках
 
-Обновить `_calculate_savings_summary()`:
+2. **Обработка expired consents:**
 
-```python
-def _calculate_savings_summary(
-    deposits: List[Dict[str, Any]], 
-    target: Optional[float] = None,
-    monthly_income: Optional[float] = None,
-    goal_date: Optional[date] = None
-) -> Dict[str, Any]:
-    total_saved = sum(...)
-    
-    # Расчет SDP на основе цели
-    if target and goal_date:
-        today = date.today()
-        days_remaining = max(1, (goal_date - today).days)
-        remaining_amount = max(0, target - total_saved)
-        daily_payment = remaining_amount / days_remaining if days_remaining > 0 else 0.0
-    elif monthly_income:
-        # 10% от дохода в день (если цель не задана)
-        daily_payment = (monthly_income * 0.1) / 30.0
-    else:
-        daily_payment = 500.0  # Fallback
-    
-    # ... остальной код
-```
+- Проверять срок действия consent перед использованием
+- Автоматически обновлять consent если истек
 
-Обновить вызов в `_calculate_dashboard_metrics()`:
+3. **Валидация данных:**
 
-```python
-financial_inputs = _load_financial_inputs(user_id) or {}
-savings_target = financial_inputs.get("savings_target")
-savings_goal_date = _parse_iso_date(financial_inputs.get("savings_goal_date"))
-
-savings_summary = _calculate_savings_summary(
-    all_deposits,
-    target=savings_target,
-    monthly_income=categorization_result["estimated_monthly_income"],
-    goal_date=savings_goal_date
-)
-```
+- Проверка сумм платежей (не больше баланса)
+- Проверка наличия достаточных средств
 
 ---
 
-### 5. Сохранять настройки онбординга для использования в расчетах
+### 4. Тестирование всех endpoints
 
-**Проблема:** Dashboard использует hardcoded `repayment_speed="balanced"` и `strategy="avalanche"`.
+**Что нужно сделать:**
 
-**Файлы:**
+1. **Протестировать onboarding flow:**
 
-- `hktn/core/database.py:433` - расширить `upsert_user_financial_inputs`
-- `hktn/backend/services/onboarding.py:86` - сохранять настройки при финализации
-- `hktn/backend/services/analytics.py:264` - использовать настройки из БД
+- POST /api/onboarding/start
+- POST /api/onboarding/consents
+- GET /api/onboarding/consents/status
+- POST /api/onboarding/finalize
+- GET /api/onboarding/status
 
-**Изменения:**
+2. **Протестировать payment endpoints:**
 
-1. Расширить таблицу `user_financial_inputs`:
-```sql
-ALTER TABLE user_financial_inputs ADD COLUMN repayment_speed TEXT;
-ALTER TABLE user_financial_inputs ADD COLUMN repayment_strategy TEXT;
-ALTER TABLE user_financial_inputs ADD COLUMN savings_target REAL;
-ALTER TABLE user_financial_inputs ADD COLUMN savings_goal_date TEXT;
-```
+- POST /api/payments/mdp
+- POST /api/payments/adp
+- POST /api/payments/sdp
 
-2. Обновить `upsert_user_financial_inputs()` для принятия новых параметров
-3. Обновить `get_user_financial_inputs()` для возврата новых полей
-4. В `finalize_onboarding()` сохранять настройки из `req.goals` (если есть)
-5. В `_calculate_dashboard_metrics()` использовать настройки из БД:
-```python
-financial_inputs = _load_financial_inputs(user_id) or {}
-repayment_speed = financial_inputs.get("repayment_speed", "balanced")
-strategy = financial_inputs.get("repayment_strategy", "avalanche")
+3. **Протестировать dashboard:**
 
-adp_result = adp_calculation(
-    ...,
-    repayment_speed=repayment_speed,
-    strategy=strategy,
-)
-```
-
+- GET /api/dashboard
+- Проверить что все поля заполняются правильно
 
 ---
 
-## Важные исправления (Приоритет 2)
+### 5. Доработать frontend интеграцию
 
-### 6. Добавить персистентное хранение данных (accounts, transactions, balances, credits)
+**Что нужно сделать:**
 
-**Проблема:** Данные хранятся только в памяти, теряются при перезапуске.
+1. **Проверить интеграцию Step2BanksAndConsents с API:**
 
-**Файл:** `hktn/core/database.py`
+- Правильно ли отправляется запрос на `/api/onboarding/consents`
+- Правильно ли обрабатываются ответы
 
-**Изменения:**
+2. **Проверить Step2ConsentProgress:**
 
-1. Создать таблицы в `init_db()`:
-```sql
-CREATE TABLE IF NOT EXISTS accounts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL,
-    bank_id TEXT NOT NULL,
-    account_id TEXT NOT NULL,
-    account_data TEXT NOT NULL,  -- JSON
-    synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, bank_id, account_id)
-);
+- Правильно ли отображается прогресс создания consent
+- Правильно ли обрабатываются ошибки
 
-CREATE TABLE IF NOT EXISTS transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL,
-    bank_id TEXT NOT NULL,
-    account_id TEXT NOT NULL,
-    transaction_id TEXT NOT NULL,
-    transaction_data TEXT NOT NULL,  -- JSON
-    synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, bank_id, transaction_id)
-);
+3. **Проверить интеграцию платежей:**
 
-CREATE TABLE IF NOT EXISTS balances (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL,
-    bank_id TEXT NOT NULL,
-    account_id TEXT NOT NULL,
-    balance_data TEXT NOT NULL,  -- JSON
-    synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS credits (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL,
-    bank_id TEXT NOT NULL,
-    credit_id TEXT NOT NULL,
-    credit_data TEXT NOT NULL,  -- JSON
-    synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, bank_id, credit_id)
-);
-```
-
-2. Добавить функции сохранения:
-```python
-def save_accounts(user_id: str, bank_id: str, accounts: List[Dict[str, Any]]) -> None
-def save_transactions(user_id: str, bank_id: str, account_id: str, transactions: List[Dict[str, Any]]) -> None
-def save_balances(user_id: str, bank_id: str, account_id: str, balances: List[Dict[str, Any]]) -> None
-def save_credits(user_id: str, bank_id: str, credits: List[Dict[str, Any]]) -> None
-```
-
-3. Обновить `bootstrap_bank()` для сохранения данных в БД после загрузки
+- Правильно ли вызываются payment endpoints
+- Правильно ли обновляется UI после платежа
 
 ---
 
-### 7. Улучшить обработку ошибок в payment endpoints
+### 6. Улучшить расчет STS на завтра
 
-**Проблема:** Нет детальной обработки ошибок, нет валидации данных.
+**Проблема:** `sts_today.tomorrow.amount` использует упрощенную версию.
 
-**Файл:** `hktn/backend/services/payments.py`
+**Файл:** `hktn/backend/services/analytics.py:373`
 
-**Изменения:**
+**Что нужно сделать:**
 
-1. Добавить валидацию суммы платежа (должна быть > 0)
-2. Добавить проверку наличия достаточного баланса (опционально)
-3. Улучшить сообщения об ошибках
-4. Добавить логирование всех операций
+Пересчитать STS на завтра с учетом:
 
----
-
-### 8. Обновить dashboard cache после платежей
-
-**Проблема:** После платежа dashboard cache не обновляется.
-
-**Файл:** `hktn/backend/services/payments.py`
-
-**Изменения:**
-
-После успешного платежа добавить:
-
-```python
-from hktn.core.database import invalidate_dashboard_cache
-
-# После успешного платежа
-invalidate_dashboard_cache(req.user_id)
-```
+- Событий завтрашнего дня (платежи по кредитам, поступления)
+- Изменения баланса после завтрашних операций
+- Влияния завтрашнего дохода (если он ожидается)
 
 ---
 
-## Порядок выполнения
+### 7. Реализовать отслеживание потраченных средств (sts_today.spent)
 
-1. Исправить сохранение onboarding_id (задача 1)
-2. Исправить finalize_onboarding (задача 2)
-3. Исправить payment endpoints (задача 3)
-4. Реализовать расчет SDP (задача 4)
-5. Сохранять настройки онбординга (задача 5)
-6. Добавить персистентное хранение данных (задача 6)
-7. Улучшить обработку ошибок (задача 7)
-8. Обновить dashboard cache после платежей (задача 8)
+**Проблема:** `sts_today.spent` всегда 0.0.
+
+**Файл:** `hktn/backend/services/analytics.py:371`
+
+**Что нужно сделать:**
+
+Суммировать все debit транзакции за сегодня:
+
+- Фильтровать транзакции по дате (сегодня)
+- Фильтровать по типу (debit)
+- Суммировать суммы
+- Возвращать общую сумму потраченных средств
+
+---
+
+## Приоритет выполнения
+
+1. **Высокий приоритет:**
+
+- Улучшить Dashboard структуру (задача 1)
+- Проверить логику определения цели (задача 2)
+- Реализовать отслеживание потраченных средств (задача 7)
+
+2. **Средний приоритет:**
+
+- Улучшить расчет STS на завтра (задача 6)
+- Улучшить обработку ошибок (задача 3)
+
+3. **Низкий приоритет:**
+
+- Тестирование endpoints (задача 4)
+- Доработка frontend интеграции (задача 5)
