@@ -15,6 +15,7 @@ from hktn.core.database import (
     get_cached_dashboard,
     save_dashboard_cache,
     invalidate_dashboard_cache,
+    get_bank_data_cache,
 )
 
 from ..config import settings
@@ -359,6 +360,20 @@ async def _calculate_dashboard_metrics(user_id: str) -> Dict[str, object]:
         except (ValueError, TypeError):
             pass
     
+    # Собираем метаданные свежести данных
+    data_freshness = []
+    for consent in consents:
+        bank_id = consent.bank_id
+        cached = get_bank_data_cache(user_id, bank_id, "accounts")
+        if cached:
+            fetched_at_dt = datetime.fromisoformat(cached["fetched_at"])
+            age_minutes = int((datetime.utcnow() - fetched_at_dt).total_seconds() / 60)
+            data_freshness.append({
+                "bank_id": bank_id,
+                "fetched_at": cached["fetched_at"],
+                "age_minutes": age_minutes,
+            })
+    
     logger.info(
         "Dashboard payload for %s generated (balance=%.2f, sts=%.2f, mode=%s)",
         user_id,
@@ -383,6 +398,7 @@ async def _calculate_dashboard_metrics(user_id: str) -> Dict[str, object]:
         "health_score": health_score,
         "bank_statuses": bank_statuses,
         "user_mode": user_mode,
+        "data_freshness": data_freshness,
     }
 
 

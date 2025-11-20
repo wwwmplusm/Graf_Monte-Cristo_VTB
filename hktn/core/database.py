@@ -52,6 +52,7 @@ def init_db() -> None:
             _ensure_column(conn, "consents", "request_id", "TEXT")
             _ensure_column(conn, "consents", "approval_url", "TEXT")
             _ensure_column(conn, "consents", "consent_type", "TEXT")
+            _ensure_column(conn, "consents", "expires_at", "TEXT")  # ISO format datetime
             # Backfill consent type for legacy rows.
             conn.execute(
                 """
@@ -152,6 +153,20 @@ def init_db() -> None:
                 """
             )
             
+            # Кеш исходных банковских данных
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS bank_data_cache (
+                    user_id TEXT NOT NULL,
+                    bank_id TEXT NOT NULL,
+                    data_type TEXT NOT NULL,
+                    data_json TEXT NOT NULL,
+                    fetched_at TEXT NOT NULL,
+                    PRIMARY KEY (user_id, bank_id, data_type)
+                );
+                """
+            )
+            
             # Таблицы для персистентного хранения данных
             conn.execute(
                 """
@@ -229,22 +244,24 @@ def save_consent(
     request_id: Optional[str] = None,
     approval_url: Optional[str] = None,
     consent_type: str = "accounts",
+    expires_at: Optional[str] = None,
 ) -> None:
     """Persist or update a consent record."""
     with get_db_connection() as conn:
         conn.execute(
             """
-            INSERT INTO consents (user_id, bank_id, consent_id, status, request_id, approval_url, consent_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO consents (user_id, bank_id, consent_id, status, request_id, approval_url, consent_type, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(consent_id) DO UPDATE SET
                 status=excluded.status,
                 user_id=excluded.user_id,
                 bank_id=excluded.bank_id,
                 request_id=COALESCE(excluded.request_id, consents.request_id),
                 approval_url=COALESCE(excluded.approval_url, consents.approval_url),
-                consent_type=COALESCE(excluded.consent_type, consents.consent_type)
+                consent_type=COALESCE(excluded.consent_type, consents.consent_type),
+                expires_at=COALESCE(excluded.expires_at, consents.expires_at)
             """,
-            (user_id, bank_id, consent_id, status, request_id, approval_url, consent_type),
+            (user_id, bank_id, consent_id, status, request_id, approval_url, consent_type, expires_at),
         )
         conn.commit()
 
@@ -794,3 +811,54 @@ def save_credits(user_id: str, bank_id: str, credits: List[Dict[str, Any]]) -> N
             )
         conn.commit()
     logger.info("Saved %d credits for user %s, bank %s", len(credits), user_id, bank_id)
+
+
+def save_bank_data_cache(
+    user_id: str,
+    bank_id: str,
+    data_type: str,
+    data: Any,
+) -> None:
+    """Сохраняет данные банка в кеш с timestamp."""
+    from datetime import datetime
+    
+    fetched_at = datetime.utcnow().isoformat()
+    
+    with get_db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO bank_data_cache (user_id, bank_id, data_type, data_json, fetched_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(user_id, bank_id, data_type) DO UPDATE SET
+                data_json = excluded.data_json,
+                fetched_at = excluded.fetched_at
+            """,
+            (user_id, bank_id, data_type, json.dumps(data), fetched_at),
+        )
+        conn.commit()
+    logger.info("Saved %s data for user %s, bank %s at %s", data_type, user_id, bank_id, fetched_at)
+
+
+def get_bank_data_cache(user_id: str, bank_id: str, data_type: str) -> Optional[Dict[str, Any]]:
+    """Получает кешированные данные банка."""
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            """
+            SELECT data_json, fetched_at
+            FROM bank_data_cache
+            WHERE user_id = ? AND bank_id = ? AND data_type = ?
+            """,
+            (user_id, bank_id, data_type),
+        )
+        row = cursor.fetchone()
+    
+    if row:
+        try:
+            return {
+                "data": json.loads(row["data_json"]),
+                "fetched_at": row["fetched_at"],
+            }
+        except json.JSONDecodeError:
+            logger.warning("Failed to parse cached %s data for user %s, bank %s", data_type, user_id, bank_id)
+            return None
+    return None

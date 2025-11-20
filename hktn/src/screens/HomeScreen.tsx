@@ -6,6 +6,7 @@ import { DebitCardsWidget } from '../components/widgets/DebitCardsWidget';
 import { UpcomingEventsWidget } from '../components/widgets/UpcomingEventsWidget';
 import { RefinanceTriggersWidget } from '../components/widgets/RefinanceTriggersWidget';
 import { QuickActionsWidget } from '../components/widgets/QuickActionsWidget';
+import { DataFreshnessIndicator } from '../components/DataFreshnessIndicator';
 import { getDashboard, type DashboardResponse } from '../utils/api';
 import type { AppState } from '../data/mockAppState';
 
@@ -192,13 +193,18 @@ export function HomeScreen({ appState, onNavigate, onPayment, onDashboardUpdate 
         {/* Header */}
         <div className="bg-[var(--color-bg-primary)] border-b border-[var(--color-stroke-divider)] px-4 py-4">
           <div className="flex items-start justify-between">
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Привет, {appState.user.name.split(' ')[0]}!</h1>
               <p className="text-sm text-[var(--color-text-secondary)] mt-1">Ваши финансы под контролем</p>
               {dashboardData?.cache_info && dashboardData.cache_info.is_cached && (
                 <p className="text-xs text-[var(--color-text-secondary)] mt-1">
                   Обновлено {formatTimeAgo(dashboardData.cache_info.calculated_at)}
                 </p>
+              )}
+              {dashboardData?.data_freshness && dashboardData.data_freshness.length > 0 && (
+                <div className="mt-3">
+                  <DataFreshnessIndicator freshness={dashboardData.data_freshness} />
+                </div>
               )}
             </div>
             <button

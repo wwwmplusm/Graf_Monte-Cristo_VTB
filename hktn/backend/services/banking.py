@@ -7,7 +7,12 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from fastapi import HTTPException, status
 
-from hktn.core.database import add_bank_status_log, find_approved_consents
+from hktn.core.database import (
+    add_bank_status_log,
+    find_approved_consents,
+    get_bank_data_cache,
+    save_bank_data_cache,
+)
 from hktn.core.obr_client import OBRAPIClient
 
 from ..config import BankConfig, settings
@@ -318,8 +323,36 @@ async def fetch_bank_balances_with_consent(bank_id: str, consent_id: str, user_i
             return {"bank_id": bank_id, "status": "error", "balances": [], "message": error_message}
 
 
-async def bootstrap_bank(bank_id: str, user_id: str) -> Dict[str, Any]:
+async def bootstrap_bank(bank_id: str, user_id: str, use_cache: bool = True) -> Dict[str, Any]:
     """Aggregate initial payload for a connected bank."""
+    from datetime import datetime
+    
+    # Check cache first if requested
+    if use_cache:
+        cached_accounts = get_bank_data_cache(user_id, bank_id, "accounts")
+        cached_balances = get_bank_data_cache(user_id, bank_id, "balances")
+        cached_transactions = get_bank_data_cache(user_id, bank_id, "transactions")
+        cached_credits = get_bank_data_cache(user_id, bank_id, "credits")
+        
+        if all([cached_accounts, cached_balances, cached_transactions, cached_credits]):
+            logger.info(f"Serving bank {bank_id} data from cache for user {user_id}")
+            return {
+                "bank_id": bank_id,
+                "user_id": user_id,
+                "accounts": cached_accounts["data"].get("accounts", []),
+                "balances": cached_balances["data"].get("balances", []),
+                "transactions": cached_transactions["data"].get("transactions", [])[:100],
+                "credits": cached_credits["data"].get("credits", []),
+                "status": {
+                    "accounts": cached_accounts["data"].get("status_info", {"state": "ok"}),
+                    "balances": cached_balances["data"].get("status_info", {"state": "ok"}),
+                    "transactions": cached_transactions["data"].get("status_info", {"state": "ok"}),
+                    "credits": cached_credits["data"].get("status_info", {"state": "ok"}),
+                },
+                "fetched_at": cached_accounts["fetched_at"],
+                "from_cache": True,
+            }
+    
     config = _require_bank(bank_id)
     if not config.url:
         message = "Bank endpoint URL is not configured."
@@ -368,6 +401,25 @@ async def bootstrap_bank(bank_id: str, user_id: str) -> Dict[str, Any]:
         },
     }
 
+    # Save to cache
+    fetched_at = datetime.utcnow().isoformat()
+    save_bank_data_cache(user_id, bank_id, "accounts", {
+        "accounts": accounts_res.get("accounts") or [],
+        "status_info": status_block["accounts"]
+    })
+    save_bank_data_cache(user_id, bank_id, "balances", {
+        "balances": balances_res.get("balances") or [],
+        "status_info": status_block["balances"]
+    })
+    save_bank_data_cache(user_id, bank_id, "transactions", {
+        "transactions": transactions_res.get("transactions") or [],
+        "status_info": status_block["transactions"]
+    })
+    save_bank_data_cache(user_id, bank_id, "credits", {
+        "credits": credits_res.get("credits") or [],
+        "status_info": status_block["credits"]
+    })
+    
     result = {
         "bank_id": bank_id,
         "user_id": user_id,
@@ -377,6 +429,8 @@ async def bootstrap_bank(bank_id: str, user_id: str) -> Dict[str, Any]:
         "transactions": transactions_snapshot,
         "status": status_block,
         "balances": balances_res.get("balances") or [],
+        "fetched_at": fetched_at,
+        "from_cache": False,
     }
     add_bank_status_log(user_id, bank_id, "bootstrap", "ok", "Bootstrap payload generated.")
     return result

@@ -89,6 +89,12 @@ export interface CacheInfo {
     age_minutes: number | null;
 }
 
+export interface DataFreshness {
+    bank_id: string;
+    fetched_at: string;
+    age_minutes: number;
+}
+
 export interface DashboardResponse {
     sts_today: STSToday;
     loan_summary: LoanSummary;
@@ -104,6 +110,7 @@ export interface DashboardResponse {
     bank_statuses: BankStatus[];
     user_mode: 'loans' | 'deposits';
     cache_info: CacheInfo;
+    data_freshness: DataFreshness[];
 }
 
 export async function getDashboard(userId: string, forceRefresh: boolean = false): Promise<DashboardResponse> {

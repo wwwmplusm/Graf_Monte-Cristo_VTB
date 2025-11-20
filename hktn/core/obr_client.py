@@ -59,6 +59,7 @@ class ConsentInitResult:
     auto_approved: bool
     approval_url: Optional[str] = None
     request_id: Optional[str] = None
+    expires_at: Optional[str] = None  # ISO format datetime from bank
 
     @property
     def requires_manual_action(self) -> bool:
@@ -263,16 +264,26 @@ class OBRAPIClient:
             or data_section.get("autoApproved")
             or (status in AUTHORIZED_CONSENT_STATUSES)
         )
+        
+        # Parse expiration date from response
+        expires_at = (
+            response_data.get("expirationDateTime")
+            or response_data.get("expiration_date_time")
+            or data_section.get("expirationDateTime")
+            or data_section.get("expiration_date_time")
+            or response_data.get("expires_at")
+        )
 
         if not consent_id and not request_id:
             logger.error("Response data: %s", response_data)
             raise ValueError("API did not return a consent or request identifier.")
 
         logger.info(
-            "Consent initiated with consent_id=%s request_id=%s (status=%s)",
+            "Consent initiated with consent_id=%s request_id=%s (status=%s) expires_at=%s",
             consent_id,
             request_id,
             status,
+            expires_at,
         )
         return ConsentInitResult(
             consent_id=consent_id,
@@ -280,6 +291,7 @@ class OBRAPIClient:
             status=status,
             auto_approved=auto_approved,
             request_id=request_id,
+            expires_at=expires_at,
         )
 
     async def initiate_product_consent(
@@ -334,6 +346,12 @@ class OBRAPIClient:
              response_data.get("links", {}).get("consentApproval")
              or response_data.get("approval_url")
         )
+        
+        expires_at = (
+            response_data.get("expirationDateTime")
+            or response_data.get("valid_until")
+            or response_data.get("expires_at")
+        )
 
         return ConsentInitResult(
             consent_id=consent_id,
@@ -341,6 +359,7 @@ class OBRAPIClient:
             status=status,
             auto_approved=auto_approved,
             approval_url=approval_url,
+            expires_at=expires_at,
         )
 
     async def initiate_payment_consent(
@@ -447,12 +466,19 @@ class OBRAPIClient:
         status = response_data.get("status") or "pending"
         approval_url = response_data.get("links", {}).get("consentApproval")
         auto_approved = bool(response_data.get("auto_approved") or response_data.get("autoApproved"))
+        
+        expires_at = (
+            response_data.get("expirationDateTime")
+            or response_data.get("valid_until")
+            or response_data.get("expires_at")
+        )
 
         return ConsentInitResult(
             consent_id=consent_id,
             status=status,
             approval_url=approval_url,
             auto_approved=auto_approved,
+            expires_at=expires_at,
         )
 
     async def initiate_single_payment(

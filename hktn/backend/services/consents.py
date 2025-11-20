@@ -43,6 +43,7 @@ async def initiate_consent(req: ConsentInitiateRequest) -> Dict[str, Any]:
                 request_id=consent_meta.request_id,
                 approval_url=consent_meta.approval_url,
                 consent_type="accounts",
+                expires_at=consent_meta.expires_at,
             )
 
             if consent_meta.consent_id and consent_meta.auto_approved:
@@ -96,6 +97,7 @@ async def initiate_product_consent(req: ConsentInitiateRequest) -> Dict[str, Any
                 request_id=consent_meta.request_id,
                 approval_url=consent_meta.approval_url,
                 consent_type="products",
+                expires_at=consent_meta.expires_at,
             )
 
             if consent_meta.consent_id and consent_meta.auto_approved:
@@ -190,6 +192,7 @@ async def initiate_payment_consent(req: ConsentInitiateRequest) -> Dict[str, Any
                 request_id=consent_meta.request_id,
                 approval_url=consent_meta.approval_url,
                 consent_type="payments",
+                expires_at=consent_meta.expires_at,
             )
 
             if consent_meta.consent_id and consent_meta.auto_approved:
@@ -595,6 +598,18 @@ async def get_consents_status(user_id: str) -> Dict[str, Any]:
         consent_id = consent.get("consent_id")
         request_id = consent.get("request_id")
         approval_url = consent.get("approval_url")
+        
+        # НОВОЕ: Автопроверка pending консентов у банка
+        if status == "AWAITING_USER" and request_id:
+            try:
+                logger.info(f"Polling consent status for request_id={request_id} at bank {bank_id}")
+                poll_result = await poll_consent_status(user_id, bank_id, request_id)
+                if poll_result.get("state") == "approved":
+                    status = "APPROVED"
+                    consent_id = poll_result.get("consent_id") or consent_id
+                    logger.info(f"Consent {request_id} is now approved with consent_id={consent_id}")
+            except Exception as e:
+                logger.warning(f"Failed to poll consent status for {request_id}: {e}")
         
         if bank_id not in banks_dict:
             # Get bank config for bank_name

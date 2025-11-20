@@ -163,6 +163,13 @@ class CacheInfo(BaseModel):
     age_minutes: Optional[int] = None
 
 
+class DataFreshness(BaseModel):
+    """Метаданные о свежести данных банка."""
+    bank_id: str
+    fetched_at: str  # ISO timestamp
+    age_minutes: int
+
+
 class DashboardResponse(BaseModel):
     sts_today: STSToday
     loan_summary: LoanSummary
@@ -173,3 +180,4 @@ class DashboardResponse(BaseModel):
     bank_statuses: List[BankStatus]
     user_mode: Literal["loans", "deposits"]
     cache_info: CacheInfo
+    data_freshness: List[DataFreshness] = []  # Свежесть данных по каждому банку
