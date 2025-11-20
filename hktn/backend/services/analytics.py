@@ -245,8 +245,10 @@ async def _calculate_dashboard_metrics(user_id: str) -> Dict[str, object]:
     # 3. Расчет общей задолженности
     logger.info("Calculating debt from %d credit agreements", len(all_credits))
     if all_credits:
-        logger.debug("Sample credit agreement keys: %s", list(all_credits[0].keys())[:15] if all_credits else [])
-        logger.debug("Sample credit agreement: %s", {k: v for k, v in list(all_credits[0].items())[:10]} if all_credits else {})
+        logger.info("Sample credit agreement keys: %s", list(all_credits[0].keys())[:15] if all_credits else [])
+        logger.info("Sample credit agreement: %s", {k: v for k, v in list(all_credits[0].items())[:10]} if all_credits else {})
+        # Log the full first agreement for debugging
+        logger.info("Full first credit agreement: %s", all_credits[0])
     debt_result = total_debt_calculation(all_credits)
     logger.info("Debt calculation result: total_debt=%.2f, loans=%.2f, cards=%.2f, active_loans=%d",
                debt_result["total_debt_base"], 
