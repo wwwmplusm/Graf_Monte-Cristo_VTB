@@ -1,5 +1,7 @@
-import { ArrowLeft, TrendingDown, Info, Zap } from 'lucide-react';
+import { ArrowLeft, TrendingDown, Info, Zap, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { formatCurrency, formatDateFull, getMonthsUntil } from '../utils/formatters';
+import { getLoans, type Loan } from '../utils/api';
 import type { AppState } from '../data/mockAppState';
 
 interface LoansDetailScreenProps {
@@ -9,7 +11,33 @@ interface LoansDetailScreenProps {
 }
 
 export function LoansDetailScreen({ appState, onBack, onPayment }: LoansDetailScreenProps) {
-  const { loans, onboarding } = appState;
+  const { loans: loansFromState, onboarding } = appState;
+  const [loansData, setLoansData] = useState<Loan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [mdp, setMdp] = useState(loansFromState.summary.mandatory_daily_payment);
+  const [adp, setAdp] = useState(loansFromState.summary.additional_daily_payment);
+  const [totalOutstanding, setTotalOutstanding] = useState(loansFromState.summary.total_outstanding);
+
+  useEffect(() => {
+    const loadLoans = async () => {
+      try {
+        setLoading(true);
+        const response = await getLoans(appState.user.id);
+        setLoansData(response.loans || []);
+        setMdp(response.mdp || 0);
+        setAdp(response.adp || 0);
+        setTotalOutstanding(response.total_outstanding || 0);
+      } catch (error) {
+        console.error('Failed to load loans:', error);
+        // Fallback to state data
+        setLoansData(loansFromState.items);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadLoans();
+  }, [appState.user.id]);
 
   const priorityLabels = ['Высокий приоритет', 'Средний приоритет', 'Низкий приоритет'];
 
@@ -47,7 +75,7 @@ export function LoansDetailScreen({ appState, onBack, onPayment }: LoansDetailSc
           <div className="bg-white rounded-2xl p-5 border border-gray-200">
             <div className="text-sm text-gray-500 mb-2">Общий долг</div>
             <div className="text-3xl font-semibold text-gray-900 mb-4">
-              {formatCurrency(loans.summary.total_outstanding)}
+              {formatCurrency(totalOutstanding)}
             </div>
 
             <div className="flex items-center gap-2 mb-4">
@@ -65,7 +93,7 @@ export function LoansDetailScreen({ appState, onBack, onPayment }: LoansDetailSc
               >
                 <div className="text-xs text-gray-600 mb-1">Обязательный</div>
                 <div className="text-lg font-semibold text-gray-900">
-                  {formatCurrency(1200)}
+                  {formatCurrency(mdp)}
                 </div>
                 <div className="text-xs text-red-600 mt-1 font-medium">Оплатить</div>
               </button>
@@ -76,7 +104,7 @@ export function LoansDetailScreen({ appState, onBack, onPayment }: LoansDetailSc
               >
                 <div className="text-xs text-gray-600 mb-1">Дополнительный</div>
                 <div className="text-lg font-semibold text-gray-900">
-                  {formatCurrency(540)}
+                  {formatCurrency(adp)}
                 </div>
                 <div className="text-xs text-purple-600 mt-1 font-medium">Оплатить</div>
               </button>
@@ -101,30 +129,39 @@ export function LoansDetailScreen({ appState, onBack, onPayment }: LoansDetailSc
           {/* Loans list */}
           <div>
             <h2 className="font-semibold text-gray-900 mb-3">Все кредиты</h2>
-            <div className="space-y-3">
-              {loans.items.map((loan) => {
-                const monthsLeft = getMonthsUntil(loan.maturity_date);
-                return (
-                  <div
-                    key={loan.id}
-                    className="bg-white rounded-2xl p-5 border border-gray-200"
-                    data-api-binding="loans[]"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="font-semibold text-gray-900 mb-1">{loan.bank}</div>
-                        <div className="text-xs text-gray-500">{loan.type}</div>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+              </div>
+            ) : loansData.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                Нет активных кредитов
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {loansData.map((loan) => {
+                  const monthsLeft = loan.maturity_date ? getMonthsUntil(loan.maturity_date) : 0;
+                  return (
+                    <div
+                      key={loan.id}
+                      className="bg-white rounded-2xl p-5 border border-gray-200"
+                      data-api-binding="loans[]"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <div className="font-semibold text-gray-900 mb-1">{loan.bank}</div>
+                          <div className="text-xs text-gray-500">{loan.type}</div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs ${
+                          loan.priority === 1
+                            ? 'bg-red-50 text-red-700'
+                            : loan.priority === 2
+                            ? 'bg-orange-50 text-orange-700'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {priorityLabels[loan.priority - 1] || `Приоритет ${loan.priority}`}
+                        </div>
                       </div>
-                      <div className={`px-2 py-1 rounded-full text-xs ${
-                        loan.priority === 1
-                          ? 'bg-red-50 text-red-700'
-                          : loan.priority === 2
-                          ? 'bg-orange-50 text-orange-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {priorityLabels[loan.priority - 1]}
-                      </div>
-                    </div>
 
                     <div className="grid grid-cols-2 gap-4 mb-3">
                       <div>
@@ -152,9 +189,10 @@ export function LoansDetailScreen({ appState, onBack, onPayment }: LoansDetailSc
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Simulator hint */}

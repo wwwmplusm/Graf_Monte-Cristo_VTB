@@ -16,6 +16,7 @@ from hktn.core.database import (
     save_dashboard_cache,
     invalidate_dashboard_cache,
     get_bank_data_cache,
+    save_bank_data_cache,
 )
 
 from ..config import settings
@@ -140,6 +141,20 @@ async def _calculate_dashboard_metrics(user_id: str) -> Dict[str, object]:
         balances_res = balances_results[i]
         transactions_res = transactions_results[i]
         
+        # Save fresh data to cache
+        save_bank_data_cache(user_id, consent.bank_id, "accounts", {
+            "accounts": accounts_res.get("accounts") or [],
+            "status_info": {"state": accounts_res.get("status"), "message": accounts_res.get("message")}
+        })
+        save_bank_data_cache(user_id, consent.bank_id, "balances", {
+            "balances": balances_res.get("balances") or [],
+            "status_info": {"state": balances_res.get("status"), "message": balances_res.get("message")}
+        })
+        save_bank_data_cache(user_id, consent.bank_id, "transactions", {
+            "transactions": transactions_res.get("transactions") or [],
+            "status_info": {"state": transactions_res.get("status"), "message": transactions_res.get("message")}
+        })
+        
         if accounts_res.get("status") == "ok":
             all_accounts.extend(accounts_res.get("accounts") or [])
         if balances_res.get("status") == "ok":
@@ -189,13 +204,20 @@ async def _calculate_dashboard_metrics(user_id: str) -> Dict[str, object]:
             for consent in product_consents
         ]
         credit_results = await asyncio.gather(*credit_tasks, return_exceptions=True)
-        for result in credit_results:
+        for i, result in enumerate(credit_results):
             if isinstance(result, dict) and result.get("status") == "ok":
                 credits = result.get("credits") or []
                 logger.info("Fetched %d credits from bank, sample product types: %s", 
                            len(credits), 
                            [c.get("productType") or c.get("product_type") or c.get("type", "unknown") for c in credits[:3]] if credits else [])
                 all_credits.extend(credits)
+                
+                # Save credits to cache
+                consent = product_consents[i]
+                save_bank_data_cache(user_id, consent.bank_id, "credits", {
+                    "credits": credits,
+                    "status_info": {"state": result.get("status"), "message": result.get("message")}
+                })
     else:
         logger.warning("No product consents found for user %s", user_id)
     
@@ -361,18 +383,14 @@ async def _calculate_dashboard_metrics(user_id: str) -> Dict[str, object]:
             pass
     
     # Собираем метаданные свежести данных
+    # Данные только что загружены, поэтому используем текущий fetched_at
     data_freshness = []
     for consent in consents:
-        bank_id = consent.bank_id
-        cached = get_bank_data_cache(user_id, bank_id, "accounts")
-        if cached:
-            fetched_at_dt = datetime.fromisoformat(cached["fetched_at"])
-            age_minutes = int((datetime.utcnow() - fetched_at_dt).total_seconds() / 60)
-            data_freshness.append({
-                "bank_id": bank_id,
-                "fetched_at": cached["fetched_at"],
-                "age_minutes": age_minutes,
-            })
+        data_freshness.append({
+            "bank_id": consent.bank_id,
+            "fetched_at": fetched_at,
+            "age_minutes": 0,  # Данные только что загружены
+        })
     
     logger.info(
         "Dashboard payload for %s generated (balance=%.2f, sts=%.2f, mode=%s)",

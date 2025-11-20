@@ -236,13 +236,15 @@ export async function getTotalLoanAmount(user_id: string): Promise<number> {
         const response = await fetch(`${API_BASE_URL}/api/dashboard?user_id=${user_id}`);
         
         if (!response.ok) {
-            // Если dashboard недоступен, возвращаем 0 (безопасное значение)
+            console.error("Dashboard API returned error:", response.status, response.statusText);
             return 0;
         }
 
         const data = await response.json();
         const loanSummary = data.loan_summary || {};
         const totalOutstanding = loanSummary.total_outstanding || 0;
+        
+        console.log("Total loan amount from API:", totalOutstanding, "| User mode:", data.user_mode);
         
         // Возвращаем сумму всех кредитов
         return totalOutstanding;
@@ -251,4 +253,127 @@ export async function getTotalLoanAmount(user_id: string): Promise<number> {
         // В случае ошибки возвращаем 0 (безопасное значение)
         return 0;
     }
+}
+
+// Loans API
+export interface Loan {
+    id: string;
+    bank: string;
+    type: string;
+    balance: number;
+    rate: number;
+    monthly_payment: number;
+    priority: number;
+    is_refi_candidate?: boolean;
+    maturity_date?: string;
+}
+
+export interface LoansResponse {
+    status: string;
+    loans: Loan[];
+    total_outstanding: number;
+    mdp: number;
+    adp: number;
+    strategy: string;
+}
+
+export async function getLoans(user_id: string): Promise<LoansResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/loans?user_id=${user_id}`);
+    
+    if (!response.ok) {
+        throw new Error(`Failed to fetch loans: ${response.statusText}`);
+    }
+    
+    return response.json();
+}
+
+// Deposits API
+export interface Deposit {
+    id: string;
+    bank: string;
+    type: string;
+    balance: number;
+    rate: number;
+    term_months: number;
+    maturity_date?: string;
+}
+
+export interface DepositsResponse {
+    status: string;
+    deposits: Deposit[];
+    total_saved: number;
+    sdp: number;
+    target: number;
+    progress_percent: number;
+}
+
+export async function getDeposits(user_id: string): Promise<DepositsResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/deposits?user_id=${user_id}`);
+    
+    if (!response.ok) {
+        throw new Error(`Failed to fetch deposits: ${response.statusText}`);
+    }
+    
+    return response.json();
+}
+
+// Refinance API
+export interface RefinanceOffer {
+    id: string;
+    bank: string;
+    rate: number;
+    term_months: number;
+    strategy: string;
+    monthly_payment: number;
+    savings: number;
+    loan_amount: number;
+    commission: number;
+    breakeven_months: number;
+}
+
+export interface RefinanceResponse {
+    status: string;
+    offers: RefinanceOffer[];
+    financing_needed: boolean;
+    urgency: string;
+    triggers: string[];
+}
+
+export async function getRefinanceOffers(user_id: string): Promise<RefinanceResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/refinance/optimize-loans?user_id=${user_id}`);
+    
+    if (!response.ok) {
+        throw new Error(`Failed to fetch refinance offers: ${response.statusText}`);
+    }
+    
+    return response.json();
+}
+
+export interface RefinanceApplicationRequest {
+    user_id: string;
+    offer_id: string;
+    loan_ids: string[];
+    phone: string;
+}
+
+export interface RefinanceApplicationResponse {
+    status: string;
+    application_id?: string;
+    message: string;
+}
+
+export async function applyRefinance(req: RefinanceApplicationRequest): Promise<RefinanceApplicationResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/refinance/apply`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(req),
+    });
+    
+    if (!response.ok) {
+        throw new Error(`Failed to submit refinance application: ${response.statusText}`);
+    }
+    
+    return response.json();
 }

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from hktn.core.database import init_db
 from .config import settings
-from .routers import analytics, banks, consents, auth, payments, onboarding
+from .routers import analytics, banks, consents, auth, payments, onboarding, loans, refinance
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("finpulse.backend")
@@ -30,6 +30,8 @@ def create_app() -> FastAPI:
     app.include_router(analytics.router)
     app.include_router(payments.router)
     app.include_router(onboarding.router)
+    app.include_router(loans.router)
+    app.include_router(refinance.router)
 
     @app.on_event("startup")
     def _on_startup() -> None:

@@ -683,3 +683,258 @@ def sts_calculation(
         "min_low_point": round(min_low_point, 2),
     }
 
+
+def loan_ranking_engine(
+    active_loans: List[Dict[str, Any]],
+    catalog_products: List[Dict[str, Any]],
+    strategy: str = "avalanche",
+    refi_threshold: float = 2.0,
+) -> List[Dict[str, Any]]:
+    """
+    Ранжирует кредиты по приоритету погашения.
+    
+    Returns:
+        ordered_loans[] с полями: priority_rank, is_refi_candidate, potential_refi_rate
+    """
+    if not active_loans:
+        return []
+    
+    # ЭТАП 1: Обогащение данных (Refi Check)
+    enriched_loans = []
+    for loan in active_loans:
+        current_rate = float(loan.get("interest_rate") or loan.get("rate") or 0.0)
+        product_type = (loan.get("product_type") or loan.get("productType") or "loan").lower()
+        
+        # Ищем лучшую ставку в каталоге
+        best_market_rate = current_rate
+        for product in catalog_products:
+            cat_type = (product.get("productType") or product.get("product_type") or "").lower()
+            if cat_type == product_type:
+                cat_rate = float(product.get("interestRate") or product.get("rate") or current_rate)
+                if cat_rate < best_market_rate:
+                    best_market_rate = cat_rate
+        
+        is_refi_candidate = (current_rate - best_market_rate) >= refi_threshold
+        
+        enriched_loan = {
+            **loan,
+            "is_refi_candidate": is_refi_candidate,
+            "potential_refi_rate": best_market_rate if is_refi_candidate else current_rate,
+        }
+        enriched_loans.append(enriched_loan)
+    
+    # ЭТАП 2: Ранжирование (Sorting)
+    if strategy.lower() == "snowball":
+        # Snowball: сначала мелкие
+        sorted_loans = sorted(
+            enriched_loans,
+            key=lambda x: (
+                float(x.get("amount") or x.get("outstanding_balance") or 0.0),
+                -float(x.get("interest_rate") or x.get("rate") or 0.0),
+            ),
+        )
+    else:
+        # Avalanche: сначала дорогие по ставке
+        sorted_loans = sorted(
+            enriched_loans,
+            key=lambda x: (
+                -float(x.get("interest_rate") or x.get("rate") or 0.0),
+                float(x.get("amount") or x.get("outstanding_balance") or 0.0),
+            ),
+        )
+    
+    # ЭТАП 3: Присвоение рангов
+    for idx, loan in enumerate(sorted_loans):
+        loan["priority_rank"] = idx + 1
+    
+    return sorted_loans
+
+
+def financing_need_detector(
+    estimated_monthly_income: float,
+    active_loans: List[Dict[str, Any]],
+    sts_status: str,
+    ordered_loans: List[Dict[str, Any]],
+    total_overdue_debt_base: float = 0.0,
+    dti_threshold: float = 0.5,
+) -> Dict[str, Any]:
+    """
+    Определяет, нуждается ли клиент в финансировании.
+    
+    Returns:
+        {
+            "financing_needed": bool,
+            "urgency": "NONE" | "WATCH" | "MEDIUM" | "HIGH",
+            "triggers": List[str],
+            "refi_candidates": List[str],
+        }
+    """
+    triggers = []
+    refi_candidates = []
+    
+    # ЭТАП 1: Расчет ПДН (DTI)
+    total_payments = sum(
+        float(loan.get("monthly_payment") or loan.get("Monthly_Payment") or 0.0)
+        for loan in active_loans
+    )
+    
+    if estimated_monthly_income > 0:
+        dti = total_payments / estimated_monthly_income
+    else:
+        dti = 1.0  # Доход не подтвержден
+    
+    # ЭТАП 2: Сбор триггеров
+    if total_overdue_debt_base > 0:
+        triggers.append("overdue")
+    
+    if sts_status == "DANGER":
+        triggers.append("gap_risk")
+    
+    if dti > dti_threshold:
+        triggers.append("high_dti")
+    
+    # Refi opportunity (только если нет просрочек)
+    if total_overdue_debt_base == 0:
+        for loan in ordered_loans:
+            if loan.get("is_refi_candidate"):
+                triggers.append("refi_opportunity")
+                loan_id = loan.get("id") or loan.get("agreement_id")
+                if loan_id:
+                    refi_candidates.append(str(loan_id))
+    
+    # ЭТАП 3: Оценка срочности
+    if "overdue" in triggers or "gap_risk" in triggers:
+        urgency = "HIGH"
+    elif "high_dti" in triggers:
+        urgency = "MEDIUM"
+    elif "refi_opportunity" in triggers:
+        urgency = "WATCH"
+    else:
+        urgency = "NONE"
+    
+    # ЭТАП 4: Финал
+    financing_needed = urgency != "NONE"
+    
+    return {
+        "financing_needed": financing_needed,
+        "urgency": urgency,
+        "triggers": triggers,
+        "refi_candidates": refi_candidates,
+        "dti": dti,
+    }
+
+
+def calculate_pmt(rate: float, nper: int, pv: float) -> float:
+    """Рассчитывает аннуитетный платеж (PMT функция)."""
+    if rate == 0:
+        return pv / nper
+    
+    monthly_rate = rate / 100.0 / 12.0
+    return pv * (monthly_rate * (1 + monthly_rate) ** nper) / ((1 + monthly_rate) ** nper - 1)
+
+
+def best_financing_offer_selector(
+    refi_candidates: List[str],
+    active_loans: List[Dict[str, Any]],
+    catalog_offers: List[Dict[str, Any]],
+    estimated_monthly_income: float = 0.0,
+    min_rate_diff: float = 1.5,
+) -> List[Dict[str, Any]]:
+    """
+    Подбирает наиболее выгодные условия финансирования.
+    
+    Returns:
+        top_offers[] с полями: offer_data, strategy, old_monthly_payment, new_monthly_payment, monthly_saving
+    """
+    if not refi_candidates or not catalog_offers:
+        return []
+    
+    # Найти кредиты-кандидаты
+    candidate_loans = [
+        loan for loan in active_loans
+        if (loan.get("id") or loan.get("agreement_id")) in refi_candidates
+    ]
+    
+    if not candidate_loans:
+        return []
+    
+    all_offers = []
+    
+    # ЭТАП 1: Сценарий "Точечный выстрел" (Single Refi)
+    for loan in candidate_loans:
+        loan_amount = float(loan.get("amount") or loan.get("outstanding_balance") or 0.0)
+        loan_rate = float(loan.get("interest_rate") or loan.get("rate") or 0.0)
+        old_payment = float(loan.get("monthly_payment") or loan.get("Monthly_Payment") or 0.0)
+        
+        if loan_amount <= 0 or old_payment <= 0:
+            continue
+        
+        # Ищем подходящие офферы
+        for offer in catalog_offers:
+            offer_type = (offer.get("productType") or offer.get("product_type") or "").lower()
+            if offer_type not in ["loan", "refinance"]:
+                continue
+            
+            offer_rate = float(offer.get("interestRate") or offer.get("rate") or 0.0)
+            min_amount = float(offer.get("minAmount") or offer.get("min_amount") or 0.0)
+            max_amount = float(offer.get("maxAmount") or offer.get("max_amount") or float("inf"))
+            max_term = int(offer.get("termMonths") or offer.get("max_term_months") or 60)
+            
+            # Проверка условий
+            if min_amount <= loan_amount <= max_amount:
+                if loan_rate - offer_rate >= min_rate_diff:
+                    # Рассчитываем новый платеж
+                    new_payment = calculate_pmt(offer_rate, max_term, loan_amount)
+                    saving = old_payment - new_payment
+                    
+                    if saving > 0:
+                        all_offers.append({
+                            "offer_data": offer,
+                            "strategy": "Refinance One",
+                            "target_loan_id": loan.get("id") or loan.get("agreement_id"),
+                            "old_monthly_payment": old_payment,
+                            "new_monthly_payment": new_payment,
+                            "monthly_saving": saving,
+                            "loan_amount": loan_amount,
+                        })
+    
+    # ЭТАП 2: Сценарий "Консолидация" (All-in)
+    total_debt_sum = sum(
+        float(loan.get("amount") or loan.get("outstanding_balance") or 0.0)
+        for loan in candidate_loans
+    )
+    total_current_pay = sum(
+        float(loan.get("monthly_payment") or loan.get("Monthly_Payment") or 0.0)
+        for loan in candidate_loans
+    )
+    
+    if total_debt_sum > 0 and total_current_pay > 0:
+        for offer in catalog_offers:
+            offer_type = (offer.get("productType") or offer.get("product_type") or "").lower()
+            if offer_type not in ["loan", "refinance", "consolidation"]:
+                continue
+            
+            offer_rate = float(offer.get("interestRate") or offer.get("rate") or 0.0)
+            max_amount = float(offer.get("maxAmount") or offer.get("max_amount") or float("inf"))
+            max_term = int(offer.get("termMonths") or offer.get("max_term_months") or 60)
+            
+            if max_amount >= total_debt_sum:
+                new_total_pay = calculate_pmt(offer_rate, max_term, total_debt_sum)
+                total_saving = total_current_pay - new_total_pay
+                
+                if total_saving > 0:
+                    all_offers.append({
+                        "offer_data": offer,
+                        "strategy": "Consolidation",
+                        "target_loan_id": None,  # Все кредиты
+                        "old_monthly_payment": total_current_pay,
+                        "new_monthly_payment": new_total_pay,
+                        "monthly_saving": total_saving,
+                        "loan_amount": total_debt_sum,
+                    })
+    
+    # ЭТАП 3: Сортировка и Выбор
+    sorted_offers = sorted(all_offers, key=lambda x: x["monthly_saving"], reverse=True)
+    
+    return sorted_offers[:3]  # Топ-3
+

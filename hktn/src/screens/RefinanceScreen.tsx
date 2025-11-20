@@ -1,6 +1,7 @@
-import { ArrowLeft, TrendingDown, Check, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, TrendingDown, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { formatCurrency } from '../utils/formatters';
+import { getRefinanceOffers, applyRefinance, type RefinanceOffer } from '../utils/api';
 import type { AppState } from '../data/mockAppState';
 
 interface RefinanceScreenProps {
@@ -11,20 +12,59 @@ interface RefinanceScreenProps {
 export function RefinanceScreen({ appState, onBack }: RefinanceScreenProps) {
   const [selectedOffer, setSelectedOffer] = useState<string | null>(null);
   const [applicationStatus, setApplicationStatus] = useState<'idle' | 'pending' | 'approved' | 'declined'>('idle');
+  const [offers, setOffers] = useState<RefinanceOffer[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const isLoansMode = appState.mode === 'loans';
-  const offers = isLoansMode ? appState.offers.refi : appState.offers.deposits;
+
+  useEffect(() => {
+    const loadOffers = async () => {
+      if (!isLoansMode) {
+        // Для режима deposits пока используем mock данные
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        const response = await getRefinanceOffers(appState.user.id);
+        setOffers(response.offers || []);
+      } catch (error) {
+        console.error('Failed to load refinance offers:', error);
+        setOffers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadOffers();
+  }, [appState.user.id, isLoansMode]);
 
   const handleSelectOffer = (offerId: string) => {
     setSelectedOffer(offerId);
   };
 
-  const handleSubmitApplication = () => {
+  const handleSubmitApplication = async () => {
+    if (!selectedOffer) return;
+    
     setApplicationStatus('pending');
-    // Simulate API call
-    setTimeout(() => {
-      setApplicationStatus(Math.random() > 0.3 ? 'approved' : 'declined');
-    }, 2000);
+    try {
+      const result = await applyRefinance({
+        user_id: appState.user.id,
+        offer_id: selectedOffer,
+        loan_ids: [], // TODO: получить из выбранного оффера
+        phone: '+7 (999) 123-45-67', // TODO: получить из профиля
+      });
+      
+      if (result.status === 'approved') {
+        setApplicationStatus('approved');
+      } else {
+        setApplicationStatus('declined');
+      }
+    } catch (error) {
+      console.error('Failed to submit refinance application:', error);
+      setApplicationStatus('declined');
+    }
   };
 
   if (applicationStatus === 'pending') {
@@ -125,10 +165,22 @@ export function RefinanceScreen({ appState, onBack }: RefinanceScreenProps) {
           </div>
 
           {/* Offers list */}
-          <div className="space-y-3">
-            {isLoansMode ? (
-              // Loan refinancing offers
-              (offers as AppState['offers']['refi']).map((offer) => (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+            </div>
+          ) : offers.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              {isLoansMode 
+                ? 'Нет доступных предложений рефинансирования'
+                : 'Нет доступных предложений по вкладам'
+              }
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {isLoansMode ? (
+                // Loan refinancing offers
+                offers.map((offer) => (
                 <button
                   key={offer.id}
                   onClick={() => handleSelectOffer(offer.id)}
@@ -173,16 +225,18 @@ export function RefinanceScreen({ appState, onBack }: RefinanceScreenProps) {
                         <TrendingDown className="w-4 h-4" />
                         <span className="font-medium">Экономия {formatCurrency(offer.savings)}</span>
                       </div>
-                      <div className="text-xs text-gray-500">
-                        Окупается за {offer.breakeven_months} мес.
-                      </div>
+                      {offer.breakeven_months > 0 && (
+                        <div className="text-xs text-gray-500">
+                          Окупается за {offer.breakeven_months} мес.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </button>
-              ))
-            ) : (
-              // Deposit offers
-              (offers as AppState['offers']['deposits']).map((offer) => (
+                ))
+              ) : (
+                // Deposit offers (mock для deposits режима)
+                (appState.offers.deposits || []).map((offer) => (
                 <button
                   key={offer.id}
                   onClick={() => handleSelectOffer(offer.id)}
@@ -234,9 +288,10 @@ export function RefinanceScreen({ appState, onBack }: RefinanceScreenProps) {
                     )}
                   </div>
                 </button>
-              ))
-            )}
-          </div>
+                ))
+              )}
+            </div>
+          )}
 
           {/* Submit button */}
           {selectedOffer && (

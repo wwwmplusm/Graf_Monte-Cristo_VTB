@@ -55,11 +55,11 @@ def init_db() -> None:
             _ensure_column(conn, "consents", "expires_at", "TEXT")  # ISO format datetime
             # Backfill consent type for legacy rows.
             conn.execute(
-                """
+                r"""
                 UPDATE consents
                 SET bank_id = substr(bank_id, 1, length(bank_id) - 9),
                     consent_type = COALESCE(consent_type, 'products')
-                WHERE bank_id LIKE '%\_products' ESCAPE '\\'
+                WHERE bank_id LIKE '%\_products' ESCAPE '\'
                 """
             )
             conn.execute(

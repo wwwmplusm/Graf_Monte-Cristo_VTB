@@ -4,7 +4,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
 import { Slider } from "../ui/slider";
-import { checkUserHasLoans, getTotalLoanAmount } from "../../utils/api";
+import { getTotalLoanAmount } from "../../utils/api";
 
 type GoalType = "save" | "payoff";
 type Speed = "conservative" | "optimal" | "fast";
@@ -53,10 +53,10 @@ export function Step5Questions({ onNext, onBack, initialGoals, userId }: Step5Qu
     const checkLoans = async () => {
       if (userId) {
         try {
-          const [hasLoansResult, totalAmount] = await Promise.all([
-            checkUserHasLoans(userId),
-            getTotalLoanAmount(userId),
-          ]);
+          // Делаем только один запрос к dashboard вместо двух параллельных
+          const totalAmount = await getTotalLoanAmount(userId);
+          const hasLoansResult = totalAmount > 0;
+          
           setHasLoans(hasLoansResult);
           setTotalLoanAmount(totalAmount);
         } catch (error) {

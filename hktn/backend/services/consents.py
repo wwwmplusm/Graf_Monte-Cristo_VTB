@@ -600,16 +600,17 @@ async def get_consents_status(user_id: str) -> Dict[str, Any]:
         approval_url = consent.get("approval_url")
         
         # НОВОЕ: Автопроверка pending консентов у банка
-        if status == "AWAITING_USER" and request_id:
+        # Проверяем только account consents, так как только они поддерживают polling по request_id
+        if status == "AWAITING_USER" and request_id and consent_type == "accounts":
             try:
-                logger.info(f"Polling consent status for request_id={request_id} at bank {bank_id}")
+                logger.info(f"Polling account consent status for request_id={request_id} at bank {bank_id}")
                 poll_result = await poll_consent_status(user_id, bank_id, request_id)
                 if poll_result.get("state") == "approved":
                     status = "APPROVED"
                     consent_id = poll_result.get("consent_id") or consent_id
-                    logger.info(f"Consent {request_id} is now approved with consent_id={consent_id}")
+                    logger.info(f"Account consent {request_id} is now approved with consent_id={consent_id}")
             except Exception as e:
-                logger.warning(f"Failed to poll consent status for {request_id}: {e}")
+                logger.warning(f"Failed to poll account consent status for {request_id}: {e}")
         
         if bank_id not in banks_dict:
             # Get bank config for bank_name
