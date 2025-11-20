@@ -17,6 +17,8 @@ export function HomeScreen({ appState, onNavigate, onPayment, onDashboardUpdate 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState<DashboardResponse | null>(null);
+
+  const [refreshing, setRefreshing] = useState(false);
   
   // Store callback in ref to avoid dependency issues
   const onDashboardUpdateRef = useRef(onDashboardUpdate);
@@ -25,6 +27,45 @@ export function HomeScreen({ appState, onNavigate, onPayment, onDashboardUpdate 
   }, [onDashboardUpdate]);
   
   const hasConsents = Object.keys(appState.user.consents).length > 0;
+
+  const formatTimeAgo = (timestamp: string | null): string => {
+    if (!timestamp) return 'только что';
+    
+    try {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      if (diffMins < 1) return 'только что';
+      if (diffMins < 60) return `${diffMins} мин назад`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours} ч назад`;
+      const diffDays = Math.floor(diffHours / 24);
+      return `${diffDays} дн назад`;
+    } catch {
+      return 'неизвестно';
+    }
+  };
+
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    
+    setRefreshing(true);
+    try {
+      setError(null);
+      const data = await getDashboard(appState.user.id, true);
+      setDashboardData(data);
+      if (onDashboardUpdateRef.current) {
+        onDashboardUpdateRef.current(data);
+      }
+    } catch (err) {
+      console.error('Failed to refresh dashboard:', err);
+      setError(err instanceof Error ? err.message : 'Ошибка обновления данных');
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     if (!hasConsents) {
@@ -147,8 +188,32 @@ export function HomeScreen({ appState, onNavigate, onPayment, onDashboardUpdate 
       <div className="max-w-lg mx-auto">
         {/* Header */}
         <div className="bg-[var(--color-bg-primary)] border-b border-[var(--color-stroke-divider)] px-4 py-4">
-          <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Привет, {appState.user.name.split(' ')[0]}!</h1>
-          <p className="text-sm text-[var(--color-text-secondary)] mt-1">Ваши финансы под контролем</p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Привет, {appState.user.name.split(' ')[0]}!</h1>
+              <p className="text-sm text-[var(--color-text-secondary)] mt-1">Ваши финансы под контролем</p>
+              {dashboardData?.cache_info && dashboardData.cache_info.is_cached && (
+                <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+                  Обновлено {formatTimeAgo(dashboardData.cache_info.calculated_at)}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing || loading}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Обновить данные"
+            >
+              <svg 
+                className={`w-5 h-5 text-[var(--color-text-secondary)] ${refreshing ? 'animate-spin' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Widgets */}

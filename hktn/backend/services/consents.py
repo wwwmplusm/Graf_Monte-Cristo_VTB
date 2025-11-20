@@ -136,19 +136,46 @@ async def initiate_product_consent(req: ConsentInitiateRequest) -> Dict[str, Any
 
 async def initiate_payment_consent(req: ConsentInitiateRequest) -> Dict[str, Any]:
     """Initiate payment consent for the selected bank."""
+    from hktn.core.database import find_consent_by_type
+    
     bank_config = get_bank_config(req.bank_id, require_url=True)
     async with bank_client(req.bank_id) as client:
         try:
             logger.info("Initiating PAYMENT consent for user '%s' with bank '%s'", req.user_id, req.bank_id)
             
-            # Try to get account consent to fetch real debtor_account
+            # Get debtor_account from user's accounts if account consent exists
+            debtor_account: Optional[str] = None
             account_consent = find_consent_by_type(req.user_id, req.bank_id, "accounts")
-            account_consent_id = account_consent.consent_id if account_consent else None
+            if account_consent:
+                try:
+                    accounts = await client.fetch_accounts_with_consent(req.user_id, account_consent.consent_id)
+                    if accounts and len(accounts) > 0:
+                        # Extract account_id from first account
+                        first_account = accounts[0]
+                        debtor_account = (
+                            first_account.get("accountId")
+                            or first_account.get("account_id")
+                            or first_account.get("id")
+                            or first_account.get("identification")
+                        )
+                        if debtor_account:
+                            logger.info("Using account %s as debtor_account for payment consent", debtor_account)
+                except Exception as e:
+                    logger.warning("Failed to fetch accounts for payment consent: %s", e)
             
+            # Fallback: use placeholder format if no account found
+            if not debtor_account:
+                debtor_account = f"account-{req.user_id}-{req.bank_id}"
+                logger.warning("Using placeholder debtor_account: %s", debtor_account)
+            
+            # Create VRP consent (Variable Recurring Payment) for flexible payments
             consent_meta = await client.initiate_payment_consent(
-                req.user_id,
-                user_display_name=None,
-                account_consent_id=account_consent_id
+                user_id=req.user_id,
+                debtor_account=debtor_account,
+                consent_type="vrp",
+                vrp_max_individual_amount=100000.0,  # Max 100k per payment
+                vrp_daily_limit=500000.0,  # Max 500k per day
+                vrp_monthly_limit=10000000.0,  # Max 10M per month
             )
             if not consent_meta or not (consent_meta.consent_id or consent_meta.request_id):
                 raise HTTPException(status_code=502, detail="Bank did not provide payment consent identifier.")

@@ -112,8 +112,8 @@ export function Step2ConsentProgress({
         setConsentsStatus(response.results);
         setOverallStatus(response.overall_status);
 
-        // If all are completed, stop polling
-        if (response.overall_status === "completed") {
+        // If all are completed or there are errors, stop polling
+        if (response.overall_status === "completed" || response.overall_status === "error") {
           setPolling(false);
         }
       } catch (err: any) {
@@ -157,9 +157,19 @@ export function Step2ConsentProgress({
           );
         });
 
+        // Check if all consents are in error state
+        const allErrors = selectedBanks.every((bank) => {
+          const bankStatus = status.find((s) => s.bank_id === bank.bank_id);
+          return bankStatus?.account_consent?.status === "error";
+        });
+
         if (allApproved && !hasPending) {
           setPolling(false);
           setOverallStatus("completed");
+        } else if (allErrors && !hasPending) {
+          // Stop polling if all consents failed
+          setPolling(false);
+          setOverallStatus("error");
         }
       } catch (err) {
         console.error("Failed to poll consents status:", err);

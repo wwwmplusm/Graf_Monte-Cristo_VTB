@@ -157,6 +157,12 @@ class BankStatus(BaseModel):
     fetched_at: Optional[str] = None
 
 
+class CacheInfo(BaseModel):
+    is_cached: bool
+    calculated_at: Optional[str] = None
+    age_minutes: Optional[int] = None
+
+
 class DashboardResponse(BaseModel):
     sts_today: STSToday
     loan_summary: LoanSummary
@@ -166,3 +172,4 @@ class DashboardResponse(BaseModel):
     health_score: HealthScore
     bank_statuses: List[BankStatus]
     user_mode: Literal["loans", "deposits"]
+    cache_info: CacheInfo

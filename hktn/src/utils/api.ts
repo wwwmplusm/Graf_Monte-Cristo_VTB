@@ -83,6 +83,12 @@ export interface BankStatus {
     fetched_at?: string;
 }
 
+export interface CacheInfo {
+    is_cached: boolean;
+    calculated_at: string | null;
+    age_minutes: number | null;
+}
+
 export interface DashboardResponse {
     sts_today: STSToday;
     loan_summary: LoanSummary;
@@ -97,10 +103,16 @@ export interface DashboardResponse {
     health_score: HealthScore;
     bank_statuses: BankStatus[];
     user_mode: 'loans' | 'deposits';
+    cache_info: CacheInfo;
 }
 
-export async function getDashboard(userId: string): Promise<DashboardResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/dashboard?user_id=${userId}`);
+export async function getDashboard(userId: string, forceRefresh: boolean = false): Promise<DashboardResponse> {
+    const params = new URLSearchParams({ user_id: userId });
+    if (forceRefresh) {
+        params.append('force_refresh', 'true');
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/api/dashboard?${params}`);
 
     if (!response.ok) {
         throw new Error(`Failed to fetch dashboard: ${response.statusText}`);

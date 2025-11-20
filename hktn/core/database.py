@@ -110,12 +110,12 @@ def init_db() -> None:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS onboarding_sessions (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    onboarding_id TEXT PRIMARY KEY,
                     user_id TEXT NOT NULL,
-                    banks_connected TEXT,
-                    products_consented TEXT,
-                    goal_profile TEXT,
-                    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    user_name TEXT,
+                    status TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    completed_at TIMESTAMP
                 );
                 """
             )
@@ -127,8 +127,91 @@ def init_db() -> None:
                     next_salary_date TEXT,
                     credit_payment_amount REAL,
                     credit_payment_date TEXT,
+                    repayment_speed TEXT,
+                    repayment_strategy TEXT,
+                    savings_target REAL,
+                    savings_goal_date TEXT,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+                """
+            )
+            _ensure_column(conn, "user_financial_inputs", "repayment_speed", "TEXT")
+            _ensure_column(conn, "user_financial_inputs", "repayment_strategy", "TEXT")
+            _ensure_column(conn, "user_financial_inputs", "savings_target", "REAL")
+            _ensure_column(conn, "user_financial_inputs", "savings_goal_date", "TEXT")
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS dashboard_cache (
+                    user_id TEXT PRIMARY KEY,
+                    dashboard_data TEXT NOT NULL,
+                    synced_at TEXT NOT NULL,
+                    calculated_at TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+                    version INTEGER DEFAULT 1
+                );
+                """
+            )
+            
+            # Таблицы для персистентного хранения данных
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS accounts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    bank_id TEXT NOT NULL,
+                    account_id TEXT NOT NULL,
+                    account_data TEXT NOT NULL,
+                    synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, bank_id, account_id)
+                );
+                """
+            )
+            
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS transactions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    bank_id TEXT NOT NULL,
+                    account_id TEXT NOT NULL,
+                    transaction_id TEXT NOT NULL,
+                    transaction_data TEXT NOT NULL,
+                    synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, bank_id, transaction_id)
+                );
+                """
+            )
+            
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS balances (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    bank_id TEXT NOT NULL,
+                    account_id TEXT NOT NULL,
+                    balance_data TEXT NOT NULL,
+                    synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS credits (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL,
+                    bank_id TEXT NOT NULL,
+                    credit_id TEXT NOT NULL,
+                    credit_data TEXT NOT NULL,
+                    synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, bank_id, credit_id)
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_dashboard_expires 
+                ON dashboard_cache(expires_at);
                 """
             )
             conn.commit()
@@ -332,18 +415,86 @@ def get_recent_bank_status_logs(user_id: str, limit: int = 10) -> List[Dict[str,
     return [dict(row) for row in rows]
 
 
-def commit_onboarding_session(user_id: str, banks: List[str], products: List[Dict[str, Any]], goal: Dict[str, Any]) -> None:
-    """Save a summary of the completed onboarding session."""
+def save_onboarding_session(
+    onboarding_id: str,
+    user_id: str,
+    user_name: Optional[str] = None,
+    status: str = "started",
+) -> None:
+    """Save or update an onboarding session."""
     with get_db_connection() as conn:
         conn.execute(
             """
-            INSERT INTO onboarding_sessions (user_id, banks_connected, products_consented, goal_profile)
-            VALUES (?, ?, ?, ?);
+            INSERT INTO onboarding_sessions (onboarding_id, user_id, user_name, status, created_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(onboarding_id) DO UPDATE SET
+                user_id = excluded.user_id,
+                user_name = excluded.user_name,
+                status = excluded.status
             """,
-            (user_id, json.dumps(banks), json.dumps(products), json.dumps(goal)),
+            (onboarding_id, user_id, user_name, status),
         )
         conn.commit()
-    logger.info("Committed onboarding session for user %s", user_id)
+    logger.info("Saved onboarding session %s for user %s (status=%s)", onboarding_id, user_id, status)
+
+
+def get_onboarding_session(onboarding_id: str) -> Optional[Dict[str, Any]]:
+    """Return onboarding session by onboarding_id if it exists."""
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            """
+            SELECT onboarding_id, user_id, user_name, status, created_at, completed_at
+            FROM onboarding_sessions
+            WHERE onboarding_id = ?
+            """,
+            (onboarding_id,),
+        )
+        row = cursor.fetchone()
+    if row:
+        return {
+            "onboarding_id": row["onboarding_id"],
+            "user_id": row["user_id"],
+            "user_name": row["user_name"],
+            "status": row["status"],
+            "created_at": row["created_at"],
+            "completed_at": row["completed_at"],
+        }
+    return None
+
+
+def update_onboarding_session_status(onboarding_id: str, status: str) -> None:
+    """Update onboarding session status."""
+    with get_db_connection() as conn:
+        if status == "completed":
+            conn.execute(
+                """
+                UPDATE onboarding_sessions
+                SET status = ?, completed_at = CURRENT_TIMESTAMP
+                WHERE onboarding_id = ?
+                """,
+                (status, onboarding_id),
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE onboarding_sessions
+                SET status = ?
+                WHERE onboarding_id = ?
+                """,
+                (status, onboarding_id),
+            )
+        conn.commit()
+    logger.info("Updated onboarding session %s status to %s", onboarding_id, status)
+
+
+def commit_onboarding_session(user_id: str, banks: List[str], products: List[Dict[str, Any]], goal: Dict[str, Any]) -> None:
+    """Save a summary of the completed onboarding session (legacy function, kept for compatibility)."""
+    # This function is kept for backward compatibility but uses the new structure
+    # Generate a new onboarding_id for this session
+    import uuid
+    onboarding_id = str(uuid.uuid4())
+    save_onboarding_session(onboarding_id, user_id, status="completed")
+    logger.info("Committed onboarding session for user %s (legacy)", user_id)
 
 
 def get_latest_onboarding_session(user_id: str) -> Optional[Dict[str, Any]]:
@@ -361,24 +512,16 @@ def get_latest_onboarding_session(user_id: str) -> Optional[Dict[str, Any]]:
         )
         row = cursor.fetchone()
 
-    if not row:
-        return None
-
-    def _safe_parse(value: Optional[str], default: Any) -> Any:
-        if not value:
-            return default
-        try:
-            return json.loads(value)
-        except json.JSONDecodeError:
-            return default
-
-    return {
-        "user_id": row["user_id"],
-        "banks_connected": _safe_parse(row["banks_connected"], []),
-        "products_consented": _safe_parse(row["products_consented"], []),
-        "goal_profile": _safe_parse(row["goal_profile"], {}),
-        "completed_at": row["completed_at"],
-    }
+    if row:
+        return {
+            "onboarding_id": row["onboarding_id"],
+            "user_id": row["user_id"],
+            "user_name": row["user_name"],
+            "status": row["status"],
+            "created_at": row["created_at"],
+            "completed_at": row["completed_at"],
+        }
+    return None
 
 
 def get_user_goal(user_id: str) -> Optional[Dict[str, Any]]:
@@ -418,31 +561,46 @@ def upsert_user_financial_inputs(
     next_salary_date: Optional[str] = None,
     credit_payment_amount: Optional[float] = None,
     credit_payment_date: Optional[str] = None,
+    repayment_speed: Optional[str] = None,
+    repayment_strategy: Optional[str] = None,
+    savings_target: Optional[float] = None,
+    savings_goal_date: Optional[str] = None,
 ) -> None:
-    """Persist salary/credit metadata used by the simplified analytics flow."""
+    """Persist salary/credit metadata and onboarding settings used by the simplified analytics flow."""
     with get_db_connection() as conn:
         conn.execute(
             """
-            INSERT INTO user_financial_inputs (user_id, salary_amount, next_salary_date, credit_payment_amount, credit_payment_date, updated_at)
-            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            INSERT INTO user_financial_inputs (
+                user_id, salary_amount, next_salary_date, credit_payment_amount, credit_payment_date,
+                repayment_speed, repayment_strategy, savings_target, savings_goal_date, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             ON CONFLICT(user_id) DO UPDATE SET
-                salary_amount = excluded.salary_amount,
-                next_salary_date = excluded.next_salary_date,
-                credit_payment_amount = excluded.credit_payment_amount,
-                credit_payment_date = excluded.credit_payment_date,
+                salary_amount = COALESCE(excluded.salary_amount, user_financial_inputs.salary_amount),
+                next_salary_date = COALESCE(excluded.next_salary_date, user_financial_inputs.next_salary_date),
+                credit_payment_amount = COALESCE(excluded.credit_payment_amount, user_financial_inputs.credit_payment_amount),
+                credit_payment_date = COALESCE(excluded.credit_payment_date, user_financial_inputs.credit_payment_date),
+                repayment_speed = COALESCE(excluded.repayment_speed, user_financial_inputs.repayment_speed),
+                repayment_strategy = COALESCE(excluded.repayment_strategy, user_financial_inputs.repayment_strategy),
+                savings_target = COALESCE(excluded.savings_target, user_financial_inputs.savings_target),
+                savings_goal_date = COALESCE(excluded.savings_goal_date, user_financial_inputs.savings_goal_date),
                 updated_at = CURRENT_TIMESTAMP
             """,
-            (user_id, salary_amount, next_salary_date, credit_payment_amount, credit_payment_date),
+            (
+                user_id, salary_amount, next_salary_date, credit_payment_amount, credit_payment_date,
+                repayment_speed, repayment_strategy, savings_target, savings_goal_date
+            ),
         )
         conn.commit()
 
 
 def get_user_financial_inputs(user_id: str) -> Optional[Dict[str, Any]]:
-    """Return stored salary/payment metadata for a user if present."""
+    """Return stored salary/payment metadata and onboarding settings for a user if present."""
     with get_db_connection() as conn:
         cursor = conn.execute(
             """
-            SELECT user_id, salary_amount, next_salary_date, credit_payment_amount, credit_payment_date
+            SELECT user_id, salary_amount, next_salary_date, credit_payment_amount, credit_payment_date,
+                   repayment_speed, repayment_strategy, savings_target, savings_goal_date
             FROM user_financial_inputs
             WHERE user_id = ?
             """,
@@ -450,3 +608,189 @@ def get_user_financial_inputs(user_id: str) -> Optional[Dict[str, Any]]:
         )
         row = cursor.fetchone()
     return dict(row) if row else None
+
+
+def get_cached_dashboard(user_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Получает кешированный dashboard из БД.
+    
+    Returns:
+        Dict с ключами: dashboard_data, synced_at, calculated_at, expires_at
+        или None если кеш не найден или устарел
+    """
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            """
+            SELECT dashboard_data, synced_at, calculated_at, expires_at
+            FROM dashboard_cache
+            WHERE user_id = ? AND expires_at > datetime('now')
+            """,
+            (user_id,),
+        )
+        row = cursor.fetchone()
+    
+    if row:
+        try:
+            return {
+                "dashboard_data": json.loads(row["dashboard_data"]),
+                "synced_at": row["synced_at"],
+                "calculated_at": row["calculated_at"],
+                "expires_at": row["expires_at"],
+            }
+        except json.JSONDecodeError:
+            logger.warning("Failed to parse cached dashboard data for user %s", user_id)
+            return None
+    return None
+
+
+def save_dashboard_cache(user_id: str, dashboard_data: Dict[str, Any], ttl_minutes: int = 30) -> None:
+    """
+    Сохраняет dashboard в кеш.
+    
+    Args:
+        user_id: ID пользователя
+        dashboard_data: Данные dashboard для сохранения
+        ttl_minutes: Время жизни кеша в минутах (по умолчанию 30)
+    """
+    from datetime import datetime, timedelta
+    
+    now = datetime.utcnow()
+    expires_at = now + timedelta(minutes=ttl_minutes)
+    
+    with get_db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO dashboard_cache 
+            (user_id, dashboard_data, synced_at, calculated_at, expires_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                dashboard_data = excluded.dashboard_data,
+                synced_at = excluded.synced_at,
+                calculated_at = excluded.calculated_at,
+                expires_at = excluded.expires_at
+            """,
+            (
+                user_id,
+                json.dumps(dashboard_data),
+                now.isoformat(),
+                now.isoformat(),
+                expires_at.isoformat(),
+            ),
+        )
+        conn.commit()
+    logger.info("Saved dashboard cache for user %s (expires at %s)", user_id, expires_at.isoformat())
+
+
+def invalidate_dashboard_cache(user_id: str) -> None:
+    """
+    Инвалидирует кеш dashboard для пользователя.
+    
+    Args:
+        user_id: ID пользователя
+    """
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            "DELETE FROM dashboard_cache WHERE user_id = ?",
+            (user_id,),
+        )
+        conn.commit()
+        if cursor.rowcount > 0:
+            logger.info("Invalidated dashboard cache for user %s", user_id)
+
+
+def cleanup_expired_cache() -> None:
+    """Удаляет устаревшие кеши из БД."""
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            "DELETE FROM dashboard_cache WHERE expires_at < datetime('now')"
+        )
+        conn.commit()
+        deleted_count = cursor.rowcount
+        if deleted_count > 0:
+            logger.info("Cleaned up %d expired dashboard cache entries", deleted_count)
+
+
+def save_accounts(user_id: str, bank_id: str, accounts: List[Dict[str, Any]]) -> None:
+    """Save accounts data to database."""
+    if not accounts:
+        return
+    with get_db_connection() as conn:
+        for account in accounts:
+            account_id = account.get("accountId") or account.get("account_id")
+            if not account_id:
+                continue
+            conn.execute(
+                """
+                INSERT INTO accounts (user_id, bank_id, account_id, account_data, synced_at)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(user_id, bank_id, account_id) DO UPDATE SET
+                    account_data = excluded.account_data,
+                    synced_at = CURRENT_TIMESTAMP
+                """,
+                (user_id, bank_id, account_id, json.dumps(account)),
+            )
+        conn.commit()
+    logger.info("Saved %d accounts for user %s, bank %s", len(accounts), user_id, bank_id)
+
+
+def save_transactions(user_id: str, bank_id: str, account_id: str, transactions: List[Dict[str, Any]]) -> None:
+    """Save transactions data to database."""
+    if not transactions:
+        return
+    with get_db_connection() as conn:
+        for tx in transactions:
+            tx_id = tx.get("transactionId") or tx.get("transaction_id") or tx.get("id")
+            if not tx_id:
+                continue
+            conn.execute(
+                """
+                INSERT INTO transactions (user_id, bank_id, account_id, transaction_id, transaction_data, synced_at)
+                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(user_id, bank_id, transaction_id) DO UPDATE SET
+                    transaction_data = excluded.transaction_data,
+                    synced_at = CURRENT_TIMESTAMP
+                """,
+                (user_id, bank_id, account_id, tx_id, json.dumps(tx)),
+            )
+        conn.commit()
+    logger.info("Saved %d transactions for user %s, bank %s, account %s", len(transactions), user_id, bank_id, account_id)
+
+
+def save_balances(user_id: str, bank_id: str, account_id: str, balances: List[Dict[str, Any]]) -> None:
+    """Save balances data to database."""
+    if not balances:
+        return
+    with get_db_connection() as conn:
+        for balance in balances:
+            conn.execute(
+                """
+                INSERT INTO balances (user_id, bank_id, account_id, balance_data, synced_at)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                """,
+                (user_id, bank_id, account_id, json.dumps(balance)),
+            )
+        conn.commit()
+    logger.info("Saved %d balances for user %s, bank %s, account %s", len(balances), user_id, bank_id, account_id)
+
+
+def save_credits(user_id: str, bank_id: str, credits: List[Dict[str, Any]]) -> None:
+    """Save credits data to database."""
+    if not credits:
+        return
+    with get_db_connection() as conn:
+        for credit in credits:
+            credit_id = credit.get("agreementId") or credit.get("agreement_id") or credit.get("id")
+            if not credit_id:
+                continue
+            conn.execute(
+                """
+                INSERT INTO credits (user_id, bank_id, credit_id, credit_data, synced_at)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(user_id, bank_id, credit_id) DO UPDATE SET
+                    credit_data = excluded.credit_data,
+                    synced_at = CURRENT_TIMESTAMP
+                """,
+                (user_id, bank_id, credit_id, json.dumps(credit)),
+            )
+        conn.commit()
+    logger.info("Saved %d credits for user %s, bank %s", len(credits), user_id, bank_id)

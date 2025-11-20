@@ -12,6 +12,9 @@ from hktn.core.database import (
     find_approved_consents,
     find_consent_by_type,
     get_user_financial_inputs,
+    get_cached_dashboard,
+    save_dashboard_cache,
+    invalidate_dashboard_cache,
 )
 
 from ..config import settings
@@ -99,7 +102,7 @@ def _calculate_safe_to_spend(
     return {"value": safe_daily, "days": days_until_salary}
 
 
-async def get_dashboard_metrics(user_id: str) -> Dict[str, object]:
+async def _calculate_dashboard_metrics(user_id: str) -> Dict[str, object]:
     consents = _require_consents(user_id)
     fetched_at = datetime.utcnow().isoformat()
     
@@ -257,13 +260,17 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, object]:
         categorization_result["debt_obligations_status"],
     )
     
-    # 5. Расчет ADP (используем настройки по умолчанию, можно получить из онбординга)
+    # 5. Расчет ADP (используем настройки из онбординга или значения по умолчанию)
+    financial_inputs = _load_financial_inputs(user_id) or {}
+    repayment_speed = financial_inputs.get("repayment_speed", "balanced")
+    strategy = financial_inputs.get("repayment_strategy", "avalanche")
+    
     adp_result = adp_calculation(
         mdp_result["mdp_today_base"],
         debt_result["active_loans"],
         categorization_result["estimated_monthly_income"],
-        repayment_speed="balanced",  # TODO: получить из онбординга
-        strategy="avalanche",  # TODO: получить из онбординга
+        repayment_speed=repayment_speed,
+        strategy=strategy,
     )
     
     # 6. Расчет STS
@@ -286,11 +293,20 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, object]:
         "total_monthly_payment": mdp_result["mdp_today_base"] * 30,  # Приблизительно
     }
     
-    # Формируем savings_summary
-    savings_summary = _calculate_savings_summary(all_deposits)
-    
     # Формируем events_next_30d
     financial_inputs = _load_financial_inputs(user_id)
+    
+    # Получаем параметры для расчета SDP
+    savings_target = financial_inputs.get("savings_target")
+    savings_goal_date = _parse_iso_date(financial_inputs.get("savings_goal_date"))
+    
+    # Формируем savings_summary с реальным расчетом SDP
+    savings_summary = _calculate_savings_summary(
+        all_deposits,
+        target=savings_target,
+        monthly_income=categorization_result["estimated_monthly_income"],
+        goal_date=savings_goal_date,
+    )
     next_income_start = categorization_result["next_income_window"].get("start")
     if next_income_start:
         try:
@@ -366,6 +382,86 @@ async def get_dashboard_metrics(user_id: str) -> Dict[str, object]:
         "bank_statuses": bank_statuses,
         "user_mode": user_mode,
     }
+
+
+def is_fresh(cached: Dict[str, Any], max_age_minutes: int = 15) -> bool:
+    """
+    Проверяет свежесть кеша.
+    
+    Args:
+        cached: Словарь с ключами calculated_at, expires_at
+        max_age_minutes: Максимальный возраст кеша в минутах
+    
+    Returns:
+        True если кеш свежий, False если устарел
+    """
+    try:
+        calculated_at = datetime.fromisoformat(cached["calculated_at"])
+        max_age = timedelta(minutes=max_age_minutes)
+        age = datetime.utcnow() - calculated_at
+        return age < max_age
+    except (KeyError, ValueError, TypeError) as e:
+        logger.warning("Failed to check cache freshness: %s", e)
+        return False
+
+
+def get_dashboard_cache_info(user_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Возвращает информацию о кеше dashboard для пользователя.
+    
+    Returns:
+        Dict с ключами: calculated_at, age_minutes или None если кеш не найден
+    """
+    cached = get_cached_dashboard(user_id)
+    if not cached:
+        return None
+    
+    try:
+        calculated_at = datetime.fromisoformat(cached["calculated_at"])
+        age = datetime.utcnow() - calculated_at
+        age_minutes = int(age.total_seconds() / 60)
+        
+        return {
+            "calculated_at": cached["calculated_at"],
+            "age_minutes": age_minutes,
+        }
+    except (KeyError, ValueError, TypeError) as e:
+        logger.warning("Failed to get cache info: %s", e)
+        return None
+
+
+async def get_dashboard_metrics(user_id: str, force_refresh: bool = False) -> Dict[str, object]:
+    """
+    Получает dashboard метрики с умным кешированием.
+    
+    Strategy:
+    1. Проверяем кеш в БД
+    2. Если свежий (< 15 минут) - возвращаем из кеша
+    3. Если устарел или force_refresh - пересчитываем
+    4. Сохраняем в кеш
+    
+    Args:
+        user_id: ID пользователя
+        force_refresh: Принудительно обновить данные (игнорировать кеш)
+    
+    Returns:
+        Dict с данными dashboard
+    """
+    # 1. Проверяем кеш (если не force_refresh)
+    if not force_refresh:
+        cached = get_cached_dashboard(user_id)
+        if cached and is_fresh(cached, max_age_minutes=15):
+            logger.info("Serving dashboard from cache for user %s", user_id)
+            return cached["dashboard_data"]
+    
+    # 2. Получаем свежие данные (существующий код)
+    logger.info("Calculating fresh dashboard for user %s (force_refresh=%s)", user_id, force_refresh)
+    dashboard_data = await _calculate_dashboard_metrics(user_id)
+    
+    # 3. Сохраняем в кеш
+    save_dashboard_cache(user_id, dashboard_data, ttl_minutes=30)
+    
+    return dashboard_data
 
 
 BALANCE_CURRENCY_WHITELIST = {"RUB", "RUR"}
@@ -468,7 +564,12 @@ def _calculate_loan_summary(credits: List[Dict[str, Any]]) -> Dict[str, float]:
     }
 
 
-def _calculate_savings_summary(deposits: List[Dict[str, Any]], target: Optional[float] = None) -> Dict[str, Any]:
+def _calculate_savings_summary(
+    deposits: List[Dict[str, Any]],
+    target: Optional[float] = None,
+    monthly_income: Optional[float] = None,
+    goal_date: Optional[date] = None,
+) -> Dict[str, Any]:
     """Вычисляет сводку по накоплениям: SDP, total_saved, progress."""
     total_saved = 0.0
     for deposit in deposits:
@@ -476,9 +577,21 @@ def _calculate_savings_summary(deposits: List[Dict[str, Any]], target: Optional[
         if balance:
             total_saved += balance
     
-    # SDP (Savings Daily Payment) - дневной платеж на накопления
-    # Обычно составляет 5-10% от дохода или фиксированная сумма
-    daily_payment = 500.0  # Placeholder - можно вычислить из финансовых данных
+    # Расчет SDP (Savings Daily Payment) на основе цели
+    daily_payment = 500.0  # Fallback по умолчанию
+    
+    if target and goal_date:
+        # Если задана цель и дата достижения цели
+        today = date.today()
+        days_remaining = max(1, (goal_date - today).days)
+        remaining_amount = max(0, target - total_saved)
+        if days_remaining > 0:
+            daily_payment = remaining_amount / days_remaining
+        else:
+            daily_payment = 0.0
+    elif monthly_income and monthly_income > 0:
+        # Если цель не задана, используем 10% от дохода в день
+        daily_payment = (monthly_income * 0.1) / 30.0
     
     # Target по умолчанию
     if target is None:
@@ -488,7 +601,7 @@ def _calculate_savings_summary(deposits: List[Dict[str, Any]], target: Optional[
     
     return {
         "total_saved": round(total_saved, 2),
-        "daily_payment": daily_payment,
+        "daily_payment": round(daily_payment, 2),
         "target": target,
         "progress_percent": progress_percent,
     }

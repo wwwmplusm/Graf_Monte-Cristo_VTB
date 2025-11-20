@@ -86,7 +86,7 @@ class OBRAPIClient:
         return {
             "Authorization": f"Bearer {bank_token}",
             "X-Requesting-Bank": self.team_id,
-            "x-fapi-interaction-id": str(uuid.uuid4()),
+            "X-Fapi-Interaction-Id": str(uuid.uuid4()),
         }
 
     @api_retry
@@ -162,22 +162,15 @@ class OBRAPIClient:
                 return self._bank_token
 
             logger.info("Requesting new bank token from %s", self.api_base_url)
-            logger.debug("Using client_id: %s (length: %d)", self.team_id, len(self.team_id) if self.team_id else 0)
-            logger.debug("Using client_secret: %s (length: %d)", "***" if self.team_secret else "None", len(self.team_secret) if self.team_secret else 0)
 
             @api_retry
             async def _fetch_token_with_retry():
-                try:
-                    response = await self._client.post(
-                        "/auth/bank-token",
-                        params={"client_id": self.team_id, "client_secret": self.team_secret},
-                    )
-                    response.raise_for_status()
-                    return response.json()
-                except Exception as e:
-                    logger.error("Failed to get bank token: %s", e)
-                    logger.error("Request URL: %s/auth/bank-token?client_id=%s&client_secret=***", self.api_base_url, self.team_id)
-                    raise
+                response = await self._client.post(
+                    "/auth/bank-token",
+                    params={"client_id": self.team_id, "client_secret": self.team_secret},
+                )
+                response.raise_for_status()
+                return response.json()
 
             token_data = await _fetch_token_with_retry()
             access_token = token_data["access_token"]
@@ -191,50 +184,66 @@ class OBRAPIClient:
             logger.info("Successfully obtained and validated new bank token.")
             return self._bank_token
 
-    # !!! УБРАЛИ @retry ОТСЮДА !!!
     async def initiate_consent(self, user_id: str) -> ConsentInitResult:
         """
         Step 1: Create an account access consent request at the bank.
-        Returns metadata about the consent, including approval URL when provided.
+        Strictly follows openapi.json:
+        - Path: POST /account-consents/request
+        - Body: ConsentRequestBody (flat)
+        - Headers: X-Requesting-Bank
+        - Params: None (client_id is in body)
         """
         bank_token = await self._get_bank_token()
         headers = await self._get_common_headers(bank_token)
+        
+        # openapi.json: ConsentRequestBody
         body = {
             "client_id": user_id,
             "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"],
             "reason": "Financial analysis for FinPulse Hackathon",
             "requesting_bank": self.team_id,
             "requesting_bank_name": f"{self.team_id} App",
-            "redirect_uri": "http://localhost:5173/callback",
         }
 
         logger.info("Initiating consent for user '%s' at %s", user_id, self.api_base_url)
         
         @api_retry
         async def _post_consent_request():
-            response = await self._client.post("/account-consents/request", headers=headers, json=body)
+            # openapi.json does NOT list client_id as query param for this endpoint
+            response = await self._client.post(
+                "/account-consents/request",
+                headers=headers,
+                json=body,
+            )
             response.raise_for_status()
             return response.json()
 
         response_data = await _post_consent_request()
 
+        # Response handling based on description example:
+        # {"status": "approved", "consent_id": "consent-abc123", "auto_approved": true}
+        # But we also check for nested data just in case, as GET returns wrapped data.
+        
         data_section = response_data.get("data") if isinstance(response_data, dict) else {}
         if not isinstance(data_section, dict):
             data_section = {}
 
         consent_id = (
-            data_section.get("consentId")
+            response_data.get("consent_id")
+            or response_data.get("consentId")
+            or data_section.get("consentId")
             or data_section.get("consent_id")
-            or (response_data.get("consentId") if isinstance(response_data, dict) else None)
-            or (response_data.get("consent_id") if isinstance(response_data, dict) else None)
         )
+        
+        # request_id might not be in the response based on example, but we check
         request_id = (
-            data_section.get("requestId")
+            response_data.get("request_id")
+            or response_data.get("requestId")
+            or data_section.get("requestId")
             or data_section.get("request_id")
-            or (response_data.get("request_id") if isinstance(response_data, dict) else None)
-            or (response_data.get("requestId") if isinstance(response_data, dict) else None)
         )
 
+        # Approval URL might be in links
         approval_url = (
             response_data.get("links", {}).get("consentApproval")
             or response_data.get("links", {}).get("consentApprovalUrl")
@@ -244,10 +253,11 @@ class OBRAPIClient:
         )
 
         status = (
-            data_section.get("status")
-            or response_data.get("status") if isinstance(response_data, dict) else None
+            response_data.get("status")
+            or data_section.get("status")
             or ("Authorized" if response_data.get("auto_approved") else "AwaitingAuthorization")
         )
+        
         auto_approved = bool(
             response_data.get("auto_approved")
             or data_section.get("autoApproved")
@@ -255,14 +265,8 @@ class OBRAPIClient:
         )
 
         if not consent_id and not request_id:
+            logger.error("Response data: %s", response_data)
             raise ValueError("API did not return a consent or request identifier.")
-
-        if not approval_url and auto_approved:
-            logger.info(
-                "Consent %s appears auto-approved at %s (no approval URL).",
-                consent_id,
-                self.api_base_url,
-            )
 
         logger.info(
             "Consent initiated with consent_id=%s request_id=%s (status=%s)",
@@ -280,288 +284,176 @@ class OBRAPIClient:
 
     async def initiate_product_consent(
         self, user_id: str, user_display_name: Optional[str] = None
-    ) -> Optional[ConsentInitResult]:
-        """Creates a product agreement consent request according to API specification.
-        
-        client_id is passed ONLY in query params, NOT in body.
+    ) -> ConsentInitResult:
+        """
+        Creates a product agreement consent (Extension API).
+        Strictly follows openapi.json:
+        - Path: POST /product-agreement-consents/request
+        - Body: ProductAgreementConsentRequestData (flat)
+        - Params: client_id (Required)
         """
         bank_token = await self._get_bank_token()
         headers = await self._get_common_headers(bank_token)
-        url = "/product-agreement-consents/request"
-
-        # Base payload WITHOUT client_id (it goes in query params only)
-        base_payload = {
+        
+        # openapi.json: ProductAgreementConsentRequestData
+        body = {
             "requesting_bank": self.team_id,
-            "reason": "Финансовый агрегатор для управления продуктами",
+            "read_product_agreements": True,
+            "open_product_agreements": True,
+            "close_product_agreements": True,
+            "allowed_product_types": ["deposit", "loan", "card", "account"],
+            "max_amount": 10000000.00,
+            "reason": "FinPulse Product Management",
         }
 
-        # Primary payload according to API specification
-        payloads_to_try = [
-            {
-                **base_payload,
-                "read_product_agreements": True,
-                "open_product_agreements": True,
-                "close_product_agreements": False,
-                "allowed_product_types": ["deposit", "loan", "card"],
-                "max_amount": 1000000.00,
-            },
-            {
-                **base_payload,
-                "read_product_agreements": True,
-                "open_product_agreements": True,
-                "close_product_agreements": False,
-                "allowed_product_types": ["deposit", "loan", "credit_card"],
-                "max_amount": 5_000_000,
-            },
-            {
-                **base_payload,
-                "read_product_agreements": True,
-                "open_product_agreements": False,
-                "close_product_agreements": False,
-                "allowed_product_types": ["deposit", "loan", "card"],
-            },
-            {
-                **base_payload,
-                "read_product_agreements": True,
-            },
-        ]
+        logger.info("Initiating product consent for %s at %s", user_id, self.api_base_url)
 
-        for body in payloads_to_try:
-            try:
-                response = await self._client.post(
-                    url,
-                    headers=headers,
-                    params={"client_id": user_id},
-                    json=body,
-                )
-                if response.status_code >= 400:
-                    logger.warning("Payload failed with status %s: %s", response.status_code, body)
-                    continue
+        @api_retry
+        async def _post_product_consent():
+            # openapi.json REQUIRES client_id in query params for this endpoint
+            response = await self._client.post(
+                "/product-agreement-consents/request",
+                headers=headers,
+                json=body,
+                params={"client_id": user_id},
+            )
+            response.raise_for_status()
+            return response.json()
 
-                data = response.json()
-                # Extract fields according to API specification
-                request_id = (
-                    data.get("request_id")
-                    or self._jget(data, ["data", "requestId"])
-                    or self._jget(data, ["data", "request_id"])
-                )
-                consent_id = (
-                    data.get("consent_id")
-                    or self._jget(data, ["data", "consentId"])
-                    or self._jget(data, ["data", "consent_id"])
-                )
-                status_raw = (
-                    data.get("status")
-                    or self._jget(data, ["data", "status"])
-                )
-                auto_approved = bool(
-                    data.get("auto_approved")
-                    or self._jget(data, ["data", "autoApproved"])
-                    or self._jget(data, ["data", "auto_approved"])
-                )
-                approval_url = (
-                    self._jget(data, ["links", "consentApproval"])
-                    or self._jget(data, ["links", "approvalUrl"])
-                    or data.get("approval_url")
-                )
+        response_data = await _post_product_consent()
+        
+        # Response example:
+        # {"request_id": "...", "consent_id": "...", "status": "approved", "auto_approved": true}
+        
+        consent_id = response_data.get("consent_id") or response_data.get("consentId")
+        request_id = response_data.get("request_id") or response_data.get("requestId")
+        status = response_data.get("status") or "pending"
+        auto_approved = bool(response_data.get("auto_approved") or response_data.get("autoApproved"))
+        
+        approval_url = (
+             response_data.get("links", {}).get("consentApproval")
+             or response_data.get("approval_url")
+        )
 
-                # request_id is always present according to API spec
-                if not request_id:
-                    logger.warning("Product consent response missing request_id: %s", data)
-                    continue
-
-                # Normalize status
-                normalized_status = _normalize_status_value(status_raw).lower() if status_raw else ""
-                
-                # Determine auto_approved if not explicitly set
-                if not auto_approved and normalized_status:
-                    auto_approved = normalized_status in _AUTHORIZED_STATUS_SET
-                
-                # Determine final status
-                if not status_raw:
-                    status_value = "Approved" if auto_approved else "Pending"
-                else:
-                    status_value = status_raw
-
-                # consent_id may be None if status is "pending" (requires manual approval)
-                final_consent_id = consent_id if consent_id else None
-
-                logger.info(
-                    "Product consent initiated: request_id=%s, consent_id=%s, status=%s, auto_approved=%s",
-                    request_id,
-                    final_consent_id,
-                    status_value,
-                    auto_approved,
-                )
-                return ConsentInitResult(
-                    consent_id=final_consent_id,
-                    status=status_value,
-                    auto_approved=auto_approved,
-                    approval_url=approval_url,
-                    request_id=request_id,
-                )
-            except httpx.RequestError as e:  # noqa: PERF203
-                logger.warning("Request failed for product consent payload %s: %s", body, e)
-
-        logger.error("All attempts to create product consent failed for user %s at %s", user_id, self.api_base_url)
-        return None
+        return ConsentInitResult(
+            consent_id=consent_id,
+            request_id=request_id,
+            status=status,
+            auto_approved=auto_approved,
+            approval_url=approval_url,
+        )
 
     async def initiate_payment_consent(
-        self, user_id: str, user_display_name: Optional[str] = None, account_consent_id: Optional[str] = None
-    ) -> Optional[ConsentInitResult]:
+        self,
+        user_id: str,
+        debtor_account: str,
+        consent_type: str = "vrp",
+        amount: Optional[float] = None,
+        creditor_account: Optional[str] = None,
+        creditor_name: Optional[str] = None,
+        reference: Optional[str] = None,
+        vrp_max_individual_amount: Optional[float] = None,
+        vrp_daily_limit: Optional[float] = None,
+        vrp_monthly_limit: Optional[float] = None,
+        max_uses: Optional[int] = None,
+        max_amount_per_payment: Optional[float] = None,
+        max_total_amount: Optional[float] = None,
+        allowed_creditor_accounts: Optional[List[str]] = None,
+        valid_until: Optional[str] = None,
+    ) -> ConsentInitResult:
         """
-        Creates a multi-use payment consent request according to API specification.
+        Creates a payment consent.
+        Strictly follows openapi.json:
+        - Path: POST /payment-consents/request
+        - Body: PaymentConsentRequestData (flat)
+        - Params: None
         
-        Uses consent_type="multi_use" for multiple payments with limits.
-        client_id is passed in body, NOT in query params.
+        Args:
+            user_id: Client ID
+            debtor_account: Account to debit from (required)
+            consent_type: "single_use", "multi_use", or "vrp" (default: "vrp")
+            amount: Amount for single_use consent
+            creditor_account: Specific creditor account (for single_use or multi_use with restrictions)
+            creditor_name: Creditor name
+            reference: Payment reference
+            vrp_max_individual_amount: Max amount per payment for VRP
+            vrp_daily_limit: Daily limit for VRP
+            vrp_monthly_limit: Monthly limit for VRP
+            max_uses: Max number of uses for multi_use
+            max_amount_per_payment: Max amount per payment for multi_use
+            max_total_amount: Max total amount for multi_use
+            allowed_creditor_accounts: Allowed creditor accounts for multi_use
+            valid_until: Expiration datetime
         """
         bank_token = await self._get_bank_token()
         headers = await self._get_common_headers(bank_token)
-        url = "/payment-consents/request"
-
-        # Try to get real debtor_account if account_consent_id is provided
-        debtor_account: Optional[str] = None
-        if account_consent_id:
-            try:
-                accounts = await self.fetch_accounts_with_consent(user_id, account_consent_id)
-                if accounts:
-                    # Use first account as debtor_account
-                    debtor_account = self._extract_account_id(accounts[0])
-                    logger.info("Found debtor_account: %s for user %s", debtor_account, user_id)
-            except Exception as e:
-                logger.warning("Failed to fetch accounts for debtor_account: %s", e)
-
-        # Use placeholder if no real account found
-        if not debtor_account:
-            # Extract bank_id from api_base_url (e.g., "https://abank.open.bankingapi.ru" -> "abank")
-            bank_id_from_url = self.api_base_url.split("//")[1].split(".")[0] if "//" in self.api_base_url else "bank"
-            debtor_account = f"account-{user_id}-{bank_id_from_url}"
-            logger.info("Using placeholder debtor_account: %s", debtor_account)
-
-        valid_until = (
-            datetime.now(timezone.utc) + timedelta(days=365)
-        ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-        # Base payload with client_id in body (NOT in query params)
-        base_payload = {
+        
+        # openapi.json: PaymentConsentRequestData
+        body = {
             "requesting_bank": self.team_id,
             "client_id": user_id,
-            "reason": "Финансовый агрегатор для управления платежами",
+            "consent_type": consent_type,
+            "currency": "RUB",
+            "debtor_account": debtor_account,
         }
+        
+        # Add fields based on consent type
+        if consent_type == "single_use":
+            if amount is not None:
+                body["amount"] = amount
+            if creditor_account:
+                body["creditor_account"] = creditor_account
+            if creditor_name:
+                body["creditor_name"] = creditor_name
+            if reference:
+                body["reference"] = reference
+        elif consent_type == "multi_use":
+            if max_uses is not None:
+                body["max_uses"] = max_uses
+            if max_amount_per_payment is not None:
+                body["max_amount_per_payment"] = max_amount_per_payment
+            if max_total_amount is not None:
+                body["max_total_amount"] = max_total_amount
+            if allowed_creditor_accounts:
+                body["allowed_creditor_accounts"] = allowed_creditor_accounts
+            if valid_until:
+                body["valid_until"] = valid_until
+        elif consent_type == "vrp":
+            if vrp_max_individual_amount is not None:
+                body["vrp_max_individual_amount"] = vrp_max_individual_amount
+            if vrp_daily_limit is not None:
+                body["vrp_daily_limit"] = vrp_daily_limit
+            if vrp_monthly_limit is not None:
+                body["vrp_monthly_limit"] = vrp_monthly_limit
+            if valid_until:
+                body["valid_until"] = valid_until
 
-        # Multi-use payment consent according to API specification
-        payloads_to_try = [
-            {
-                **base_payload,
-                "consent_type": "multi_use",
-                "debtor_account": debtor_account,
-                "max_uses": 100,
-                "max_amount_per_payment": 100000.00,
-                "max_total_amount": 1000000.00,
-                "valid_until": valid_until,
-            },
-            {
-                **base_payload,
-                "consent_type": "multi_use",
-                "debtor_account": debtor_account,
-                "max_uses": 50,
-                "max_amount_per_payment": 50000.00,
-                "max_total_amount": 500000.00,
-                "valid_until": valid_until,
-            },
-            {
-                **base_payload,
-                "consent_type": "multi_use",
-                "debtor_account": debtor_account,
-                "max_uses": 10,
-                "max_amount_per_payment": 10000.00,
-                "max_total_amount": 100000.00,
-            },
-        ]
+        logger.info("Initiating payment consent (type=%s) for %s", consent_type, user_id)
 
-        for body in payloads_to_try:
-            try:
-                # client_id is in body, NOT in query params
-                response = await self._client.post(
-                    url,
-                    headers=headers,
-                    json=body,
-                )
-                if response.status_code >= 400:
-                    logger.warning(
-                        "Payment consent payload failed with status %s: %s",
-                        response.status_code,
-                        body,
-                    )
-                    continue
+        @api_retry
+        async def _post_payment_consent():
+            # openapi.json does NOT list client_id as query param
+            response = await self._client.post(
+                "/payment-consents/request",
+                headers=headers,
+                json=body,
+            )
+            response.raise_for_status()
+            return response.json()
 
-                data = response.json()
-                # Extract fields according to API specification
-                request_id = (
-                    data.get("request_id")
-                    or self._jget(data, ["data", "requestId"])
-                    or self._jget(data, ["data", "request_id"])
-                )
-                consent_id = (
-                    data.get("consent_id")
-                    or self._jget(data, ["data", "consentId"])
-                    or self._jget(data, ["data", "consent_id"])
-                )
-                status_raw = (
-                    data.get("status")
-                    or self._jget(data, ["data", "status"])
-                )
-                auto_approved = bool(
-                    data.get("auto_approved")
-                    or self._jget(data, ["data", "autoApproved"])
-                    or self._jget(data, ["data", "auto_approved"])
-                )
-                approval_url = (
-                    self._jget(data, ["links", "consentApproval"])
-                    or self._jget(data, ["links", "approvalUrl"])
-                    or data.get("approval_url")
-                )
+        response_data = await _post_payment_consent()
+        
+        consent_id = response_data.get("consent_id") or response_data.get("consentId")
+        status = response_data.get("status") or "pending"
+        approval_url = response_data.get("links", {}).get("consentApproval")
+        auto_approved = bool(response_data.get("auto_approved") or response_data.get("autoApproved"))
 
-                # request_id is always present according to API spec
-                if not request_id:
-                    logger.warning("Payment consent response missing request_id: %s", data)
-                    continue
-
-                # Normalize status
-                normalized_status = _normalize_status_value(status_raw).lower() if status_raw else ""
-                
-                # Determine auto_approved if not explicitly set
-                if not auto_approved and normalized_status:
-                    auto_approved = normalized_status in _AUTHORIZED_STATUS_SET
-                
-                # Determine final status
-                if not status_raw:
-                    status_value = "Approved" if auto_approved else "Pending"
-                else:
-                    status_value = status_raw
-
-                # consent_id may be None if status is "pending" (requires manual approval)
-                final_consent_id = consent_id if consent_id else None
-
-                logger.info(
-                    "Payment consent initiated: request_id=%s, consent_id=%s, status=%s, auto_approved=%s",
-                    request_id,
-                    final_consent_id,
-                    status_value,
-                    auto_approved,
-                )
-                return ConsentInitResult(
-                    consent_id=final_consent_id,
-                    status=status_value,
-                    auto_approved=auto_approved,
-                    approval_url=approval_url,
-                    request_id=request_id,
-                )
-            except httpx.RequestError as e:  # noqa: PERF203
-                logger.warning("Request failed for payment consent payload %s: %s", body, e)
-
-        logger.error("All attempts to create payment consent failed for user %s at %s", user_id, self.api_base_url)
-        return None
+        return ConsentInitResult(
+            consent_id=consent_id,
+            status=status,
+            approval_url=approval_url,
+            auto_approved=auto_approved,
+        )
 
     async def initiate_single_payment(
         self,
@@ -572,93 +464,60 @@ class OBRAPIClient:
         creditor_account: str,
         description: str,
     ) -> Dict[str, Any]:
-        """Инициирует single payment через банковское API."""
+        """
+        Initiates a single payment.
+        Strictly follows openapi.json:
+        - Path: POST /payments
+        - Body: PaymentRequest (wrapped in data.initiation)
+        - Headers: X-Payment-Consent-Id
+        - Params: client_id (Required for bank_token)
+        """
         bank_token = await self._get_bank_token()
         headers = await self._get_common_headers(bank_token)
         headers["X-Payment-Consent-Id"] = consent_id
-
-        # Try multiple endpoints
-        endpoints_to_try = [
-            "/payments/single",
-            "/payments/single-payment",
-            "/single-payments",
-        ]
-
-        base_payload = {
-            "client_id": user_id,
-            "debtor_account": account_id,
-            "creditor_account": creditor_account,
-            "amount": amount,
-            "currency": "RUB",
-            "description": description,
-            "requesting_bank": self.team_id,
+        
+        # openapi.json: PaymentRequest -> data -> initiation
+        body = {
+            "data": {
+                "initiation": {
+                    "instructedAmount": {
+                        "amount": str(amount),
+                        "currency": "RUB"
+                    },
+                    "debtorAccount": {
+                        "schemeName": "RU.CBR.PAN",
+                        "identification": account_id
+                    },
+                    "creditorAccount": {
+                        "schemeName": "RU.CBR.PAN",
+                        "identification": creditor_account
+                    },
+                    "comment": description
+                }
+            }
         }
 
-        payloads_to_try = [
-            base_payload,
-            {
-                **base_payload,
-                "instructed_amount": {
-                    "amount": str(amount),
-                    "currency": "RUB",
-                },
-            },
-            {
-                **base_payload,
-                "payment_amount": amount,
-                "payment_currency": "RUB",
-            },
-        ]
+        @api_retry
+        async def _post_payment():
+            # openapi.json: client_id IS required in query for bank_token
+            response = await self._client.post(
+                "/payments",
+                headers=headers,
+                json=body,
+                params={"client_id": user_id}
+            )
+            response.raise_for_status()
+            return response.json()
 
-        for url in endpoints_to_try:
-            for body in payloads_to_try:
-                try:
-                    response = await self._client.post(
-                        url,
-                        headers=headers,
-                        params={"client_id": user_id},
-                        json=body,
-                    )
-                    if response.status_code >= 400:
-                        logger.warning(
-                            "Payment request failed with status %s for endpoint %s: %s",
-                            response.status_code,
-                            url,
-                            body,
-                        )
-                        continue
+        return await _post_payment()
 
-                    data = response.json()
-                    payment_id = data.get("payment_id") or self._jget(data, ["data", "paymentId"])
-                    status_raw = data.get("status") or self._jget(data, ["data", "status"])
-
-                    if payment_id:
-                        logger.info(
-                            "Single payment initiated successfully with endpoint %s: payment_id=%s",
-                            url,
-                            payment_id,
-                        )
-                        return {
-                            "payment_id": payment_id,
-                            "status": status_raw or "Pending",
-                            "amount": amount,
-                            "description": description,
-                        }
-                except httpx.RequestError as e:  # noqa: PERF203
-                    logger.warning(
-                        "Request failed for payment endpoint %s with payload %s: %s",
-                        url,
-                        body,
-                        e,
-                    )
-
-        logger.error("All attempts to initiate single payment failed for user %s at %s", user_id, self.api_base_url)
-        raise Exception("Failed to initiate payment: all endpoints failed")
 
     @api_retry
     async def get_consent_details(self, consent_id: str) -> Dict[str, Any]:
         """Fetch consent status from /account-consents/{consent_id}."""
-        response = await self._client.get(f"/account-consents/{consent_id}")
+        bank_token = await self._get_bank_token()
+        headers = await self._get_common_headers(bank_token)
+        response = await self._client.get(f"/account-consents/{consent_id}", headers=headers)
         response.raise_for_status()
         return response.json()
 
@@ -668,24 +527,6 @@ class OBRAPIClient:
         bank_token = await self._get_bank_token()
         headers = await self._get_common_headers(bank_token)
         response = await self._client.get(f"/account-consents/{request_id}", headers=headers)
-        response.raise_for_status()
-        return response.json()
-
-    @api_retry
-    async def get_product_consent_status(self, request_id: str, user_id: str) -> Dict[str, Any]:
-        """
-        Fetch product agreement consent status using GET /product-agreement-consents/{request_id}?client_id={user_id}.
-        
-        According to API spec, the same endpoint is used for both POST (create) and GET (check status).
-        """
-        bank_token = await self._get_bank_token()
-        headers = await self._get_common_headers(bank_token)
-        params = {"client_id": user_id}
-        response = await self._client.get(
-            f"/product-agreement-consents/{request_id}",
-            headers=headers,
-            params=params,
-        )
         response.raise_for_status()
         return response.json()
 
@@ -715,9 +556,16 @@ class OBRAPIClient:
 
             await asyncio.sleep(poll_interval_seconds)
 
-    async def fetch_transactions_with_consent(self, user_id: str, consent_id: str) -> List[Transaction]:
+    async def fetch_transactions_with_consent(
+        self,
+        user_id: str,
+        consent_id: str,
+        from_booking_date_time: Optional[str] = None,
+        to_booking_date_time: Optional[str] = None,
+    ) -> List[Transaction]:
         """
         Step 2: Retrieve transactions for the user using an approved consent.
+        Uses page/limit pagination as per OpenAPI spec (default: page=1, limit=50, max limit=500).
         """
         bank_token = await self._get_bank_token()
         base_headers = await self._get_common_headers(bank_token)
@@ -727,7 +575,7 @@ class OBRAPIClient:
         
         @api_retry
         async def _get_accounts():
-            acc_response = await self._client.get(f"/accounts?client_id={user_id}", headers=headers)
+            acc_response = await self._client.get("/accounts", headers=headers, params={"client_id": user_id})
             acc_response.raise_for_status()
             return acc_response.json()
 
@@ -740,25 +588,40 @@ class OBRAPIClient:
             if not account_id:
                 continue
 
-            next_page_url: Optional[str] = f"/accounts/{account_id}/transactions?client_id={user_id}"
             page_num = 1
-            while next_page_url:
+            limit = 500  # Max limit per OpenAPI spec
+            has_more = True
+
+            while has_more:
                 logger.info(
-                    "Fetching transactions for account '%s', page %d (next=%s)",
+                    "Fetching transactions for account '%s', page %d (limit=%d)",
                     account_id,
                     page_num,
-                    next_page_url,
+                    limit,
                 )
-                paginated_headers = {**headers, "x-fapi-interaction-id": str(uuid.uuid4())}
+                paginated_headers = {**headers, "X-Fapi-Interaction-Id": str(uuid.uuid4())}
 
                 @api_retry
-                async def _get_transactions_page(url):
-                    tx_response = await self._client.get(url, headers=paginated_headers)
+                async def _get_transactions_page():
+                    params = {
+                        "client_id": user_id,
+                        "page": page_num,
+                        "limit": limit,
+                    }
+                    if from_booking_date_time:
+                        params["from_booking_date_time"] = from_booking_date_time
+                    if to_booking_date_time:
+                        params["to_booking_date_time"] = to_booking_date_time
+                    
+                    tx_response = await self._client.get(
+                        f"/accounts/{account_id}/transactions",
+                        headers=paginated_headers,
+                        params=params,
+                    )
                     tx_response.raise_for_status()
                     return tx_response.json()
                 
-                response_data = await _get_transactions_page(next_page_url)
-
+                response_data = await _get_transactions_page()
                 raw_txs = self._extract_transactions(response_data)
 
                 for raw in raw_txs:
@@ -768,14 +631,18 @@ class OBRAPIClient:
                     else:
                         logger.warning("Failed to normalize transaction payload: %s", raw)
 
-                next_page_url = self._extract_next_link(response_data)
-                logger.info(
-                    "Pagination checkpoint account=%s page=%d next=%s",
-                    account_id,
-                    page_num,
-                    next_page_url,
-                )
+                # Check if there are more pages
+                # If we got fewer transactions than limit, we're on the last page
+                has_more = len(raw_txs) >= limit
                 page_num += 1
+                
+                logger.info(
+                    "Pagination checkpoint account=%s page=%d fetched=%d has_more=%s",
+                    account_id,
+                    page_num - 1,
+                    len(raw_txs),
+                    has_more,
+                )
 
         logger.info("Fetched %d transactions for user '%s' from %s", len(all_transactions), user_id, self.api_base_url)
         return all_transactions
@@ -793,7 +660,7 @@ class OBRAPIClient:
 
         @api_retry
         async def _get_accounts():
-            response = await self._client.get(f"/accounts?client_id={user_id}", headers=headers)
+            response = await self._client.get("/accounts", headers=headers, params={"client_id": user_id})
             response.raise_for_status()
             return response.json()
 
@@ -810,13 +677,13 @@ class OBRAPIClient:
         logger.info("Fetching balances for user '%s' (consent %s)", user_id, consent_id)
 
         async def _accounts_headers() -> Dict[str, str]:
-            headers = {**base_headers, "x-fapi-interaction-id": str(uuid.uuid4())}
+            headers = {**base_headers, "X-Fapi-Interaction-Id": str(uuid.uuid4())}
             headers["X-Consent-Id"] = consent_id
             return headers
 
         @api_retry
         async def _get_accounts():
-            response = await self._client.get(f"/accounts?client_id={user_id}", headers=await _accounts_headers())
+            response = await self._client.get("/accounts", headers=await _accounts_headers(), params={"client_id": user_id})
             response.raise_for_status()
             return response.json()
 
@@ -858,84 +725,42 @@ class OBRAPIClient:
 
     async def fetch_credits_with_consent(self, user_id: str, consent_id: str) -> List[Dict[str, Any]]:
         """
-        Fetches credit agreements using multiple header variations and pagination,
-        inspired by hndmd.py.
+        Fetches product agreements and filters for credits.
+        Strictly follows openapi.json:
+        - Path: GET /product-agreements
+        - Headers: X-Product-Agreement-Consent-Id
+        - Params: client_id
         """
         if not consent_id:
             logger.warning("fetch_credits_with_consent called without consent_id for user %s", user_id)
             return []
 
         bank_token = await self._get_bank_token()
-        common_headers = await self._get_common_headers(bank_token)
-        params: Dict[str, Any] = {"client_id": user_id}
+        headers = await self._get_common_headers(bank_token)
+        headers["X-Product-Agreement-Consent-Id"] = consent_id
+        
+        params = {"client_id": user_id}
+        url = "/product-agreements"
 
-        urls_to_try = ["/credits", "/product-agreements"]
+        try:
+            response = await self._client.get(url, headers=headers, params=params)
+            response.raise_for_status()
 
-        headers_variations = [
-            {"X-Product-Agreement-Consent-Id": consent_id},
-            {"x-product-agreement-consent-id": consent_id},
-            {"X-Consent-Id": consent_id},
-        ]
+            all_agreements = await self._paginate(response, headers, params)
+            credits = [ag for ag in all_agreements if self._is_credit(ag)]
 
-        for url in urls_to_try:
-            for header_variant in headers_variations:
-                headers = {**common_headers, **header_variant}
-                try:
-                    response = await self._client.get(url, headers=headers, params=params)
-                    if response.status_code in (400, 401, 403, 404):
-                        logger.warning(
-                            "Request to %s failed with status %s using header %s",
-                            url,
-                            response.status_code,
-                            list(header_variant.keys())[0],
-                        )
-                        continue
-
-                    response.raise_for_status()
-
-                    all_agreements = await self._paginate(response, headers, params)
-                    logger.info("Fetched %d total agreements from %s", len(all_agreements), url)
-                    
-                    # Log sample agreements for debugging
-                    if all_agreements:
-                        sample = all_agreements[0]
-                        logger.info("Sample agreement keys: %s", list(sample.keys())[:20] if isinstance(sample, dict) else "not_dict")
-                        logger.info("Sample agreement: %s", 
-                                   {k: v for k, v in list(sample.items())[:15]} if isinstance(sample, dict) else "not_dict")
-                        logger.info("Sample agreement product_type: %s", 
-                                    sample.get("productType") or sample.get("product_type") or sample.get("type", "unknown") if isinstance(sample, dict) else "N/A")
-                        logger.info("Sample agreement status: %s", 
-                                    sample.get("status", "unknown") if isinstance(sample, dict) else "N/A")
-                    
-                    credits = [ag for ag in all_agreements if self._is_credit(ag)]
-                    
-                    # If no credits found but agreements exist, log them for debugging
-                    if not credits and all_agreements:
-                        logger.warning("No credits found in %d agreements after filtering. All agreements:", len(all_agreements))
-                        for i, ag in enumerate(all_agreements[:3]):  # Log first 3
-                            if isinstance(ag, dict):
-                                logger.warning("  Agreement %d: productType=%s, status=%s, keys=%s", 
-                                             i+1,
-                                             ag.get("productType") or ag.get("product_type") or "unknown",
-                                             ag.get("status", "unknown"),
-                                             list(ag.keys())[:10])
-                    elif credits:
-                        logger.info("Filtered %d credits from %d agreements", len(credits), len(all_agreements))
-
-                    logger.info(
-                        "Successfully fetched %d credits from %s using header %s (out of %d total agreements)",
-                        len(credits),
-                        url,
-                        list(header_variant.keys())[0],
-                        len(all_agreements),
-                    )
-                    return credits
-                except httpx.RequestError as e:
-                    logger.error("Network error while fetching from %s: %s", url, e)
-                    raise
-
-        logger.error("All attempts to fetch credits/agreements failed for consent %s.", consent_id)
-        return []
+            logger.info(
+                "Successfully fetched %d credits from %s",
+                len(credits),
+                url,
+            )
+            return credits
+        except httpx.RequestError as e:
+            logger.error("Network error while fetching from %s: %s", url, e)
+            raise
+        except Exception as e:
+            logger.error("Error fetching credits: %s", e)
+            return []
 
     async def _paginate(self, first_response: httpx.Response, headers: Dict[str, str], params: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Paginates through API results using the 'next' link."""
@@ -971,62 +796,44 @@ class OBRAPIClient:
     @staticmethod
     def _is_credit(agreement: Dict[str, Any]) -> bool:
         """Checks if a product agreement is a credit product."""
-        # Try multiple field name variations
-        prod_type = (
-            agreement.get("productType") or 
-            agreement.get("product_type") or 
-            agreement.get("type") or
-            agreement.get("productCategory") or
-            agreement.get("product_category") or
-            ""
-        ).lower()
-        name = (
-            agreement.get("productName") or
-            agreement.get("product_name") or
-            agreement.get("name") or
-            ""
-        ).lower()
-        
-        # Check for credit keywords
-        credit_keywords = ["credit", "loan", "кредит", "заем", "займ", "overdraft", "mortgage", "ипотека"]
-        is_credit = (
-            any(keyword in prod_type for keyword in credit_keywords) or
-            any(keyword in name for keyword in credit_keywords)
-        )
-        
-        # Also check if it's NOT a deposit/savings
-        deposit_keywords = ["deposit", "savings", "вклад", "депозит", "накопительный"]
-        is_deposit = (
-            any(keyword in prod_type for keyword in deposit_keywords) or
-            any(keyword in name for keyword in deposit_keywords)
-        )
-        
-        return is_credit and not is_deposit
+        prod_type = (agreement.get("product_type") or "").lower()
+        name = (agreement.get("product_name") or "").lower()
+        return "credit" in prod_type or "loan" in prod_type or "кредит" in name
 
     @staticmethod
     def _extract_accounts(payload: Any) -> List[Dict[str, Any]]:
         if isinstance(payload, dict):
-            if isinstance(payload.get("accounts"), list):
-                return payload["accounts"]
+            # Check inside 'data' first (Standard)
             data = payload.get("data")
             if isinstance(data, dict):
-                if isinstance(data.get("accounts"), list):
-                    return data["accounts"]
-                if isinstance(data.get("account"), list):
-                    return data["account"]
+                for key in ("accounts", "account", "Accounts", "Account", "items"):
+                    val = data.get(key)
+                    if isinstance(val, list):
+                        return val
+            
+            # Check root (Non-standard)
+            for key in ("accounts", "account", "Accounts", "Account", "items"):
+                val = payload.get(key)
+                if isinstance(val, list):
+                    return val
         return []
 
     @staticmethod
     def _extract_transactions(payload: Any) -> List[Dict[str, Any]]:
         if isinstance(payload, dict):
-            if isinstance(payload.get("transactions"), list):
-                return payload["transactions"]
+            # Check inside 'data' first (Standard)
             data = payload.get("data")
             if isinstance(data, dict):
-                if isinstance(data.get("transactions"), list):
-                    return data["transactions"]
-                if isinstance(data.get("transaction"), list):
-                    return data["transaction"]
+                for key in ("transactions", "transaction", "Transactions", "Transaction", "items"):
+                    val = data.get(key)
+                    if isinstance(val, list):
+                        return val
+            
+            # Check root (Non-standard)
+            for key in ("transactions", "transaction", "Transactions", "Transaction", "items"):
+                val = payload.get(key)
+                if isinstance(val, list):
+                    return val
         return []
 
     @staticmethod
@@ -1059,49 +866,33 @@ class OBRAPIClient:
     def _extract_balances(payload: Any) -> List[Dict[str, Any]]:
         """
         Извлекает балансы из response с поддержкой разных вариантов структуры.
-        Обрабатывает как lowercase ("balance"), так и uppercase ("Balance").
+        Обрабатывает как lowercase ("balance"), так и uppercase ("Balance"),
+        а также множественное число ("balances", "accountBalances").
         """
         if not isinstance(payload, dict):
             return []
         
-        # Вариант 1: data.balance (lowercase - из реального банка)
+        # 1. Проверяем внутри data (стандарт OBR)
         data = payload.get("data")
         if isinstance(data, dict):
-            balance = data.get("balance")  # lowercase!
-            if isinstance(balance, list):
-                return balance
-            
-            # Вариант 2: data.Balance (uppercase - fallback для совместимости)
-            balance = data.get("Balance")
-            if isinstance(balance, list):
-                return balance
+            # Приоритет: balances -> balance -> accountBalances -> Balance
+            for key in ("balances", "balance", "accountBalances", "Balance", "items"):
+                val = data.get(key)
+                if isinstance(val, list):
+                    return val
         
-        # Вариант 3: прямо в корне payload
-        balance = payload.get("balance") or payload.get("Balance")
-        if isinstance(balance, list):
-            return balance
+        # 2. Проверяем в корне (нестандартные реализации)
+        for key in ("balances", "balance", "accountBalances", "Balance", "items"):
+            val = payload.get(key)
+            if isinstance(val, list):
+                return val
         
         return []
     
     @staticmethod
     def _extract_balance_entries(payload: Any) -> List[Dict[str, Any]]:
-        if isinstance(payload, list):
-            return [entry for entry in payload if isinstance(entry, dict)]
-        if not isinstance(payload, dict):
-            return []
-
-        for candidate in ("balances", "items", "accountBalances", "account_balances"):
-            section = payload.get(candidate)
-            if isinstance(section, list):
-                return [entry for entry in section if isinstance(entry, dict)]
-
-        nested_data = payload.get("data")
-        if isinstance(nested_data, dict):
-            for candidate in ("balances", "accountBalances", "account_balances"):
-                section = nested_data.get(candidate)
-                if isinstance(section, list):
-                    return [entry for entry in section if isinstance(entry, dict)]
-        return []
+        # Deprecated alias for _extract_balances but kept for compatibility if used elsewhere
+        return OBRAPIClient._extract_balances(payload)
 
     def _extract_next_link(self, payload: Any) -> Optional[str]:
         if not isinstance(payload, dict):
@@ -1123,7 +914,7 @@ class OBRAPIClient:
     def _extract_account_id(account_payload: Any) -> Optional[str]:
         if not isinstance(account_payload, dict):
             return None
-        for key in ("accountId", "account_id", "id"):
+        for key in ("accountId", "account_id", "id", "resourceId"):
             value = account_payload.get(key)
             if value:
                 return str(value)
