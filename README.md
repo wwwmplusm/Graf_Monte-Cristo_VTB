@@ -3,6 +3,12 @@
 ## Что это
 Полноценное демо OpenBanking: в одном сервисе собраны создание согласий (account / product / payment), получение токенов с валидацией через JWKS, загрузка данных по счетам/балансам/транзакциям/договорам, аналитика (safe-to-spend, долги, накопления) и пример платежей. Бэкенд на FastAPI (`hktn/backend`), фронт на React/Vite (`hktn/src`), все соседние файлы — только код и данные, без лишней документации.
 
+## По критериям API Hackathon
+- **Использование API**: три банка (VBank/ABank/SBank), полный цикл Consents API (account/product/payment) → статус/refresh; JWT валидируется через `.well-known/jwks.json`, токены кэшируются в БД (`bank_tokens`) и обновляются при 401; все вызовы соблюдают заголовки OpenBanking (`X-Consent-Id`, `X-Requesting-Bank`, `X-Payment-Consent-Id`).
+- **Архитектура**: слой `core` (HTTP-клиент, БД), сервисы `backend/services/*.py` (consents, banking, sync, analytics, payments, loans, refinance), роутеры только принимают/отдают HTTP. Кэш (`bank_data_cache`, `dashboard_cache`), блокировки (`sync_locks`), переиспользуемый клиент `OBRAPIClient` — добавление нового банка = env + запись в `settings.banks`.
+- **Уровень реализации**: end-to-end поток — `consents/init` → `sync/full-refresh` (accounts/balances/transactions/product-agreements в БД и кэше) → `dashboard` с расчётами → `payments/*` с реальным вызовом `/payments`. Никаких заглушек: данные сохраняются в таблицы `accounts/balances/transactions/credits`.
+- **Обработка ошибок / отказоустойчивость**: повтор с backoff (`api_retry`), лог операций в `bank_status_log`, graceful degradation — при ошибках банка возвращаем кэш (`bank_data_cache`, `dashboard_cache`), падение токена инвалидирует `bank_tokens`; валидация входных данных через Pydantic + ручные проверки (суммы > 0 и т.д.).
+
 ## Как запустить
 1. Экспортируйте переменные окружения:
    - `CLIENT_ID`, `CLIENT_SECRET`
