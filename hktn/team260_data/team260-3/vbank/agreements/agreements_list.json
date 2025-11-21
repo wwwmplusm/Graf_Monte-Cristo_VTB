@@ -1,0 +1,73 @@
+{
+    "data": [
+        {
+            "agreement_id": "agr-ae5bbf897d20",
+            "product_id": "prod-vbank-loan-001",
+            "product_name": "Потребительский кредит",
+            "product_type": "loan",
+            "amount": 75906.0,
+            "status": "active",
+            "start_date": "2025-11-21T02:49:24.741341",
+            "end_date": "2028-11-05T02:49:24.734320",
+            "account_number": "45537d92e8de5ae473"
+        },
+        {
+            "agreement_id": "dep-team260-3-1080",
+            "product_id": "deposit-reliable",
+            "product_name": "Вклад \"Надежный\"",
+            "product_type": "deposit",
+            "amount": 326674.25,
+            "status": "active",
+            "start_date": "2025-05-14T12:48:14.206336",
+            "end_date": null,
+            "account_number": "4081781026003054973"
+        },
+        {
+            "agreement_id": "loan-team260-3-0447",
+            "product_id": "prod-81008287967b",
+            "product_name": "Ипотека VBank 9.3%",
+            "product_type": "loan",
+            "amount": 895465.41,
+            "status": "active",
+            "start_date": "2025-07-24T12:48:14.207067",
+            "end_date": null,
+            "account_number": "4081781026003054973"
+        },
+        {
+            "agreement_id": "dep-team260-3-1110",
+            "product_id": "deposit-reliable",
+            "product_name": "Вклад \"Надежный\"",
+            "product_type": "deposit",
+            "amount": 680546.49,
+            "status": "active",
+            "start_date": "2025-08-03T12:39:14.037776",
+            "end_date": null,
+            "account_number": "4081781026003054973"
+        },
+        {
+            "agreement_id": "loan-team260-3-0467",
+            "product_id": "prod-81008287967b",
+            "product_name": "Ипотека VBank 9.3%",
+            "product_type": "loan",
+            "amount": 1370677.42,
+            "status": "active",
+            "start_date": "2025-05-30T12:23:08.447996",
+            "end_date": null,
+            "account_number": "4081781026003054973"
+        },
+        {
+            "agreement_id": "loan-team260-3",
+            "product_id": "loan-consumer",
+            "product_name": "Потребительский кредит",
+            "product_type": "loan",
+            "amount": 1355247.33,
+            "status": "closed",
+            "start_date": "2024-10-30T17:59:31.391105",
+            "end_date": null,
+            "account_number": null
+        }
+    ],
+    "meta": {
+        "total": 6
+    }
+}

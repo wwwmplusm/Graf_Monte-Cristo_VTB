@@ -1,0 +1,26 @@
+{
+    "data": {
+        "balance": [
+            {
+                "accountId": "acc-5237",
+                "type": "InterimAvailable",
+                "dateTime": "2025-11-21T16:00:54.178797Z",
+                "amount": {
+                    "amount": "75906.00",
+                    "currency": "RUB"
+                },
+                "creditDebitIndicator": "Credit"
+            },
+            {
+                "accountId": "acc-5237",
+                "type": "InterimBooked",
+                "dateTime": "2025-11-21T16:00:54.178808Z",
+                "amount": {
+                    "amount": "75906.00",
+                    "currency": "RUB"
+                },
+                "creditDebitIndicator": "Credit"
+            }
+        ]
+    }
+}

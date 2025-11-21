@@ -16,3 +16,7 @@ pytest
 pytest-asyncio
 pytest-mock
 respx
+
+# -- Database --
+# Async SQLite support
+aiosqlite

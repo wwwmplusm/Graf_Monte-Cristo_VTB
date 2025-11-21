@@ -1,0 +1,15 @@
+{
+    "data": {
+        "agreement_id": "loan-team260-3",
+        "product_id": "loan-consumer",
+        "product_name": "Потребительский кредит",
+        "product_type": "loan",
+        "interest_rate": 12.9,
+        "amount": 1355247.33,
+        "status": "closed",
+        "start_date": "2024-10-30T17:59:31.391105",
+        "end_date": null,
+        "account_number": null,
+        "account_balance": null
+    }
+}

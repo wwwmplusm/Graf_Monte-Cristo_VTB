@@ -377,3 +377,47 @@ export async function applyRefinance(req: RefinanceApplicationRequest): Promise<
     
     return response.json();
 }
+
+// Sync API
+export interface StartSyncResponse {
+    sync_id: string;
+    status: 'queued';
+}
+
+export interface SyncStatusResponse {
+    status: 'running' | 'completed';
+    sync_id?: string;
+    locked_at?: string;
+    expires_at?: string;
+    synced_at?: string;
+}
+
+export async function startSync(userId: string, force: boolean = false): Promise<StartSyncResponse> {
+    const params = new URLSearchParams({ user_id: userId });
+    if (force) {
+        params.append('force', 'true');
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/api/sync/start?${params}`, {
+        method: 'POST',
+    });
+    
+    if (!response.ok) {
+        if (response.status === 409) {
+            throw new Error('Синхронизация уже запущена');
+        }
+        throw new Error(`Failed to start sync: ${response.statusText}`);
+    }
+    
+    return response.json();
+}
+
+export async function getSyncStatus(userId: string): Promise<SyncStatusResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/sync/status?user_id=${userId}`);
+    
+    if (!response.ok) {
+        throw new Error(`Failed to get sync status: ${response.statusText}`);
+    }
+    
+    return response.json();
+}

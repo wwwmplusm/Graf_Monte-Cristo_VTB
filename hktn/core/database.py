@@ -2,6 +2,7 @@ import json
 import logging
 import sqlite3
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 DB_FILE = "finpulse_consents.db"
@@ -74,10 +75,12 @@ def init_db() -> None:
                 CREATE TABLE IF NOT EXISTS user_profiles (
                     user_id TEXT PRIMARY KEY,
                     goal_type TEXT,
-                    goal_details TEXT
+                    goal_details TEXT,
+                    enable_payments BOOLEAN DEFAULT 0
                 );
                 """
             )
+            _ensure_column(conn, "user_profiles", "enable_payments", "BOOLEAN DEFAULT 0")
 
             conn.execute(
                 """
@@ -229,6 +232,38 @@ def init_db() -> None:
                 ON dashboard_cache(expires_at);
                 """
             )
+            
+            # Таблица для синхронизации (предотвращение race conditions)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS sync_locks (
+                    user_id TEXT PRIMARY KEY,
+                    locked_at TIMESTAMP NOT NULL,
+                    sync_id TEXT NOT NULL,
+                    expires_at TIMESTAMP NOT NULL
+                );
+                """
+            )
+            
+            # Индекс для быстрого поиска consents
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_consents_lookup 
+                ON consents(user_id, bank_id, consent_type, status);
+                """
+            )
+
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS bank_tokens (
+                    bank_id TEXT PRIMARY KEY,
+                    access_token TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+                    refreshed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            
             conn.commit()
         logger.info("All database tables ensured.")
     except sqlite3.Error as exc:
@@ -715,6 +750,66 @@ def invalidate_dashboard_cache(user_id: str) -> None:
             logger.info("Invalidated dashboard cache for user %s", user_id)
 
 
+def store_bank_token(bank_id: str, token: str, expires_at: datetime) -> None:
+    """Persist a bank token with its expiration time."""
+    expires_str = expires_at.astimezone(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO bank_tokens (bank_id, access_token, expires_at, refreshed_at)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(bank_id) DO UPDATE SET
+                access_token = excluded.access_token,
+                expires_at = excluded.expires_at,
+                refreshed_at = CURRENT_TIMESTAMP
+            """,
+            (bank_id, token, expires_str),
+        )
+        conn.commit()
+
+
+def get_cached_bank_token(bank_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Return a cached bank token if it is still valid.
+    
+    Tokens expiring in the next 60 seconds are considered stale.
+    """
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            """
+            SELECT access_token, expires_at
+            FROM bank_tokens
+            WHERE bank_id = ?
+            """,
+            (bank_id,),
+        )
+        row = cursor.fetchone()
+
+    if not row:
+        return None
+
+    try:
+        expires_at = datetime.fromisoformat(row["expires_at"])
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError) as exc:
+        logger.warning("Invalid expires_at for bank %s token: %s", bank_id, exc)
+        return None
+
+    # Consider tokens too close to expiry as stale
+    if expires_at <= datetime.now(timezone.utc) + timedelta(seconds=60):
+        return None
+
+    return {"access_token": row["access_token"], "expires_at": expires_at}
+
+
+def invalidate_bank_token(bank_id: str) -> None:
+    """Remove stored token for a bank (e.g., after 401)."""
+    with get_db_connection() as conn:
+        conn.execute("DELETE FROM bank_tokens WHERE bank_id = ?", (bank_id,))
+        conn.commit()
+
+
 def cleanup_expired_cache() -> None:
     """Удаляет устаревшие кеши из БД."""
     with get_db_connection() as conn:
@@ -862,3 +957,112 @@ def get_bank_data_cache(user_id: str, bank_id: str, data_type: str) -> Optional[
             logger.warning("Failed to parse cached %s data for user %s, bank %s", data_type, user_id, bank_id)
             return None
     return None
+
+
+# ============================================================
+# Sync Lock Management (для предотвращения race conditions)
+# ============================================================
+
+def acquire_sync_lock(user_id: str, sync_id: str, ttl_seconds: int = 300) -> bool:
+    """
+    Попытка получить лок для синхронизации пользователя.
+    
+    Args:
+        user_id: ID пользователя
+        sync_id: Уникальный ID синхронизации
+        ttl_seconds: Время жизни лока в секундах (по умолчанию 5 минут)
+    
+    Returns:
+        True если лок успешно получен, False если уже заблокирован
+    """
+    from datetime import datetime, timedelta
+    
+    now = datetime.utcnow()
+    expires_at = now + timedelta(seconds=ttl_seconds)
+    
+    with get_db_connection() as conn:
+        # Сначала проверяем, есть ли активный лок
+        cursor = conn.execute(
+            """
+            SELECT sync_id, expires_at 
+            FROM sync_locks 
+            WHERE user_id = ? AND expires_at > ?
+            """,
+            (user_id, now.isoformat()),
+        )
+        existing = cursor.fetchone()
+        
+        if existing:
+            logger.warning("Sync already in progress for user %s (sync_id=%s)", user_id, existing["sync_id"])
+            return False
+        
+        # Удаляем старый истекший лок если есть
+        conn.execute("DELETE FROM sync_locks WHERE user_id = ?", (user_id,))
+        
+        # Создаём новый лок
+        conn.execute(
+            """
+            INSERT INTO sync_locks (user_id, locked_at, sync_id, expires_at)
+            VALUES (?, ?, ?, ?)
+            """,
+            (user_id, now.isoformat(), sync_id, expires_at.isoformat()),
+        )
+        conn.commit()
+        logger.info("Acquired sync lock for user %s (sync_id=%s, expires=%s)", user_id, sync_id, expires_at.isoformat())
+        return True
+
+
+def release_sync_lock(user_id: str) -> None:
+    """
+    Освобождает лок синхронизации для пользователя.
+    
+    Args:
+        user_id: ID пользователя
+    """
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            "DELETE FROM sync_locks WHERE user_id = ?",
+            (user_id,),
+        )
+        conn.commit()
+        if cursor.rowcount > 0:
+            logger.info("Released sync lock for user %s", user_id)
+
+
+def get_sync_lock(user_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Получает информацию о текущем локе синхронизации.
+    
+    Args:
+        user_id: ID пользователя
+    
+    Returns:
+        Dict с данными лока или None если лок отсутствует/истёк
+    """
+    from datetime import datetime
+    
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            """
+            SELECT user_id, sync_id, locked_at, expires_at
+            FROM sync_locks
+            WHERE user_id = ? AND expires_at > ?
+            """,
+            (user_id, datetime.utcnow().isoformat()),
+        )
+        row = cursor.fetchone()
+    
+    return dict(row) if row else None
+
+
+def is_sync_locked(user_id: str) -> bool:
+    """
+    Проверяет, заблокирована ли синхронизация для пользователя.
+    
+    Args:
+        user_id: ID пользователя
+    
+    Returns:
+        True если синхронизация заблокирована (лок активен)
+    """
+    return get_sync_lock(user_id) is not None

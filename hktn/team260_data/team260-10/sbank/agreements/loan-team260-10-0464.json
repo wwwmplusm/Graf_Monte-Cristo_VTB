@@ -1,0 +1,15 @@
+{
+    "data": {
+        "agreement_id": "loan-team260-10-0464",
+        "product_id": "prod-d5cc50fb02bc",
+        "product_name": "Автокредит Smart 11.9%",
+        "product_type": "loan",
+        "interest_rate": 11.9,
+        "amount": 1449860.43,
+        "status": "active",
+        "start_date": "2025-09-06T12:56:06.343150",
+        "end_date": null,
+        "account_number": "4081781026010015277",
+        "account_balance": 2573292.9
+    }
+}

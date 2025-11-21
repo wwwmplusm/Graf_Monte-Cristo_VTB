@@ -11,7 +11,8 @@ import httpx
 import jwt
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
-from .data_models import Transaction
+from hktn.core.data_models import Transaction
+from hktn.core.database import get_cached_bank_token, store_bank_token, invalidate_bank_token
 
 logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = httpx.Timeout(20.0, connect=5.0)
@@ -69,13 +70,20 @@ class ConsentInitResult:
 class OBRAPIClient:
     """Implements the multi-step OBR consent flow."""
 
-    def __init__(self, api_base_url: str, team_client_id: str, team_client_secret: str):
+    def __init__(
+        self,
+        api_base_url: str,
+        team_client_id: str,
+        team_client_secret: str,
+        bank_id: Optional[str] = None,
+    ):
         if not all([api_base_url, team_client_id, team_client_secret]):
             raise ValueError("api_base_url, team_client_id, and team_client_secret are required.")
 
         self.api_base_url = api_base_url.rstrip("/")
         self.team_id = team_client_id
         self.team_secret = team_client_secret
+        self.bank_id = bank_id
         self._client = httpx.AsyncClient(base_url=self.api_base_url, timeout=DEFAULT_TIMEOUT)
         self._bank_token: Optional[str] = None
         self._token_expires_at: Optional[datetime] = None
@@ -159,8 +167,36 @@ class OBRAPIClient:
 
     async def _get_bank_token(self) -> str:
         async with self._token_lock:
-            if self._bank_token and self._token_expires_at and datetime.now(timezone.utc) < self._token_expires_at:
+            now = datetime.now(timezone.utc)
+            if self._bank_token and self._token_expires_at and now < self._token_expires_at:
                 return self._bank_token
+
+            if self.bank_id:
+                cached = get_cached_bank_token(self.bank_id)
+                if cached:
+                    logger.info("Using cached bank token for %s", self.bank_id)
+                    candidate_token = cached.get("access_token")
+                    try:
+                        payload = await self._validate_jwt(candidate_token)
+                        exp_ts = payload.get("exp")
+                        expires_at = cached.get("expires_at") or now + timedelta(minutes=9)
+                        if exp_ts:
+                            expires_at = datetime.fromtimestamp(exp_ts, tz=timezone.utc) - timedelta(minutes=1)
+                        if isinstance(expires_at, str):
+                            try:
+                                expires_at = datetime.fromisoformat(expires_at)
+                            except ValueError:
+                                expires_at = now + timedelta(minutes=5)
+                        if expires_at.tzinfo is None:
+                            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+                        if now < expires_at:
+                            self._bank_token = candidate_token
+                            self._token_expires_at = expires_at
+                            return self._bank_token
+                    except Exception as exc:  # noqa: BLE001
+                        logger.warning("Cached bank token for %s failed validation: %s", self.bank_id, exc)
+                        invalidate_bank_token(self.bank_id)
 
             logger.info("Requesting new bank token from %s", self.api_base_url)
 
@@ -179,8 +215,15 @@ class OBRAPIClient:
             payload = await self._validate_jwt(access_token)
             self._bank_token = access_token
             
-            expires_at_timestamp = payload.get("exp", 0)
-            self._token_expires_at = datetime.fromtimestamp(expires_at_timestamp, tz=timezone.utc) - timedelta(minutes=1)
+            expires_at_timestamp = payload.get("exp")
+            if expires_at_timestamp:
+                expires_at = datetime.fromtimestamp(expires_at_timestamp, tz=timezone.utc) - timedelta(minutes=1)
+            else:
+                expires_at = now + timedelta(minutes=9)
+            self._token_expires_at = expires_at
+
+            if self.bank_id:
+                store_bank_token(self.bank_id, access_token, expires_at)
 
             logger.info("Successfully obtained and validated new bank token.")
             return self._bank_token
@@ -548,6 +591,35 @@ class OBRAPIClient:
         return response.json()
 
     @api_retry
+    async def get_product_consent_details(self, consent_id: str, user_id: Optional[str] = None) -> Dict[str, Any]:
+        """Fetch product-agreement consent status."""
+        bank_token = await self._get_bank_token()
+        headers = await self._get_common_headers(bank_token)
+        params = {"client_id": user_id} if user_id else None
+        response = await self._client.get(
+            f"/product-agreement-consents/{consent_id}",
+            headers=headers,
+            params=params,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    @api_retry
+    async def get_payment_consent_details(self, consent_id: str, user_id: Optional[str] = None) -> Dict[str, Any]:
+        """Fetch payment consent status."""
+        bank_token = await self._get_bank_token()
+        headers = await self._get_common_headers(bank_token)
+        headers["X-Payment-Consent-Id"] = consent_id
+        params = {"client_id": user_id} if user_id else None
+        response = await self._client.get(
+            f"/payment-consents/{consent_id}",
+            headers=headers,
+            params=params,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    @api_retry
     async def get_consent_status_by_request_id(self, request_id: str) -> Dict[str, Any]:
         """Fetch consent status when only request_id is available."""
         bank_token = await self._get_bank_token()
@@ -651,7 +723,7 @@ class OBRAPIClient:
                 raw_txs = self._extract_transactions(response_data)
 
                 for raw in raw_txs:
-                    tx_model = self._to_transaction_model(raw)
+                    tx_model = self._to_transaction_model(raw, account_id=account_id)
                     if tx_model:
                         all_transactions.append(tx_model)
                     else:
@@ -1014,7 +1086,7 @@ class OBRAPIClient:
             return code or subcode
         return None
 
-    def _to_transaction_model(self, raw: Any) -> Optional[Transaction]:
+    def _to_transaction_model(self, raw: Any, account_id: Optional[str] = None) -> Optional[Transaction]:
         if not isinstance(raw, dict):
             return None
 
@@ -1099,4 +1171,5 @@ class OBRAPIClient:
             transactionInformation=transaction_information,
             transactionLocation=transaction_location or {},
             card=card_payload or {},
+            accountId=account_id,
         )

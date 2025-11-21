@@ -1,0 +1,26 @@
+{
+    "data": {
+        "balance": [
+            {
+                "accountId": "acc-3700",
+                "type": "InterimAvailable",
+                "dateTime": "2025-11-21T16:01:20.261265Z",
+                "amount": {
+                    "amount": "4354918.14",
+                    "currency": "RUB"
+                },
+                "creditDebitIndicator": "Credit"
+            },
+            {
+                "accountId": "acc-3700",
+                "type": "InterimBooked",
+                "dateTime": "2025-11-21T16:01:20.261287Z",
+                "amount": {
+                    "amount": "4354918.14",
+                    "currency": "RUB"
+                },
+                "creditDebitIndicator": "Credit"
+            }
+        ]
+    }
+}

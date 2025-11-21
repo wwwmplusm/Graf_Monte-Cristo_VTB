@@ -8,8 +8,8 @@ try:  # pragma: no cover - compatibility for direct module import
     from .backend.app import app, create_app
     from .backend.config import settings
 except ImportError:  # pragma: no cover
-    from backend.app import app, create_app  # type: ignore
-    from backend.config import settings  # type: ignore
+    from hktn.backend.app import app, create_app  # type: ignore
+    from hktn.backend.config import settings  # type: ignore
 
 from hktn.core.obr_client import OBRAPIClient  # re-exported for legacy tests
 

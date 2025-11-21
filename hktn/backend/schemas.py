@@ -36,7 +36,7 @@ class ConsentInitiateRequest(BaseModel):
 class BankConsents(BaseModel):
     account: bool
     product: bool
-    payment: bool
+    payment: bool = False  # Optional: payment consents are not required for basic functionality
 
 
 class BankConsentRequest(BaseModel):
@@ -47,6 +47,22 @@ class BankConsentRequest(BaseModel):
 class OnboardingConsentsRequest(BaseModel):
     user_id: str
     banks: List[BankConsentRequest]
+
+
+class FullConsentInitRequest(BaseModel):
+    """Request to create account + product + payment consents for multiple banks."""
+
+    user_id: str
+    banks: List[str]
+    include_products: bool = True
+    include_payments: bool = True
+
+
+class ConsentRefreshRequest(BaseModel):
+    """Request payload for manual consent status refresh."""
+
+    user_id: str
+    banks: Optional[List[str]] = None
 
 
 # Payment schemas

@@ -1,0 +1,73 @@
+{
+    "data": [
+        {
+            "agreement_id": "dep-team260-10-1083",
+            "product_id": "deposit-reliable",
+            "product_name": "Вклад \"Надежный\"",
+            "product_type": "deposit",
+            "amount": 8003420.31,
+            "status": "active",
+            "start_date": "2025-06-28T12:48:14.214754",
+            "end_date": null,
+            "account_number": "4081781026010066706"
+        },
+        {
+            "agreement_id": "dep-team260-10-1100",
+            "product_id": "deposit-reliable",
+            "product_name": "Вклад \"Надежный\"",
+            "product_type": "deposit",
+            "amount": 9843969.81,
+            "status": "active",
+            "start_date": "2025-01-08T12:36:32.052365",
+            "end_date": null,
+            "account_number": "4081781026010066706"
+        },
+        {
+            "agreement_id": "dep-team260-10-1116",
+            "product_id": "deposit-reliable",
+            "product_name": "Вклад \"Надежный\"",
+            "product_type": "deposit",
+            "amount": 4154219.09,
+            "status": "active",
+            "start_date": "2025-10-05T12:23:08.461232",
+            "end_date": null,
+            "account_number": "4081781026010066706"
+        },
+        {
+            "agreement_id": "dep-team260-10",
+            "product_id": "deposit-reliable",
+            "product_name": "Вклад \"Надежный\"",
+            "product_type": "deposit",
+            "amount": 2753408.8,
+            "status": "active",
+            "start_date": "2025-05-30T17:59:31.391105",
+            "end_date": null,
+            "account_number": null
+        },
+        {
+            "agreement_id": "card-deb-team260-10",
+            "product_id": "card-debit",
+            "product_name": "Дебетовая карта \"Свобода\"",
+            "product_type": "card",
+            "amount": 0.0,
+            "status": "active",
+            "start_date": "2023-10-30T17:59:31.391105",
+            "end_date": null,
+            "account_number": null
+        },
+        {
+            "agreement_id": "card-cred-team260-10",
+            "product_id": "card-credit",
+            "product_name": "Кредитная карта \"Лимит\"",
+            "product_type": "card",
+            "amount": 500000.0,
+            "status": "active",
+            "start_date": "2024-10-30T17:59:31.391105",
+            "end_date": null,
+            "account_number": null
+        }
+    ],
+    "meta": {
+        "total": 6
+    }
+}

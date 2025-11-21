@@ -13,6 +13,7 @@ class Transaction(BaseModel):
     transactionId: str
     amount: float
     currency: str
+    accountId: Optional[str] = None
     description: Optional[str] = None
     bookingDate: date
     creditDebitIndicator: Optional[str] = None

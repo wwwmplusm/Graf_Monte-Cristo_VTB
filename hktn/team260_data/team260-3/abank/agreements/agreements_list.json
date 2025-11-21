@@ -1,0 +1,29 @@
+{
+    "data": [
+        {
+            "agreement_id": "loan-team260-3-0449",
+            "product_id": "prod-b6590d81632b",
+            "product_name": "Экспресс кредит 14.2%",
+            "product_type": "loan",
+            "amount": 1488936.99,
+            "status": "active",
+            "start_date": "2025-09-20T12:23:34.840590",
+            "end_date": null,
+            "account_number": "4081781026003051729"
+        },
+        {
+            "agreement_id": "loan-team260-3",
+            "product_id": "loan-consumer",
+            "product_name": "Потребительский кредит",
+            "product_type": "loan",
+            "amount": 872696.04,
+            "status": "active",
+            "start_date": "2024-10-30T17:59:49.133652",
+            "end_date": null,
+            "account_number": null
+        }
+    ],
+    "meta": {
+        "total": 2
+    }
+}

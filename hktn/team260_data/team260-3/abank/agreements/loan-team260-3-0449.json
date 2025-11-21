@@ -1,0 +1,15 @@
+{
+    "data": {
+        "agreement_id": "loan-team260-3-0449",
+        "product_id": "prod-b6590d81632b",
+        "product_name": "Экспресс кредит 14.2%",
+        "product_type": "loan",
+        "interest_rate": 14.2,
+        "amount": 1488936.99,
+        "status": "active",
+        "start_date": "2025-09-20T12:23:34.840590",
+        "end_date": null,
+        "account_number": "4081781026003051729",
+        "account_balance": 264245.21
+    }
+}

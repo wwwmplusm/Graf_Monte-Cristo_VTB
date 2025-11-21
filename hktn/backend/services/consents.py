@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException, status
 
 from hktn.core.database import (
+    add_bank_status_log,
     find_consent_by_type,
     get_consent_by_request_id,
     get_user_consents,
@@ -13,12 +15,53 @@ from hktn.core.database import (
     update_consent_from_request,
     update_consent_status,
 )
-from hktn.core.obr_client import AUTHORIZED_CONSENT_STATUSES, FAILED_CONSENT_STATUSES
+from hktn.core.obr_client import AUTHORIZED_CONSENT_STATUSES, FAILED_CONSENT_STATUSES, PENDING_CONSENT_STATUSES
 
 from ..schemas import ConsentInitiateRequest, OnboardingConsentsRequest, BankConsentRequest
 from .banking import bank_client, get_bank_config
 
 logger = logging.getLogger("finpulse.backend.consents")
+_PENDING_DB_STATUSES = {"PENDING", "CREATING", "AWAITING", "AWAITING_USER"}
+
+
+def _extract_status_from_payload(payload: Dict[str, Any]) -> str:
+    """Extract status field from various bank response shapes."""
+    if not isinstance(payload, dict):
+        return "unknown"
+    data_section = payload.get("data", {}) if isinstance(payload.get("data"), dict) else {}
+    return (
+        data_section.get("status")
+        or payload.get("status")
+        or data_section.get("ConsentStatus")
+        or payload.get("consentStatus")
+        or "unknown"
+    )
+
+
+def _extract_consent_id_from_payload(payload: Dict[str, Any]) -> Optional[str]:
+    if not isinstance(payload, dict):
+        return None
+    data_section = payload.get("data", {}) if isinstance(payload.get("data"), dict) else {}
+    return (
+        payload.get("consent_id")
+        or payload.get("consentId")
+        or data_section.get("consentId")
+        or data_section.get("consent_id")
+    )
+
+
+def _normalize_db_status(raw_status: str) -> str:
+    value = (raw_status or "").strip()
+    if not value:
+        return "UNKNOWN"
+    lowered = value.lower()
+    if lowered in {item.lower() for item in AUTHORIZED_CONSENT_STATUSES}:
+        return "APPROVED"
+    if lowered in {item.lower() for item in FAILED_CONSENT_STATUSES}:
+        return "REJECTED"
+    if lowered in {item.lower() for item in PENDING_CONSENT_STATUSES}:
+        return "AWAITING_USER"
+    return value.upper()
 
 
 async def initiate_consent(req: ConsentInitiateRequest) -> Dict[str, Any]:
@@ -138,8 +181,6 @@ async def initiate_product_consent(req: ConsentInitiateRequest) -> Dict[str, Any
 
 async def initiate_payment_consent(req: ConsentInitiateRequest) -> Dict[str, Any]:
     """Initiate payment consent for the selected bank."""
-    from hktn.core.database import find_consent_by_type
-    
     bank_config = get_bank_config(req.bank_id, require_url=True)
     async with bank_client(req.bank_id) as client:
         try:
@@ -243,6 +284,7 @@ async def initiate_full_consent_flow(req: ConsentInitiateRequest) -> Dict[str, A
     account_result = await initiate_consent(req)
 
     # 2. Product consent (всегда, не критично если не получится)
+    product_result: Dict[str, Any] = {"state": "skipped"}
     try:
         logger.info("Creating product consent for %s@%s", user_id, bank_id)
         product_result = await initiate_product_consent(req)
@@ -254,6 +296,7 @@ async def initiate_full_consent_flow(req: ConsentInitiateRequest) -> Dict[str, A
         logger.warning("Product consent creation failed (non-critical): %s", exc)
 
     # 3. Payment consent (всегда, не критично если не получится)
+    payment_result: Dict[str, Any] = {"state": "skipped"}
     try:
         logger.info("Creating payment consent for %s@%s", user_id, bank_id)
         payment_result = await initiate_payment_consent(req)
@@ -264,7 +307,13 @@ async def initiate_full_consent_flow(req: ConsentInitiateRequest) -> Dict[str, A
     except Exception as exc:  # noqa: BLE001
         logger.warning("Payment consent creation failed (non-critical): %s", exc)
 
-    return account_result
+    return {
+        "bank_id": bank_id,
+        "user_id": user_id,
+        "account_consent": account_result,
+        "product_consent": product_result,
+        "payment_consent": payment_result,
+    }
 
 
 async def poll_consent_status(user_id: str, bank_id: str, request_id: str) -> Dict[str, Any]:
@@ -337,6 +386,108 @@ async def poll_consent_status(user_id: str, bank_id: str, request_id: str) -> Di
 def mark_consent_from_callback(consent_id: str) -> bool:
     """Mark consent as approved when redirected back from bank."""
     return update_consent_status(consent_id, "APPROVED")
+
+
+async def initiate_consents_for_banks(
+    user_id: str,
+    bank_ids: List[str],
+    include_products: bool = True,
+    include_payments: bool = True,
+) -> Dict[str, Any]:
+    """Create account/product/payment consents for the provided banks."""
+    results: List[Dict[str, Any]] = []
+    for bank_id in bank_ids:
+        req = ConsentInitiateRequest(user_id=user_id, bank_id=bank_id)
+        account_result = await initiate_consent(req)
+        product_result = await initiate_product_consent(req) if include_products else {"state": "skipped"}
+        payment_result = await initiate_payment_consent(req) if include_payments else {"state": "skipped"}
+
+        results.append(
+            {
+                "bank_id": bank_id,
+                "user_id": user_id,
+                "account_consent": account_result,
+                "product_consent": product_result,
+                "payment_consent": payment_result,
+            }
+        )
+
+    overall_state = "completed"
+    all_states: List[str] = []
+    for item in results:
+        for key in ("account_consent", "product_consent", "payment_consent"):
+            state_val = (item.get(key) or {}).get("state")
+            if state_val:
+                all_states.append(state_val)
+
+    if any(state == "error" for state in all_states):
+        overall_state = "partial"
+    if any(state == "pending" for state in all_states):
+        overall_state = "in_progress"
+
+    return {"user_id": user_id, "banks": results, "overall_status": overall_state}
+
+
+async def _refresh_single_consent(user_id: str, consent_row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Poll bank-side consent status and persist it locally."""
+    bank_id = consent_row.get("bank_id")
+    consent_id = consent_row.get("consent_id")
+    consent_type = consent_row.get("consent_type", "accounts")
+    request_id = consent_row.get("request_id")
+    current_status = _normalize_db_status(consent_row.get("status", ""))
+
+    if current_status == "APPROVED":
+        return None
+
+    async with bank_client(bank_id) as client:
+        try:
+            payload: Dict[str, Any] = {}
+            if consent_type == "accounts" and request_id:
+                poll_result = await poll_consent_status(user_id, bank_id, request_id)
+                payload = poll_result
+                consent_id = poll_result.get("consent_id") or consent_id
+            elif consent_type == "accounts":
+                payload = await client.get_consent_details(consent_id)
+            elif consent_type == "products":
+                payload = await client.get_product_consent_details(consent_id, user_id=user_id)
+            else:
+                payload = await client.get_payment_consent_details(consent_id, user_id=user_id)
+
+            status_value = _extract_status_from_payload(payload)
+            new_status = _normalize_db_status(status_value)
+
+            if consent_id and new_status != current_status:
+                update_consent_status(consent_id, new_status)
+                add_bank_status_log(user_id, bank_id, "consent_refresh", "ok", f"{consent_type}:{new_status}")
+
+            return {
+                "bank_id": bank_id,
+                "consent_id": consent_id,
+                "consent_type": consent_type,
+                "status": new_status,
+                "raw_status": status_value,
+            }
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Failed to refresh %s consent for %s@%s: %s", consent_type, user_id, bank_id, exc)
+            add_bank_status_log(user_id, bank_id, "consent_refresh", "error", str(exc))
+            return None
+
+
+async def refresh_consents_status(user_id: str, bank_ids: Optional[List[str]] = None) -> Dict[str, Any]:
+    """Force-refresh pending consents via bank APIs."""
+    consents = get_user_consents(user_id)
+    changes: List[Dict[str, Any]] = []
+    for consent_row in consents:
+        if bank_ids and consent_row.get("bank_id") not in bank_ids:
+            continue
+        if _normalize_db_status(consent_row.get("status", "")) == "APPROVED":
+            continue
+        updated = await _refresh_single_consent(user_id, consent_row)
+        if updated:
+            updated["checked_at"] = datetime.utcnow().isoformat()
+            changes.append(updated)
+
+    return {"user_id": user_id, "updates": changes}
 
 
 async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, Any]:
@@ -584,33 +735,31 @@ async def create_multiple_consents(req: OnboardingConsentsRequest) -> Dict[str, 
     }
 
 
-async def get_consents_status(user_id: str) -> Dict[str, Any]:
+async def get_consents_status(
+    user_id: str,
+    bank_ids: Optional[List[str]] = None,
+    auto_refresh: bool = True,
+) -> Dict[str, Any]:
     """Возвращает текущий статус всех согласий пользователя."""
+    if auto_refresh:
+        await refresh_consents_status(user_id, bank_ids=bank_ids)
+
     consents = get_user_consents(user_id)
     
     # Group consents by bank_id
     banks_dict: Dict[str, Dict[str, Any]] = {}
+    checked_at = datetime.utcnow().isoformat()
     
     for consent in consents:
         bank_id = consent.get("bank_id")
+        if bank_ids and bank_id not in bank_ids:
+            continue
+
         consent_type = consent.get("consent_type", "accounts")
-        status = consent.get("status", "unknown")
+        status = _normalize_db_status(consent.get("status", "unknown"))
         consent_id = consent.get("consent_id")
         request_id = consent.get("request_id")
         approval_url = consent.get("approval_url")
-        
-        # НОВОЕ: Автопроверка pending консентов у банка
-        # Проверяем только account consents, так как только они поддерживают polling по request_id
-        if status == "AWAITING_USER" and request_id and consent_type == "accounts":
-            try:
-                logger.info(f"Polling account consent status for request_id={request_id} at bank {bank_id}")
-                poll_result = await poll_consent_status(user_id, bank_id, request_id)
-                if poll_result.get("state") == "approved":
-                    status = "APPROVED"
-                    consent_id = poll_result.get("consent_id") or consent_id
-                    logger.info(f"Account consent {request_id} is now approved with consent_id={consent_id}")
-            except Exception as e:
-                logger.warning(f"Failed to poll account consent status for {request_id}: {e}")
         
         if bank_id not in banks_dict:
             # Get bank config for bank_name
@@ -625,20 +774,19 @@ async def get_consents_status(user_id: str) -> Dict[str, Any]:
                 "payment_consent": None,
             }
         
-        # Map consent_type to the result structure
         consent_key_map = {
             "accounts": "account_consent",
             "products": "product_consent",
             "payments": "payment_consent",
         }
-        
         consent_key = consent_key_map.get(consent_type, "account_consent")
         
-        # Map status from DB to API status
         if status == "APPROVED":
             api_status = "approved"
-        elif status == "AWAITING_USER":
+        elif status in {"AWAITING_USER", "PENDING", "CREATING"}:
             api_status = "pending"
+        elif status in {"REJECTED", "EXPIRED", "CANCELLED"}:
+            api_status = "error"
         else:
             api_status = "creating"
         
@@ -647,6 +795,8 @@ async def get_consents_status(user_id: str) -> Dict[str, Any]:
             "consent_id": consent_id,
             "request_id": request_id,
             "approval_url": approval_url,
+            "raw_status": status,
+            "checked_at": checked_at,
         }
     
     results = list(banks_dict.values())
@@ -654,4 +804,5 @@ async def get_consents_status(user_id: str) -> Dict[str, Any]:
     return {
         "results": results,
         "user_id": user_id,
+        "checked_at": checked_at,
     }

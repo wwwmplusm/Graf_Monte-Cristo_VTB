@@ -1,0 +1,15 @@
+{
+    "data": {
+        "agreement_id": "agr-ae5bbf897d20",
+        "product_id": "prod-vbank-loan-001",
+        "product_name": "Потребительский кредит",
+        "product_type": "loan",
+        "interest_rate": 12.9,
+        "amount": 75906.0,
+        "status": "active",
+        "start_date": "2025-11-21T02:49:24.741341",
+        "end_date": "2028-11-05T02:49:24.734320",
+        "account_number": "45537d92e8de5ae473",
+        "account_balance": 75906.0
+    }
+}

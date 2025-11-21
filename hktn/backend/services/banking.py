@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from datetime import datetime, date
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from fastapi import HTTPException, status
@@ -12,8 +13,13 @@ from hktn.core.database import (
     find_approved_consents,
     get_bank_data_cache,
     save_bank_data_cache,
+    save_accounts,
+    save_balances,
+    save_transactions,
+    save_credits,
 )
 from hktn.core.obr_client import OBRAPIClient
+from hktn.core.data_models import Transaction as TxModel
 
 from ..config import BankConfig, settings
 from ..state import api_cache
@@ -114,6 +120,49 @@ def _sum_balance_amounts(entries: List[Dict[str, Any]]) -> float:
     return round(total, 2)
 
 
+def _tx_to_dict(tx: Any) -> Optional[Dict[str, Any]]:
+    """Normalize Transaction-like objects to plain dicts."""
+    if isinstance(tx, TxModel):
+        return tx.model_dump()
+    if hasattr(tx, "model_dump"):
+        try:
+            return tx.model_dump()
+        except Exception:  # noqa: BLE001
+            pass
+    if hasattr(tx, "dict"):
+        try:
+            return tx.dict()
+        except Exception:  # noqa: BLE001
+            pass
+    if isinstance(tx, dict):
+        tx_dict = tx
+    else:
+        return None
+
+    booking_date = tx_dict.get("bookingDate")
+    if isinstance(booking_date, (datetime, date)):
+        tx_dict["bookingDate"] = booking_date.isoformat()
+    return tx_dict
+    return None
+
+
+def _transactions_by_account(transactions: Sequence[Any]) -> Dict[str, List[Dict[str, Any]]]:
+    """Group transactions by account to simplify DB persistence."""
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for tx in transactions or []:
+        tx_dict = _tx_to_dict(tx)
+        if not tx_dict:
+            continue
+        account_id = (
+            tx_dict.get("accountId")
+            or tx_dict.get("account_id")
+            or tx_dict.get("debtorAccount")
+            or "unknown"
+        )
+        grouped.setdefault(str(account_id), []).append(tx_dict)
+    return grouped
+
+
 def _ensure_team_credentials() -> Tuple[str, str]:
     if not settings.team_client_id or not settings.team_client_secret:
         raise HTTPException(
@@ -148,6 +197,7 @@ async def bank_client(bank_id: str):
         api_base_url=config.url,
         team_client_id=client_id,
         team_client_secret=client_secret,
+        bank_id=bank_id,
     )
     try:
         yield client
@@ -323,10 +373,8 @@ async def fetch_bank_balances_with_consent(bank_id: str, consent_id: str, user_i
             return {"bank_id": bank_id, "status": "error", "balances": [], "message": error_message}
 
 
-async def bootstrap_bank(bank_id: str, user_id: str, use_cache: bool = True) -> Dict[str, Any]:
+async def bootstrap_bank(bank_id: str, user_id: str, use_cache: bool = True, persist: bool = True) -> Dict[str, Any]:
     """Aggregate initial payload for a connected bank."""
-    from datetime import datetime
-    
     # Check cache first if requested
     if use_cache:
         cached_accounts = get_bank_data_cache(user_id, bank_id, "accounts")
@@ -381,7 +429,12 @@ async def bootstrap_bank(bank_id: str, user_id: str, use_cache: bool = True) -> 
         balances_task,
     )
 
-    transactions_snapshot = list(transactions_res.get("transactions") or [])[:100]
+    transactions_payload = [
+        tx_dict
+        for tx_dict in (_tx_to_dict(tx) for tx in transactions_res.get("transactions") or [])
+        if tx_dict
+    ]
+    transactions_snapshot = transactions_payload[:100]
     status_block = {
         "accounts": {
             "state": accounts_res.get("status"),
@@ -401,6 +454,40 @@ async def bootstrap_bank(bank_id: str, user_id: str, use_cache: bool = True) -> 
         },
     }
 
+    if persist:
+        try:
+            accounts_payload = accounts_res.get("accounts") or []
+            balances_payload = balances_res.get("balances") or []
+            credits_payload = credits_res.get("credits") or []
+
+            save_accounts(user_id, bank_id, accounts_payload)
+
+            for balance in balances_payload:
+                account_id = (
+                    balance.get("accountId")
+                    or balance.get("account_id")
+                    or balance.get("resource_id")
+                    or "unknown"
+                )
+                save_balances(user_id, bank_id, account_id, [balance])
+
+            grouped_txs = _transactions_by_account(transactions_payload)
+            for account_id, tx_list in grouped_txs.items():
+                save_transactions(user_id, bank_id, account_id, tx_list)
+
+            save_credits(user_id, bank_id, credits_payload)
+            logger.info(
+                "Persisted bootstrap snapshot for user %s bank %s (accounts=%d, balances=%d, tx_groups=%d, credits=%d)",
+                user_id,
+                bank_id,
+                len(accounts_payload),
+                len(balances_payload),
+                len(grouped_txs),
+                len(credits_payload),
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Failed to persist bootstrap payload for %s@%s: %s", user_id, bank_id, exc)
+
     # Save to cache
     fetched_at = datetime.utcnow().isoformat()
     save_bank_data_cache(user_id, bank_id, "accounts", {
@@ -412,7 +499,7 @@ async def bootstrap_bank(bank_id: str, user_id: str, use_cache: bool = True) -> 
         "status_info": status_block["balances"]
     })
     save_bank_data_cache(user_id, bank_id, "transactions", {
-        "transactions": transactions_res.get("transactions") or [],
+        "transactions": transactions_payload,
         "status_info": status_block["transactions"]
     })
     save_bank_data_cache(user_id, bank_id, "credits", {

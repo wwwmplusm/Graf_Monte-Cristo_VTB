@@ -1,0 +1,5968 @@
+[
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632484",
+        "amount": {
+            "amount": "4306.32",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-08T13:42:17.472711Z",
+        "valueDateTime": "2025-11-08T13:42:17.472711Z",
+        "transactionInformation": "Dodopizza - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0335",
+            "name": "Dodopizza",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 8"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632481",
+        "amount": {
+            "amount": "256196.97",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-08T12:39:17.472711Z",
+        "valueDateTime": "2025-11-08T12:39:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632483",
+        "amount": {
+            "amount": "3970.28",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-05T20:06:17.472711Z",
+        "valueDateTime": "2025-11-05T20:06:17.472711Z",
+        "transactionInformation": "Дикси - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0161",
+            "name": "Дикси",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 7"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632515",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-05T10:35:17.472711Z",
+        "valueDateTime": "2025-11-05T10:35:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632485",
+        "amount": {
+            "amount": "129254.40",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-04T20:37:17.472711Z",
+        "valueDateTime": "2025-11-04T20:37:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632482",
+        "amount": {
+            "amount": "5711.71",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-04T15:03:17.472711Z",
+        "valueDateTime": "2025-11-04T15:03:17.472711Z",
+        "transactionInformation": "KFC - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0270",
+            "name": "KFC",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632514",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-04T10:23:17.472711Z",
+        "valueDateTime": "2025-11-04T10:23:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632513",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-03T10:46:17.472711Z",
+        "valueDateTime": "2025-11-03T10:46:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632512",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-02T10:57:17.472711Z",
+        "valueDateTime": "2025-11-02T10:57:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632476",
+        "amount": {
+            "amount": "174818.50",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-01T21:33:17.472711Z",
+        "valueDateTime": "2025-11-01T21:33:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632474",
+        "amount": {
+            "amount": "62041.39",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-01T15:30:17.472711Z",
+        "valueDateTime": "2025-11-01T15:30:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632472",
+        "amount": {
+            "amount": "71250.51",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-01T10:47:17.472711Z",
+        "valueDateTime": "2025-11-01T10:47:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632511",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-01T10:03:17.472711Z",
+        "valueDateTime": "2025-11-01T10:03:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632475",
+        "amount": {
+            "amount": "147860.33",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-11-01T09:52:17.472711Z",
+        "valueDateTime": "2025-11-01T09:52:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632480",
+        "amount": {
+            "amount": "1821.87",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-30T10:11:17.472711Z",
+        "valueDateTime": "2025-10-30T10:11:17.472711Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0005",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 5"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632479",
+        "amount": {
+            "amount": "38440.00",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-29T23:46:17.472711Z",
+        "valueDateTime": "2025-10-29T23:46:17.472711Z",
+        "transactionInformation": "AliExpress - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1362",
+            "name": "AliExpress",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632477",
+        "amount": {
+            "amount": "7004.29",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-29T08:59:17.472711Z",
+        "valueDateTime": "2025-10-29T08:59:17.472711Z",
+        "transactionInformation": "Макдоналдс - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0244",
+            "name": "Макдоналдс",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 10"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632473",
+        "amount": {
+            "amount": "101223.57",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-28T13:47:17.472711Z",
+        "valueDateTime": "2025-10-28T13:47:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632478",
+        "amount": {
+            "amount": "4336.18",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-27T09:25:17.472711Z",
+        "valueDateTime": "2025-10-27T09:25:17.472711Z",
+        "transactionInformation": "ВкусВилл - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0185",
+            "name": "ВкусВилл",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632468",
+        "amount": {
+            "amount": "3562.07",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-25T13:34:17.472711Z",
+        "valueDateTime": "2025-10-25T13:34:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0122",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632469",
+        "amount": {
+            "amount": "8969.80",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-24T10:13:17.472711Z",
+        "valueDateTime": "2025-10-24T10:13:17.472711Z",
+        "transactionInformation": "Dodopizza - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0331",
+            "name": "Dodopizza",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 4"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632471",
+        "amount": {
+            "amount": "1539.25",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-24T08:34:17.472711Z",
+        "valueDateTime": "2025-10-24T08:34:17.472711Z",
+        "transactionInformation": "Дикси - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0161",
+            "name": "Дикси",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 7"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632466",
+        "amount": {
+            "amount": "4375.52",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-23T11:55:17.472711Z",
+        "valueDateTime": "2025-10-23T11:55:17.472711Z",
+        "transactionInformation": "ВкусВилл - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0190",
+            "name": "ВкусВилл",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 11"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632470",
+        "amount": {
+            "amount": "3293.60",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-21T12:01:17.472711Z",
+        "valueDateTime": "2025-10-21T12:01:17.472711Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0015",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 15"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632467",
+        "amount": {
+            "amount": "68829.83",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-21T07:58:17.472711Z",
+        "valueDateTime": "2025-10-21T07:58:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632459",
+        "amount": {
+            "amount": "2461.41",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-18T15:40:17.472711Z",
+        "valueDateTime": "2025-10-18T15:40:17.472711Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0014",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 14"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632463",
+        "amount": {
+            "amount": "61328.42",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-18T08:34:17.472711Z",
+        "valueDateTime": "2025-10-18T08:34:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632461",
+        "amount": {
+            "amount": "17426.57",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-17T14:36:17.472711Z",
+        "valueDateTime": "2025-10-17T14:36:17.472711Z",
+        "transactionInformation": "Яндекс.Маркет - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1361",
+            "name": "Яндекс.Маркет",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632460",
+        "amount": {
+            "amount": "160856.73",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-16T18:09:17.472711Z",
+        "valueDateTime": "2025-10-16T18:09:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632462",
+        "amount": {
+            "amount": "2029.53",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-16T16:41:17.472711Z",
+        "valueDateTime": "2025-10-16T16:41:17.472711Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0009",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 9"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632465",
+        "amount": {
+            "amount": "55023.94",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-16T13:47:17.472711Z",
+        "valueDateTime": "2025-10-16T13:47:17.472711Z",
+        "transactionInformation": "Яндекс.Маркет - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1361",
+            "name": "Яндекс.Маркет",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632464",
+        "amount": {
+            "amount": "2911.26",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-15T12:05:17.472711Z",
+        "valueDateTime": "2025-10-15T12:05:17.472711Z",
+        "transactionInformation": "Теремок - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0393",
+            "name": "Теремок",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632458",
+        "amount": {
+            "amount": "49560.75",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-14T12:26:17.472711Z",
+        "valueDateTime": "2025-10-14T12:26:17.472711Z",
+        "transactionInformation": "Wildberries - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1360",
+            "name": "Wildberries",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632455",
+        "amount": {
+            "amount": "9353.98",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-11T19:20:17.472711Z",
+        "valueDateTime": "2025-10-11T19:20:17.472711Z",
+        "transactionInformation": "Burger King - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0306",
+            "name": "Burger King",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 7"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632453",
+        "amount": {
+            "amount": "9308.26",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-11T11:09:17.472711Z",
+        "valueDateTime": "2025-10-11T11:09:17.472711Z",
+        "transactionInformation": "Теремок - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0392",
+            "name": "Теремок",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 5"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632452",
+        "amount": {
+            "amount": "65519.98",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-09T11:36:17.472711Z",
+        "valueDateTime": "2025-10-09T11:36:17.472711Z",
+        "transactionInformation": "Яндекс.Маркет - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1361",
+            "name": "Яндекс.Маркет",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632456",
+        "amount": {
+            "amount": "3084.49",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-09T11:35:17.472711Z",
+        "valueDateTime": "2025-10-09T11:35:17.472711Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0014",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 14"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632454",
+        "amount": {
+            "amount": "4750.50",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-06T20:01:17.472711Z",
+        "valueDateTime": "2025-10-06T20:01:17.472711Z",
+        "transactionInformation": "Макдоналдс - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0240",
+            "name": "Макдоналдс",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632457",
+        "amount": {
+            "amount": "4528.83",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-06T15:34:17.472711Z",
+        "valueDateTime": "2025-10-06T15:34:17.472711Z",
+        "transactionInformation": "Теремок - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0390",
+            "name": "Теремок",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632449",
+        "amount": {
+            "amount": "3975.31",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-05T15:06:17.472711Z",
+        "valueDateTime": "2025-10-05T15:06:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0129",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 10"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632510",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-05T10:01:17.472711Z",
+        "valueDateTime": "2025-10-05T10:01:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632509",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-04T10:14:17.472711Z",
+        "valueDateTime": "2025-10-04T10:14:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632450",
+        "amount": {
+            "amount": "62719.10",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-04T09:49:17.472711Z",
+        "valueDateTime": "2025-10-04T09:49:17.472711Z",
+        "transactionInformation": "Яндекс.Маркет - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1361",
+            "name": "Яндекс.Маркет",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632451",
+        "amount": {
+            "amount": "237455.13",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-03T16:46:17.472711Z",
+        "valueDateTime": "2025-10-03T16:46:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632508",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-03T10:21:17.472711Z",
+        "valueDateTime": "2025-10-03T10:21:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632507",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-02T10:02:17.472711Z",
+        "valueDateTime": "2025-10-02T10:02:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632447",
+        "amount": {
+            "amount": "3135.30",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-01T18:13:17.472711Z",
+        "valueDateTime": "2025-10-01T18:13:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0128",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 9"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632506",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-10-01T10:01:17.472711Z",
+        "valueDateTime": "2025-10-01T10:01:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632448",
+        "amount": {
+            "amount": "8016.84",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-30T22:35:17.472711Z",
+        "valueDateTime": "2025-09-30T22:35:17.472711Z",
+        "transactionInformation": "Сбарро - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0371",
+            "name": "Сбарро",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 4"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632445",
+        "amount": {
+            "amount": "3210.57",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-30T09:13:17.472711Z",
+        "valueDateTime": "2025-09-30T09:13:17.472711Z",
+        "transactionInformation": "Лента - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0091",
+            "name": "Лента",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 2"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632446",
+        "amount": {
+            "amount": "4843.19",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-29T08:08:17.472711Z",
+        "valueDateTime": "2025-09-29T08:08:17.472711Z",
+        "transactionInformation": "Дикси - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0156",
+            "name": "Дикси",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 2"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632443",
+        "amount": {
+            "amount": "39173.84",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-28T22:16:17.472711Z",
+        "valueDateTime": "2025-09-28T22:16:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632441",
+        "amount": {
+            "amount": "4189.67",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-28T12:13:17.472711Z",
+        "valueDateTime": "2025-09-28T12:13:17.472711Z",
+        "transactionInformation": "Burger King - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0302",
+            "name": "Burger King",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632438",
+        "amount": {
+            "amount": "51172.35",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-28T08:10:17.472711Z",
+        "valueDateTime": "2025-09-28T08:10:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632440",
+        "amount": {
+            "amount": "65291.67",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-26T14:07:17.472711Z",
+        "valueDateTime": "2025-09-26T14:07:17.472711Z",
+        "transactionInformation": "Яндекс.Маркет - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1361",
+            "name": "Яндекс.Маркет",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632444",
+        "amount": {
+            "amount": "1274.37",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-25T13:53:17.472711Z",
+        "valueDateTime": "2025-09-25T13:53:17.472711Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0007",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 7"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632442",
+        "amount": {
+            "amount": "3161.60",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-25T12:55:17.472711Z",
+        "valueDateTime": "2025-09-25T12:55:17.472711Z",
+        "transactionInformation": "Dodopizza - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0328",
+            "name": "Dodopizza",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632439",
+        "amount": {
+            "amount": "2359.11",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-24T20:57:17.472711Z",
+        "valueDateTime": "2025-09-24T20:57:17.472711Z",
+        "transactionInformation": "ВкусВилл - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0182",
+            "name": "ВкусВилл",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632437",
+        "amount": {
+            "amount": "1768.76",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-23T16:23:17.472711Z",
+        "valueDateTime": "2025-09-23T16:23:17.472711Z",
+        "transactionInformation": "ВкусВилл - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0190",
+            "name": "ВкусВилл",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 11"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632429",
+        "amount": {
+            "amount": "9709.39",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-21T17:10:17.472711Z",
+        "valueDateTime": "2025-09-21T17:10:17.472711Z",
+        "transactionInformation": "Dodopizza - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0337",
+            "name": "Dodopizza",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 10"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632435",
+        "amount": {
+            "amount": "163778.98",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-19T15:43:17.472711Z",
+        "valueDateTime": "2025-09-19T15:43:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632433",
+        "amount": {
+            "amount": "236487.39",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-19T15:16:17.472711Z",
+        "valueDateTime": "2025-09-19T15:16:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632436",
+        "amount": {
+            "amount": "71578.30",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-18T22:59:17.472711Z",
+        "valueDateTime": "2025-09-18T22:59:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632430",
+        "amount": {
+            "amount": "47890.18",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-17T12:30:17.472711Z",
+        "valueDateTime": "2025-09-17T12:30:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632432",
+        "amount": {
+            "amount": "209100.69",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-16T16:29:17.472711Z",
+        "valueDateTime": "2025-09-16T16:29:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632431",
+        "amount": {
+            "amount": "4278.48",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-15T21:37:17.472711Z",
+        "valueDateTime": "2025-09-15T21:37:17.472711Z",
+        "transactionInformation": "Dodopizza - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0330",
+            "name": "Dodopizza",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632434",
+        "amount": {
+            "amount": "3208.62",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-15T19:38:17.472711Z",
+        "valueDateTime": "2025-09-15T19:38:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0129",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 10"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632424",
+        "amount": {
+            "amount": "11029.68",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-14T22:59:17.472711Z",
+        "valueDateTime": "2025-09-14T22:59:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632428",
+        "amount": {
+            "amount": "2750.63",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-12T16:52:17.472711Z",
+        "valueDateTime": "2025-09-12T16:52:17.472711Z",
+        "transactionInformation": "Лента - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0092",
+            "name": "Лента",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632425",
+        "amount": {
+            "amount": "3464.73",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-09T15:13:17.472711Z",
+        "valueDateTime": "2025-09-09T15:13:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0129",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 10"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632427",
+        "amount": {
+            "amount": "3708.26",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-09T11:25:17.472711Z",
+        "valueDateTime": "2025-09-09T11:25:17.472711Z",
+        "transactionInformation": "ВкусВилл - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0191",
+            "name": "ВкусВилл",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 12"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632426",
+        "amount": {
+            "amount": "213520.83",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-08T14:08:17.472711Z",
+        "valueDateTime": "2025-09-08T14:08:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632421",
+        "amount": {
+            "amount": "1710.46",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-06T21:43:17.472711Z",
+        "valueDateTime": "2025-09-06T21:43:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0126",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 7"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632423",
+        "amount": {
+            "amount": "147003.99",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-05T17:25:17.472711Z",
+        "valueDateTime": "2025-09-05T17:25:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632505",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-05T10:47:17.472711Z",
+        "valueDateTime": "2025-09-05T10:47:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632504",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-04T10:34:17.472711Z",
+        "valueDateTime": "2025-09-04T10:34:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632503",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-03T10:10:17.472711Z",
+        "valueDateTime": "2025-09-03T10:10:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632422",
+        "amount": {
+            "amount": "179556.56",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-02T15:50:17.472711Z",
+        "valueDateTime": "2025-09-02T15:50:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632502",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-02T10:37:17.472711Z",
+        "valueDateTime": "2025-09-02T10:37:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632501",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-09-01T10:47:17.472711Z",
+        "valueDateTime": "2025-09-01T10:47:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632420",
+        "amount": {
+            "amount": "7477.75",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-28T12:23:17.472711Z",
+        "valueDateTime": "2025-08-28T12:23:17.472711Z",
+        "transactionInformation": "Якитория - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0413",
+            "name": "Якитория",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632414",
+        "amount": {
+            "amount": "50110.64",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-24T11:31:17.472711Z",
+        "valueDateTime": "2025-08-24T11:31:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632418",
+        "amount": {
+            "amount": "28387.15",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-24T09:52:17.472711Z",
+        "valueDateTime": "2025-08-24T09:52:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632419",
+        "amount": {
+            "amount": "3708.15",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-21T21:46:17.472711Z",
+        "valueDateTime": "2025-08-21T21:46:17.472711Z",
+        "transactionInformation": "KFC - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0272",
+            "name": "KFC",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632413",
+        "amount": {
+            "amount": "43072.74",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-21T18:01:17.472711Z",
+        "valueDateTime": "2025-08-21T18:01:17.472711Z",
+        "transactionInformation": "Яндекс.Маркет - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1361",
+            "name": "Яндекс.Маркет",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632415",
+        "amount": {
+            "amount": "126242.28",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-20T09:07:17.472711Z",
+        "valueDateTime": "2025-08-20T09:07:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632416",
+        "amount": {
+            "amount": "25608.29",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-19T16:47:17.472711Z",
+        "valueDateTime": "2025-08-19T16:47:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632417",
+        "amount": {
+            "amount": "74708.92",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-19T10:27:17.472711Z",
+        "valueDateTime": "2025-08-19T10:27:17.472711Z",
+        "transactionInformation": "Wildberries - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1360",
+            "name": "Wildberries",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632412",
+        "amount": {
+            "amount": "69505.91",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-17T17:46:17.472711Z",
+        "valueDateTime": "2025-08-17T17:46:17.472711Z",
+        "transactionInformation": "AliExpress - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1362",
+            "name": "AliExpress",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632408",
+        "amount": {
+            "amount": "2796.45",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-17T17:22:17.472711Z",
+        "valueDateTime": "2025-08-17T17:22:17.472711Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0011",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 11"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632409",
+        "amount": {
+            "amount": "3941.31",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-17T17:06:17.472711Z",
+        "valueDateTime": "2025-08-17T17:06:17.472711Z",
+        "transactionInformation": "Макдоналдс - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0243",
+            "name": "Макдоналдс",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 9"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632405",
+        "amount": {
+            "amount": "104542.67",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-17T14:05:17.472711Z",
+        "valueDateTime": "2025-08-17T14:05:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632403",
+        "amount": {
+            "amount": "13841.17",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-17T13:30:17.472711Z",
+        "valueDateTime": "2025-08-17T13:30:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632411",
+        "amount": {
+            "amount": "243292.33",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-16T14:28:17.472711Z",
+        "valueDateTime": "2025-08-16T14:28:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632404",
+        "amount": {
+            "amount": "2918.82",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-14T08:44:17.472711Z",
+        "valueDateTime": "2025-08-14T08:44:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0121",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 2"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632402",
+        "amount": {
+            "amount": "189760.57",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-13T14:34:17.472711Z",
+        "valueDateTime": "2025-08-13T14:34:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632406",
+        "amount": {
+            "amount": "1413.52",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-13T11:49:17.472711Z",
+        "valueDateTime": "2025-08-13T11:49:17.472711Z",
+        "transactionInformation": "Дикси - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0157",
+            "name": "Дикси",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632410",
+        "amount": {
+            "amount": "226384.56",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-12T16:58:17.472711Z",
+        "valueDateTime": "2025-08-12T16:58:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632407",
+        "amount": {
+            "amount": "176330.29",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-12T15:29:17.472711Z",
+        "valueDateTime": "2025-08-12T15:29:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632395",
+        "amount": {
+            "amount": "2223.23",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-10T19:50:17.472711Z",
+        "valueDateTime": "2025-08-10T19:50:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0121",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 2"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632394",
+        "amount": {
+            "amount": "2822.86",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-10T10:32:17.472711Z",
+        "valueDateTime": "2025-08-10T10:32:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0127",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 8"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632401",
+        "amount": {
+            "amount": "4691.21",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-09T08:16:17.472711Z",
+        "valueDateTime": "2025-08-09T08:16:17.472711Z",
+        "transactionInformation": "Dodopizza - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0336",
+            "name": "Dodopizza",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 9"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632399",
+        "amount": {
+            "amount": "23650.47",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-08T14:19:17.472711Z",
+        "valueDateTime": "2025-08-08T14:19:17.472711Z",
+        "transactionInformation": "Wildberries - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1360",
+            "name": "Wildberries",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632400",
+        "amount": {
+            "amount": "259767.64",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-06T22:23:17.472711Z",
+        "valueDateTime": "2025-08-06T22:23:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632397",
+        "amount": {
+            "amount": "1946.67",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-06T19:04:17.472711Z",
+        "valueDateTime": "2025-08-06T19:04:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0126",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 7"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632398",
+        "amount": {
+            "amount": "6797.00",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-06T10:23:17.472711Z",
+        "valueDateTime": "2025-08-06T10:23:17.472711Z",
+        "transactionInformation": "Сбарро - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0373",
+            "name": "Сбарро",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632396",
+        "amount": {
+            "amount": "1817.34",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-05T19:15:17.472711Z",
+        "valueDateTime": "2025-08-05T19:15:17.472711Z",
+        "transactionInformation": "Дикси - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0155",
+            "name": "Дикси",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632500",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-05T10:17:17.472711Z",
+        "valueDateTime": "2025-08-05T10:17:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632499",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-04T10:09:17.472711Z",
+        "valueDateTime": "2025-08-04T10:09:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632498",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-03T10:36:17.472711Z",
+        "valueDateTime": "2025-08-03T10:36:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632391",
+        "amount": {
+            "amount": "2805.00",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-02T20:05:17.472711Z",
+        "valueDateTime": "2025-08-02T20:05:17.472711Z",
+        "transactionInformation": "Перекрёсток - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0127",
+            "name": "Перекрёсток",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 8"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632497",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-02T10:18:17.472711Z",
+        "valueDateTime": "2025-08-02T10:18:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632496",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-08-01T10:07:17.472711Z",
+        "valueDateTime": "2025-08-01T10:07:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632393",
+        "amount": {
+            "amount": "2221.22",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-31T23:45:17.472711Z",
+        "valueDateTime": "2025-07-31T23:45:17.472711Z",
+        "transactionInformation": "Dodopizza - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0330",
+            "name": "Dodopizza",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632392",
+        "amount": {
+            "amount": "149781.25",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-28T17:08:17.472711Z",
+        "valueDateTime": "2025-07-28T17:08:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632388",
+        "amount": {
+            "amount": "4206.44",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-26T17:49:17.472711Z",
+        "valueDateTime": "2025-07-26T17:49:17.472711Z",
+        "transactionInformation": "Лента - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0094",
+            "name": "Лента",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 5"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632389",
+        "amount": {
+            "amount": "4366.70",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-25T12:48:17.472711Z",
+        "valueDateTime": "2025-07-25T12:48:17.472711Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0006",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632390",
+        "amount": {
+            "amount": "76234.08",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-24T13:54:17.472711Z",
+        "valueDateTime": "2025-07-24T13:54:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632382",
+        "amount": {
+            "amount": "76113.16",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-23T18:04:17.472711Z",
+        "valueDateTime": "2025-07-23T18:04:17.472711Z",
+        "transactionInformation": "Wildberries - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1360",
+            "name": "Wildberries",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632384",
+        "amount": {
+            "amount": "61555.08",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-23T14:44:17.472711Z",
+        "valueDateTime": "2025-07-23T14:44:17.472711Z",
+        "transactionInformation": "Яндекс.Маркет - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1361",
+            "name": "Яндекс.Маркет",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632383",
+        "amount": {
+            "amount": "1405.51",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-23T12:39:17.472711Z",
+        "valueDateTime": "2025-07-23T12:39:17.472711Z",
+        "transactionInformation": "Лента - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0090",
+            "name": "Лента",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632386",
+        "amount": {
+            "amount": "1604.71",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-22T22:19:17.472711Z",
+        "valueDateTime": "2025-07-22T22:19:17.472711Z",
+        "transactionInformation": "Магнит - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0052",
+            "name": "Магнит",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 5"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632387",
+        "amount": {
+            "amount": "28980.00",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-22T14:47:17.472711Z",
+        "valueDateTime": "2025-07-22T14:47:17.472711Z",
+        "transactionInformation": "Яндекс.Маркет - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1361",
+            "name": "Яндекс.Маркет",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632381",
+        "amount": {
+            "amount": "133116.11",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-22T09:31:17.472711Z",
+        "valueDateTime": "2025-07-22T09:31:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632385",
+        "amount": {
+            "amount": "212790.58",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-21T21:26:17.472711Z",
+        "valueDateTime": "2025-07-21T21:26:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632380",
+        "amount": {
+            "amount": "162071.71",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-20T20:14:17.472711Z",
+        "valueDateTime": "2025-07-20T20:14:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632379",
+        "amount": {
+            "amount": "2133.19",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-16T19:05:17.472711Z",
+        "valueDateTime": "2025-07-16T19:05:17.472711Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0002",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 2"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632378",
+        "amount": {
+            "amount": "49737.08",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-15T22:19:17.472711Z",
+        "valueDateTime": "2025-07-15T22:19:17.472711Z",
+        "transactionInformation": "Wildberries - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1360",
+            "name": "Wildberries",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632374",
+        "amount": {
+            "amount": "32347.01",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-13T09:35:17.472711Z",
+        "valueDateTime": "2025-07-13T09:35:17.472711Z",
+        "transactionInformation": "Wildberries - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1360",
+            "name": "Wildberries",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632375",
+        "amount": {
+            "amount": "77726.09",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-13T07:14:17.472711Z",
+        "valueDateTime": "2025-07-13T07:14:17.472711Z",
+        "transactionInformation": "Яндекс.Маркет - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1361",
+            "name": "Яндекс.Маркет",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632377",
+        "amount": {
+            "amount": "43721.91",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-12T18:26:17.472711Z",
+        "valueDateTime": "2025-07-12T18:26:17.472711Z",
+        "transactionInformation": "Wildberries - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1360",
+            "name": "Wildberries",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632516",
+        "amount": {
+            "amount": "3587.81",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-11T19:27:17.472711Z",
+        "valueDateTime": "2025-07-11T19:27:17.472711Z",
+        "transactionInformation": "Перевод клиенту Иванову И.И.",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632376",
+        "amount": {
+            "amount": "2469.55",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-11T19:20:17.472711Z",
+        "valueDateTime": "2025-07-11T19:20:17.472711Z",
+        "transactionInformation": "Магнит - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0055",
+            "name": "Магнит",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 8"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632495",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-05T10:02:17.472711Z",
+        "valueDateTime": "2025-07-05T10:02:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632494",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-04T10:37:17.472711Z",
+        "valueDateTime": "2025-07-04T10:37:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632371",
+        "amount": {
+            "amount": "78939.67",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-03T16:50:17.472711Z",
+        "valueDateTime": "2025-07-03T16:50:17.472711Z",
+        "transactionInformation": "Яндекс.Маркет - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1361",
+            "name": "Яндекс.Маркет",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632493",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-03T10:55:17.472711Z",
+        "valueDateTime": "2025-07-03T10:55:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632492",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-02T10:55:17.472711Z",
+        "valueDateTime": "2025-07-02T10:55:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632370",
+        "amount": {
+            "amount": "101452.40",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-01T23:02:17.472711Z",
+        "valueDateTime": "2025-07-01T23:02:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632373",
+        "amount": {
+            "amount": "147490.58",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-01T12:58:17.472711Z",
+        "valueDateTime": "2025-07-01T12:58:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632367",
+        "amount": {
+            "amount": "7948.87",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-01T10:30:17.472711Z",
+        "valueDateTime": "2025-07-01T10:30:17.472711Z",
+        "transactionInformation": "Dodopizza - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0337",
+            "name": "Dodopizza",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 10"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632491",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-07-01T10:13:17.472711Z",
+        "valueDateTime": "2025-07-01T10:13:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632368",
+        "amount": {
+            "amount": "158024.25",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-30T17:51:17.472711Z",
+        "valueDateTime": "2025-06-30T17:51:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632372",
+        "amount": {
+            "amount": "267605.53",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-30T17:16:17.472711Z",
+        "valueDateTime": "2025-06-30T17:16:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632369",
+        "amount": {
+            "amount": "296729.65",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-30T07:21:17.472711Z",
+        "valueDateTime": "2025-06-30T07:21:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632363",
+        "amount": {
+            "amount": "114966.01",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-28T19:45:17.472711Z",
+        "valueDateTime": "2025-06-28T19:45:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632365",
+        "amount": {
+            "amount": "214260.02",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-27T23:42:17.472711Z",
+        "valueDateTime": "2025-06-27T23:42:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632361",
+        "amount": {
+            "amount": "5274.63",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-27T07:04:17.472711Z",
+        "valueDateTime": "2025-06-27T07:04:17.472711Z",
+        "transactionInformation": "Теремок - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0390",
+            "name": "Теремок",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Садовая, д. 3"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632364",
+        "amount": {
+            "amount": "285226.80",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-25T11:01:17.472711Z",
+        "valueDateTime": "2025-06-25T11:01:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632366",
+        "amount": {
+            "amount": "251890.16",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-24T20:23:17.472711Z",
+        "valueDateTime": "2025-06-24T20:23:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632362",
+        "amount": {
+            "amount": "9017.26",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-23T18:31:17.472711Z",
+        "valueDateTime": "2025-06-23T18:31:17.472711Z",
+        "transactionInformation": "Dodopizza - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0329",
+            "name": "Dodopizza",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 2"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632356",
+        "amount": {
+            "amount": "52342.82",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-19T19:16:17.472711Z",
+        "valueDateTime": "2025-06-19T19:16:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632358",
+        "amount": {
+            "amount": "185618.17",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-19T10:47:17.472711Z",
+        "valueDateTime": "2025-06-19T10:47:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632357",
+        "amount": {
+            "amount": "65069.01",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-19T08:47:17.472711Z",
+        "valueDateTime": "2025-06-19T08:47:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632360",
+        "amount": {
+            "amount": "63655.36",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-18T19:21:17.472711Z",
+        "valueDateTime": "2025-06-18T19:21:17.472711Z",
+        "transactionInformation": "Wildberries - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1360",
+            "name": "Wildberries",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632359",
+        "amount": {
+            "amount": "8221.93",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-17T23:22:17.472711Z",
+        "valueDateTime": "2025-06-17T23:22:17.472711Z",
+        "transactionInformation": "Макдоналдс - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0240",
+            "name": "Макдоналдс",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632351",
+        "amount": {
+            "amount": "134834.11",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-15T15:04:17.472711Z",
+        "valueDateTime": "2025-06-15T15:04:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632353",
+        "amount": {
+            "amount": "168603.53",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-13T15:22:17.472711Z",
+        "valueDateTime": "2025-06-13T15:22:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632349",
+        "amount": {
+            "amount": "210323.92",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-12T22:33:17.472711Z",
+        "valueDateTime": "2025-06-12T22:33:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632350",
+        "amount": {
+            "amount": "1839.01",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-12T19:03:17.472711Z",
+        "valueDateTime": "2025-06-12T19:03:17.472711Z",
+        "transactionInformation": "Лента - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0093",
+            "name": "Лента",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 4"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632352",
+        "amount": {
+            "amount": "3358.62",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-12T18:21:17.472711Z",
+        "valueDateTime": "2025-06-12T18:21:17.472711Z",
+        "transactionInformation": "Пятёрочка - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0002",
+            "name": "Пятёрочка",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 2"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632354",
+        "amount": {
+            "amount": "2783.10",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-12T18:13:17.472711Z",
+        "valueDateTime": "2025-06-12T18:13:17.472711Z",
+        "transactionInformation": "Теремок - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0393",
+            "name": "Теремок",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Невский, д. 6"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632348",
+        "amount": {
+            "amount": "98425.59",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-12T09:00:17.472711Z",
+        "valueDateTime": "2025-06-12T09:00:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632355",
+        "amount": {
+            "amount": "5268.86",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-11T15:57:17.472711Z",
+        "valueDateTime": "2025-06-11T15:57:17.472711Z",
+        "transactionInformation": "Теремок - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0391",
+            "name": "Теремок",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 4"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632347",
+        "amount": {
+            "amount": "152970.36",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-10T14:48:17.472711Z",
+        "valueDateTime": "2025-06-10T14:48:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632517",
+        "amount": {
+            "amount": "39193.37",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-09T20:08:17.472711Z",
+        "valueDateTime": "2025-06-09T20:08:17.472711Z",
+        "transactionInformation": "Перевод клиенту Иванову И.И.",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632343",
+        "amount": {
+            "amount": "26879.81",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-08T20:21:17.472711Z",
+        "valueDateTime": "2025-06-08T20:21:17.472711Z",
+        "transactionInformation": "AliExpress - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1362",
+            "name": "AliExpress",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632342",
+        "amount": {
+            "amount": "111205.96",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-08T12:17:17.472711Z",
+        "valueDateTime": "2025-06-08T12:17:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632346",
+        "amount": {
+            "amount": "2107.83",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-08T09:27:17.472711Z",
+        "valueDateTime": "2025-06-08T09:27:17.472711Z",
+        "transactionInformation": "Магнит - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0059",
+            "name": "Магнит",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 12"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632341",
+        "amount": {
+            "amount": "53643.94",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-07T20:12:17.472711Z",
+        "valueDateTime": "2025-06-07T20:12:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632344",
+        "amount": {
+            "amount": "2923.62",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-06T16:40:17.472711Z",
+        "valueDateTime": "2025-06-06T16:40:17.472711Z",
+        "transactionInformation": "Дикси - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0159",
+            "name": "Дикси",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 5"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632490",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-05T10:43:17.472711Z",
+        "valueDateTime": "2025-06-05T10:43:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632345",
+        "amount": {
+            "amount": "2377.24",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-05T08:15:17.472711Z",
+        "valueDateTime": "2025-06-05T08:15:17.472711Z",
+        "transactionInformation": "Лента - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0098",
+            "name": "Лента",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 9"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632489",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-04T10:27:17.472711Z",
+        "valueDateTime": "2025-06-04T10:27:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632488",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-03T10:25:17.472711Z",
+        "valueDateTime": "2025-06-03T10:25:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632487",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-02T10:13:17.472711Z",
+        "valueDateTime": "2025-06-02T10:13:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632486",
+        "amount": {
+            "amount": "74446.85",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-06-01T10:11:17.472711Z",
+        "valueDateTime": "2025-06-01T10:11:17.472711Z",
+        "transactionInformation": "Платеж по кредиту №loan-team260-3-0449",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": null,
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632338",
+        "amount": {
+            "amount": "81546.67",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-31T21:00:17.472711Z",
+        "valueDateTime": "2025-05-31T21:00:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632337",
+        "amount": {
+            "amount": "55408.23",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-30T22:50:17.472711Z",
+        "valueDateTime": "2025-05-30T22:50:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632340",
+        "amount": {
+            "amount": "29551.26",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-30T15:48:17.472711Z",
+        "valueDateTime": "2025-05-30T15:48:17.472711Z",
+        "transactionInformation": "Ozon - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1359",
+            "name": "Ozon",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632339",
+        "amount": {
+            "amount": "224763.18",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-27T07:23:17.472711Z",
+        "valueDateTime": "2025-05-27T07:23:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632333",
+        "amount": {
+            "amount": "77095.96",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-24T21:21:17.472711Z",
+        "valueDateTime": "2025-05-24T21:21:17.472711Z",
+        "transactionInformation": "Wildberries - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1360",
+            "name": "Wildberries",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632335",
+        "amount": {
+            "amount": "223534.24",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-22T20:42:17.472711Z",
+        "valueDateTime": "2025-05-22T20:42:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632334",
+        "amount": {
+            "amount": "85892.03",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-20T10:26:17.472711Z",
+        "valueDateTime": "2025-05-20T10:26:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632336",
+        "amount": {
+            "amount": "178178.24",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-19T08:14:17.472711Z",
+        "valueDateTime": "2025-05-19T08:14:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632329",
+        "amount": {
+            "amount": "2769.79",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-18T08:16:17.472711Z",
+        "valueDateTime": "2025-05-18T08:16:17.472711Z",
+        "transactionInformation": "KFC - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-restaurant-0277",
+            "name": "KFC",
+            "mccCode": "5812",
+            "category": "restaurant",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Тверская, д. 8"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632330",
+        "amount": {
+            "amount": "4216.95",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-18T07:18:17.472711Z",
+        "valueDateTime": "2025-05-18T07:18:17.472711Z",
+        "transactionInformation": "ВкусВилл - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-grocery-0188",
+            "name": "ВкусВилл",
+            "mccCode": "5411",
+            "category": "grocery",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 9"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632332",
+        "amount": {
+            "amount": "64997.21",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Credit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-17T11:39:17.472711Z",
+        "valueDateTime": "2025-05-17T11:39:17.472711Z",
+        "transactionInformation": "Доход от бизнеса",
+        "bankTransactionCode": {
+            "code": "02"
+        },
+        "merchant": null,
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    },
+    {
+        "accountId": "acc-3693",
+        "transactionId": "tx-abank-00632331",
+        "amount": {
+            "amount": "29575.10",
+            "currency": "RUB"
+        },
+        "creditDebitIndicator": "Debit",
+        "status": "completed",
+        "bookingDateTime": "2025-05-15T09:21:17.472711Z",
+        "valueDateTime": "2025-05-15T09:21:17.472711Z",
+        "transactionInformation": "AliExpress - Москва",
+        "bankTransactionCode": {
+            "code": "01"
+        },
+        "merchant": {
+            "merchantId": "merchant-online_retail-1362",
+            "name": "AliExpress",
+            "mccCode": "5999",
+            "category": "online_retail",
+            "city": "Москва",
+            "country": "RUS",
+            "address": "Москва, ул. Арбат, д. 1"
+        },
+        "transactionLocation": {
+            "city": "Москва",
+            "country": "RUS"
+        },
+        "card": {
+            "cardId": "card-abank-003693",
+            "cardNumber": "****3122",
+            "cardType": "debit",
+            "cardName": "МИР Supreme"
+        },
+        "counterparty": null
+    }
+]

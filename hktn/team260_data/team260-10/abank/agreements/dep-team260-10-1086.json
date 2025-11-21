@@ -1,0 +1,15 @@
+{
+    "data": {
+        "agreement_id": "dep-team260-10-1086",
+        "product_id": "deposit-reliable",
+        "product_name": "Вклад \"Надежный\"",
+        "product_type": "deposit",
+        "interest_rate": 8.5,
+        "amount": 6241609.94,
+        "status": "active",
+        "start_date": "2024-12-12T12:52:16.492696",
+        "end_date": null,
+        "account_number": "4081781026010077903",
+        "account_balance": 1502425.29
+    }
+}

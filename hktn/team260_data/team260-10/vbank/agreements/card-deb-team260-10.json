@@ -1,0 +1,15 @@
+{
+    "data": {
+        "agreement_id": "card-deb-team260-10",
+        "product_id": "card-debit",
+        "product_name": "Дебетовая карта \"Свобода\"",
+        "product_type": "card",
+        "interest_rate": null,
+        "amount": 0.0,
+        "status": "active",
+        "start_date": "2023-10-30T17:59:31.391105",
+        "end_date": null,
+        "account_number": null,
+        "account_balance": null
+    }
+}

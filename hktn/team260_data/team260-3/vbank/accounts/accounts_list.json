@@ -1,0 +1,44 @@
+{
+    "data": {
+        "account": [
+            {
+                "accountId": "acc-3693",
+                "status": "Enabled",
+                "currency": "RUB",
+                "accountType": "Personal",
+                "accountSubType": "Checking",
+                "nickname": "Checking счет",
+                "openingDate": "2024-10-30",
+                "account": [
+                    {
+                        "schemeName": "RU.CBR.PAN",
+                        "identification": "4081781026003054973",
+                        "name": "Сидоров Сидор Сидорович (ИП, team260)"
+                    }
+                ]
+            },
+            {
+                "accountId": "acc-5237",
+                "status": "Enabled",
+                "currency": "RUB",
+                "accountType": "Business",
+                "accountSubType": "Loan",
+                "nickname": "Loan счет",
+                "openingDate": "2025-11-21",
+                "account": [
+                    {
+                        "schemeName": "RU.CBR.PAN",
+                        "identification": "45537d92e8de5ae473",
+                        "name": "Сидоров Сидор Сидорович (ИП, team260)"
+                    }
+                ]
+            }
+        ]
+    },
+    "links": {
+        "self": "/accounts"
+    },
+    "meta": {
+        "totalPages": 1
+    }
+}

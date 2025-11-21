@@ -7,7 +7,7 @@ import { UpcomingEventsWidget } from '../components/widgets/UpcomingEventsWidget
 import { RefinanceTriggersWidget } from '../components/widgets/RefinanceTriggersWidget';
 import { QuickActionsWidget } from '../components/widgets/QuickActionsWidget';
 import { DataFreshnessIndicator } from '../components/DataFreshnessIndicator';
-import { getDashboard, type DashboardResponse } from '../utils/api';
+import { getDashboard, startSync, getSyncStatus, type DashboardResponse } from '../utils/api';
 import type { AppState } from '../data/mockAppState';
 
 interface HomeScreenProps {
@@ -58,15 +58,47 @@ export function HomeScreen({ appState, onNavigate, onPayment, onDashboardUpdate 
     setRefreshing(true);
     try {
       setError(null);
-      const data = await getDashboard(appState.user.id, true);
-      setDashboardData(data);
-      if (onDashboardUpdateRef.current) {
-        onDashboardUpdateRef.current(data);
-      }
+      
+      // 1. Запускаем синхронизацию
+      console.log('Starting sync for user:', appState.user.id);
+      await startSync(appState.user.id, true);
+      
+      // 2. Polling статуса синхронизации каждые 2 секунды
+      const pollInterval = setInterval(async () => {
+        try {
+          const status = await getSyncStatus(appState.user.id);
+          console.log('Sync status:', status);
+          
+          if (status.status === 'completed') {
+            clearInterval(pollInterval);
+            
+            // 3. Обновляем dashboard после завершения синхронизации
+            const data = await getDashboard(appState.user.id);
+            setDashboardData(data);
+            if (onDashboardUpdateRef.current) {
+              onDashboardUpdateRef.current(data);
+            }
+            
+            setRefreshing(false);
+          }
+        } catch (pollErr) {
+          console.error('Error polling sync status:', pollErr);
+          // Не останавливаем polling при ошибке опроса
+        }
+      }, 2000);
+      
+      // Таймаут безопасности: если синхронизация не завершилась за 60 секунд
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        if (refreshing) {
+          setRefreshing(false);
+          setError('Превышено время ожидания синхронизации');
+        }
+      }, 60000);
+      
     } catch (err) {
-      console.error('Failed to refresh dashboard:', err);
-      setError(err instanceof Error ? err.message : 'Ошибка обновления данных');
-    } finally {
+      console.error('Failed to start sync:', err);
+      setError(err instanceof Error ? err.message : 'Ошибка запуска синхронизации');
       setRefreshing(false);
     }
   };

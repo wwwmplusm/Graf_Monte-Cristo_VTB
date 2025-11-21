@@ -1,0 +1,16 @@
+{
+    "data": {
+        "account": [
+            {
+                "accountId": "acc-3693",
+                "status": "Enabled",
+                "currency": "RUB",
+                "accountType": "Personal",
+                "accountSubType": "Checking",
+                "description": "checking account",
+                "nickname": "Checking счет",
+                "openingDate": "2024-10-30"
+            }
+        ]
+    }
+}

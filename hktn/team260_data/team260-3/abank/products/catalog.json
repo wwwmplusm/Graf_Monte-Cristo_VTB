@@ -1,0 +1,86 @@
+{
+    "data": {
+        "product": [
+            {
+                "productId": "prod-abank-deposit-001",
+                "productType": "deposit",
+                "productName": "Накопительный депозит",
+                "description": "Выгодная ставка",
+                "interestRate": "8.50",
+                "minAmount": "50000.00",
+                "maxAmount": null,
+                "termMonths": 12
+            },
+            {
+                "productId": "prod-abank-card-001",
+                "productType": "credit_card",
+                "productName": "Кредитная карта Premium",
+                "description": "Кэшбэк и бонусы",
+                "interestRate": "15.90",
+                "minAmount": null,
+                "maxAmount": null,
+                "termMonths": null
+            },
+            {
+                "productId": "prod-abank-loan-001",
+                "productType": "loan",
+                "productName": "Потребительский кредит",
+                "description": "Быстрое одобрение",
+                "interestRate": "12.90",
+                "minAmount": "50000.00",
+                "maxAmount": null,
+                "termMonths": 36
+            },
+            {
+                "productId": "deposit-reliable",
+                "productType": "deposit",
+                "productName": "Вклад \"Надежный\"",
+                "description": "Классический вклад с гарантированной доходностью",
+                "interestRate": "8.50",
+                "minAmount": "10000.00",
+                "maxAmount": "10000000.00",
+                "termMonths": 12
+            },
+            {
+                "productId": "loan-consumer",
+                "productType": "loan",
+                "productName": "Потребительский кредит",
+                "description": "Кредит на любые цели",
+                "interestRate": "12.90",
+                "minAmount": "50000.00",
+                "maxAmount": "3000000.00",
+                "termMonths": 60
+            },
+            {
+                "productId": "card-debit",
+                "productType": "card",
+                "productName": "Дебетовая карта \"Свобода\"",
+                "description": "Карта с кэшбэком 2%",
+                "interestRate": null,
+                "minAmount": null,
+                "maxAmount": null,
+                "termMonths": null
+            },
+            {
+                "productId": "card-credit",
+                "productType": "card",
+                "productName": "Кредитная карта \"Лимит\"",
+                "description": "Кредитная карта с льготным периодом",
+                "interestRate": "19.90",
+                "minAmount": "50000.00",
+                "maxAmount": "500000.00",
+                "termMonths": null
+            },
+            {
+                "productId": "prod-b6590d81632b",
+                "productType": "loan",
+                "productName": "Экспресс кредит 14.2%",
+                "description": null,
+                "interestRate": "14.20",
+                "minAmount": "60000.00",
+                "maxAmount": null,
+                "termMonths": null
+            }
+        ]
+    }
+}
