@@ -15,7 +15,7 @@ export function CardsScreen({ appState, onBack }: CardsScreenProps) {
     const colors: Record<string, string> = {
       'Сбербанк': 'from-green-600 to-green-700',
       'Тинькофф': 'from-yellow-500 to-yellow-600',
-      'Альфа-Банк': 'from-red-600 to-red-700',
+      'ABank': 'from-red-600 to-red-700',
       'ВТБ': 'from-blue-600 to-blue-700',
     };
     return colors[bank] || 'from-gray-700 to-gray-900';

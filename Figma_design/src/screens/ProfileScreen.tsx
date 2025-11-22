@@ -10,7 +10,7 @@ interface ProfileScreenProps {
 export function ProfileScreen({ appState, onBack, onToggleBank }: ProfileScreenProps) {
     const banks = Object.entries(appState.user.banks_status || {}).map(([id, status]) => ({
         id,
-        name: id === 'sberbank' ? 'Сбербанк' : id === 'vtb' ? 'ВТБ' : id === 'tinkoff' ? 'Т-Банк' : id === 'alpha' ? 'Альфа-Банк' : id,
+        name: id === 'sberbank' ? 'Сбербанк' : id === 'vtb' ? 'ВТБ' : id === 'tinkoff' ? 'Т-Банк' : id === 'abank' ? 'ABank' : id,
         ...status
     }));
 

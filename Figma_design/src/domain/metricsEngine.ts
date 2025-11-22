@@ -8,8 +8,8 @@ import type {
 // Bank labels to make raw ids human friendly
 export const BANK_LABELS: Record<string, string> = {
   vbank: 'VBank',
-  sbank: 'Сбербанк',
-  abank: 'Альфа-Банк',
+  sbank: 'Sbank',
+  abank: 'ABank',
 };
 
 export const getBankLabel = (bankId: string) => BANK_LABELS[bankId] ?? bankId;

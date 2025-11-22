@@ -253,7 +253,7 @@ export const mockAppState: AppState = {
     },
     {
       id: 'card3',
-      bank: 'Альфа-Банк',
+      bank: 'ABank',
       mask: '•• 1234',
       balance: 8000,
       holds: 500,
@@ -464,7 +464,7 @@ export const mockAppStateDeposits: AppState = {
       },
       {
         id: 'dep2',
-        bank: 'Альфа-Банк',
+        bank: 'ABank',
         product: 'Альфа-Вклад',
         rate: 18.0,
         ear: 18.8,
