@@ -71,25 +71,6 @@ export function LoansDetailScreen({ appState, onBack, onPayment }: LoansDetailSc
             </div>
           </div>
 
-          {/* Closing Simulator widget */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-200">
-            <h2 className="font-semibold text-gray-900 mb-3">Симулятор закрытия</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-xs text-gray-500 mb-1">Средняя ставка</div>
-                <div className="text-lg font-semibold text-gray-900">
-                  {weightedAverageRate.toFixed(2)}%
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500 mb-1">Срок закрытия</div>
-                <div className="text-lg font-semibold text-gray-900">
-                  {payoffTime.toFixed(1)} лет
-                </div>
-              </div>
-            </div>
-          </div>
-
           {debtsByBank.length > 0 && (
             <div className="bg-white rounded-2xl p-5 border border-gray-200">
               <h2 className="font-semibold text-gray-900 mb-3">Долг по банкам</h2>
